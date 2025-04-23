@@ -3,7 +3,7 @@
 This file lists initial tasks to help us organize and launch the Mind Extension project. Tasks are grouped by area (Marketing, UI/UX, and General Planning).
 
 ## Marketing
-- Brainstorm and shortlist key marketing messages and value propositions _(Assignees: Kotryna, Karina)_
+- ~~Brainstorm and shortlist key marketing messages and value propositions _(Assignees: Kotryna, Karina)_~~ (Done)
 - Plan and script the first marketing video _(Assignee: Karina)_
 - Design initial marketing images and banners
 - Plan and storyboard 3 Instagram/TikTok reels _(Assignee: Karina)_
