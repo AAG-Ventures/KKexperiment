@@ -20,7 +20,7 @@
   border-bottom: 1px solid var(--border-light);
   display: flex;
   align-items: center;
-  padding: 0 32px;
+  padding: 0 24px;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -138,9 +138,12 @@
   flex: 1;
   display: grid;
   grid-template-columns: 240px 1fr 340px;
-  gap: 32px;
-  padding: 32px 32px 0 32px;
+  gap: 24px;
+  padding: 24px;
   box-sizing: border-box;
+  height: calc(100vh - 72px); /* Subtract header height */
+  max-height: calc(100vh - 72px);
+  overflow: hidden;
   
   /* Responsive adjustments */
   @media (max-width: 1200px) {
@@ -176,11 +179,11 @@
   background: var(--sidebar-bg);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
-  padding: 24px 16px 16px 16px;
+  padding: 16px 12px 12px 12px;
   display: flex;
   flex-direction: column;
   min-width: 200px;
-  height: 80vh;
+  height: 100%;
   justify-content: space-between;
   transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
   border: 1px solid var(--border-light);
@@ -235,26 +238,74 @@
   cursor: pointer;
   transition: background 0.15s;
 }
+
+.folderItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.folderHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.expandIcon {
+  font-size: 10px;
+  margin-right: 4px;
+  color: var(--foreground-secondary);
+}
+
+.nestedList {
+  list-style: none;
+  padding-left: 16px;
+  margin-top: 6px;
+  padding-right: 0;
+}
+
+.nestedItem {
+  font-size: 13px;
+  padding: 4px 0 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.nestedItem:hover {
+  background: var(--background-tertiary);
+}
 .kbList li:hover {
   background: var(--background-tertiary);
 }
 
 /* Process Widget Styles */
 .processWidget {
-  background: var(--card-bg);
+  background: var(--dark-bg, #1e2738);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
-  padding: 15px;
+  padding: 18px;
   border: 1px solid var(--border-light);
   transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
+  color: white;
 }
 
 .processWidget h3 {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
-  margin-bottom: 10px;
-  color: var(--foreground-primary);
+  margin-bottom: 0;
+  color: white;
   letter-spacing: var(--letter-spacing-tight);
+}
+
+.processWidget .sectionHeader {
+  margin-bottom: 16px;
+  color: white;
+}
+
+.processWidget .sectionHeader .material-icons {
+  color: white;
+  opacity: 0.9;
 }
 
 .processList {
@@ -266,13 +317,20 @@
 .processList li {
   display: flex;
   align-items: center;
-  padding: 8px 10px;
-  margin-bottom: 6px;
+  justify-content: space-between;
+  padding: 10px 12px;
+  margin-bottom: 8px;
   border-radius: var(--radius-md);
   font-size: var(--font-size-xs);
   background: var(--background-tertiary);
   position: relative;
   transition: background-color var(--transition-normal);
+}
+
+.processInfo {
+  display: flex;
+  align-items: center;
+  font-weight: var(--font-weight-medium);
 }
 
 .processList li:hover {
@@ -281,12 +339,13 @@
 
 .processStatus {
   font-size: var(--font-size-xs);
-  padding: 2px 6px;
+  padding: 4px 12px;
   border-radius: var(--radius-pill);
   background: var(--brand-primary);
   color: white;
-  margin-left: auto;
   font-weight: var(--font-weight-medium);
+  min-width: 80px;
+  text-align: center;
 }
 
 .processStatus.complete {
@@ -316,8 +375,8 @@
   background: var(--card-bg);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
-  padding: 32px 40px;
-  min-height: 500px;
+  padding: 20px 24px;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -354,9 +413,10 @@
 /* Card Grid Styles */
 .cardGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+  width: 100%;
 }
 
 /* Card Styles */
@@ -436,9 +496,22 @@
   padding-bottom: 0;
 }
 
-.activityItem span.material-icons {
+.activityIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(102, 103, 171, 0.15);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.activityIcon span {
   color: var(--brand-primary);
-  font-size: 20px;
+  font-size: 24px;
+  line-height: 1;
 }
 
 .activityText {
@@ -489,27 +562,44 @@
 .widgets {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
   height: 100%;
 }
 .widgetBox {
   background: var(--card-bg);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
-  padding: 20px 20px 10px 20px;
-  margin-bottom: 8px;
+  padding: 16px 16px 8px 16px;
+  margin-bottom: 16px;
   transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
   border: 1px solid var(--border-light);
+  max-height: calc(100% - 398px);
+  display: flex;
+  flex-direction: column;
 }
 .widgetBox h3 {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
-  margin-bottom: 12px;
+  margin-bottom: 0;
   color: var(--foreground-primary);
-  line-height: var(--line-height-tight);
   letter-spacing: var(--letter-spacing-tight);
 }
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+.sectionHeader .material-icons {
+  font-size: 20px;
+  color: var(--foreground-secondary);
+  opacity: 0.8;
+}
 /* Task Styles */
+/* Tasks container no longer needs scrolling */
 .tasksContainer {
   display: flex;
   flex-direction: column;
@@ -519,22 +609,55 @@
 .taskSection {
   display: flex;
   flex-direction: column;
+  height: 148px; /* Increased height to fit all tasks properly */
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 8px 0 8px 8px; /* Padding on left only, not right (for scrollbar) */
+  background-color: var(--background-secondary);
 }
 
 .taskList {
   list-style: none;
   padding: 0;
   margin: 0;
+  overflow-y: auto; /* Show scrollbar only when needed */
+  height: 100%;
+  padding-right: 2px;
+  padding-top: 2px; /* Add a bit of top padding */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(103, 58, 183, 0.8) transparent;
+  border-right: 1px solid var(--border-light);
+}
+
+/* Webkit browsers scrollbar styling */
+.taskList::-webkit-scrollbar {
+  width: 10px;
+}
+
+.taskList::-webkit-scrollbar-track {
+  background: var(--background-tertiary);
+  border-radius: 10px;
+}
+
+.taskList::-webkit-scrollbar-thumb {
+  background-color: rgba(103, 58, 183, 0.8);
+  border-radius: 5px;
+  border: 1px solid rgba(103, 58, 183, 0.6);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
 }
 
 .taskItem {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
+  padding-bottom: 5px;
   font-size: var(--font-size-sm);
   transition: opacity var(--transition-normal), transform var(--transition-normal);
   line-height: var(--line-height-normal);
+  padding-right: 8px;
+  min-height: 20px; /* Minimum height rather than fixed height */
+  border-bottom: 1px solid var(--border-light);
 }
 
 .taskCheckbox {
@@ -593,6 +716,7 @@
   margin-top: 10px;
   padding-top: 10px;
   border-top: 1px solid var(--border-light);
+  padding-right: 8px; /* Add space for the scrollbar */
 }
 
 .completedTasksHeader {
@@ -610,22 +734,31 @@
   box-shadow: var(--shadow-md);
   display: flex;
   flex-direction: column;
-  height: 320px;
-  margin-top: auto;
   transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
   border: 1px solid var(--border-light);
+  height: 380px;
+  margin-top: auto; /* This pushes it to the bottom */
+  margin-bottom: 0;
 }
 .chatHeader {
   font-weight: var(--font-weight-semibold);
   font-size: var(--font-size-base);
-  padding: 12px 18px 6px 18px;
+  padding: 8px 12px 4px 12px;
   border-bottom: 1px solid var(--border-light);
   letter-spacing: var(--letter-spacing-tight);
 }
+
+.chatHeader .sectionHeader {
+  margin-bottom: 0;
+}
+
+.chatHeader .sectionHeader span:first-child {
+  font-weight: var(--font-weight-semibold);
+}
 .chatTabs {
   display: flex;
-  gap: 8px;
-  padding: 8px 18px 0 18px;
+  gap: 6px;
+  padding: 6px 12px 0 12px;
 }
 .activeTab {
   background: linear-gradient(135deg, var(--brand-gradient-start), var(--brand-gradient-end));
@@ -652,10 +785,11 @@
 }
 .chatBody {
   flex: 1;
-  padding: 14px 18px;
+  padding: 10px 12px;
   overflow-y: auto;
-  font-size: 15px;
+  font-size: 14px;
   color: var(--foreground-primary);
+  max-height: 275px;
 }
 .chatMsg {
   background: var(--background-tertiary);
