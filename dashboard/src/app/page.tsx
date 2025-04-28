@@ -1,8 +1,94 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import styles from "./page.module.css";
+import AddModal from "./components/AddModal";
+
+// Task type definition
+type Task = {
+  id: string;
+  text: string;
+  completed: boolean;
+};
 
 export default function Dashboard() {
+  // Initial tasks state
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  // Initialize tasks on component mount
+  useEffect(() => {
+    // Get saved tasks from localStorage or use default tasks
+    const savedTasks = localStorage.getItem('dashboard_tasks');
+    
+    if (savedTasks) {
+      setTasks(JSON.parse(savedTasks));
+    } else {
+      // Default tasks
+      const defaultTasks = [
+        { id: '1', text: 'Design dashboard UI', completed: false },
+        { id: '2', text: 'Review agent history', completed: false },
+        { id: '3', text: 'Connect Slack', completed: false },
+      ];
+      setTasks(defaultTasks);
+    }
+  }, []);
+
+  // Save tasks to localStorage whenever they change
+  useEffect(() => {
+    if (tasks.length > 0) {
+      localStorage.setItem('dashboard_tasks', JSON.stringify(tasks));
+    }
+  }, [tasks]);
+
+  // Toggle task completion
+  const toggleTaskCompletion = (taskId: string) => {
+    setTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.id === taskId ? { ...task, completed: !task.completed } : task
+      )
+    );
+  };
+
+  // Handle opening the add modal
+  const handleOpenAddModal = () => {
+    setIsAddModalOpen(true);
+  };
+  
+  // Handle closing the add modal
+  const handleCloseAddModal = () => {
+    setIsAddModalOpen(false);
+  };
+  
+  // Handle option selection in the add modal
+  const handleOptionSelect = (option: string) => {
+    console.log(`Selected option: ${option}`);
+    // Here you would handle each option differently
+    // For this implementation, we'll just close the modal
+    setIsAddModalOpen(false);
+    
+    // You can add specific logic for each option type here
+    switch (option) {
+      case 'folder':
+        // Logic for creating a folder
+        break;
+      case 'file':
+        // Logic for creating a file
+        break;
+      case 'agent':
+        // Logic for creating an agent
+        break;
+      case 'workflow':
+        // Logic for creating a workflow
+        break;
+      case 'custom':
+        // Logic for custom/other
+        break;
+    }
+  };
+  
   return (
     <div className={styles.dashboardWrapper}>
       {/* Top Bar */}
@@ -14,7 +100,10 @@ export default function Dashboard() {
             width={140} 
             height={40} 
             priority
-            style={{objectFit: 'contain'}} 
+            style={{
+              objectFit: 'contain',
+              mixBlendMode: 'normal'
+            }} 
             className={styles.logo}
           />
         </div>
@@ -50,13 +139,30 @@ export default function Dashboard() {
               <li>📄 Meeting Notes</li>
               <li>📁 Shared Space</li>
             </ul>
-            <div className={styles.sectionTitle}>Active Processes</div>
-            <ul className={styles.processList}>
-              <li>🔄 Data Sync</li>
-              <li>✅ Report Generation</li>
-            </ul>
           </nav>
-          <button className={styles.createButton}>＋</button>
+          <div className={styles.sidebarBottom}>
+            {/* Process Widget */}
+            <div className={styles.processWidget}>
+              <h3>Active Processes</h3>
+              <ul className={styles.processList}>
+                <li>
+                  <span className="material-icons" style={{fontSize: 16, marginRight: 6}}>sync</span>
+                  Data Sync
+                  <span className={styles.processStatus}>In Progress</span>
+                </li>
+                <li>
+                  <span className="material-icons" style={{fontSize: 16, marginRight: 6}}>description</span>
+                  Report Generation
+                  <span className={styles.processStatus + ' ' + styles.complete}>Complete</span>
+                </li>
+              </ul>
+            </div>
+            <button 
+              className={styles.createButton}
+              onClick={handleOpenAddModal}
+              aria-label="Create new item"
+            >＋</button>
+          </div>
         </aside>
 
         {/* Main Content */}
@@ -133,11 +239,52 @@ export default function Dashboard() {
 
           <div className={styles.widgetBox}>
             <h3>My Tasks</h3>
-            <ul>
-              <li>Design dashboard UI</li>
-              <li>Review agent history</li>
-              <li>Connect Slack</li>
-            </ul>
+            <div className={styles.tasksContainer}>
+              {/* Active Tasks */}
+              <div className={styles.taskSection}>
+                <ul className={styles.taskList}>
+                  {tasks
+                    .filter(task => !task.completed)
+                    .map(task => (
+                      <li key={task.id} className={styles.taskItem}>
+                        <button 
+                          className={styles.taskCheckbox} 
+                          onClick={() => toggleTaskCompletion(task.id)}
+                          aria-label={`Mark ${task.text} as complete`}
+                        >
+                          <span className={styles.checkboxInner}></span>
+                        </button>
+                        <span className={styles.taskText}>{task.text}</span>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+              
+              {/* Completed Tasks */}
+              {tasks.some(task => task.completed) && (
+                <div className={styles.completedTasksSection}>
+                  <div className={styles.completedTasksHeader}>Completed</div>
+                  <ul className={styles.taskList}>
+                    {tasks
+                      .filter(task => task.completed)
+                      .map(task => (
+                        <li key={task.id} className={`${styles.taskItem} ${styles.completedTask}`}>
+                          <button 
+                            className={`${styles.taskCheckbox} ${styles.checked}`}
+                            onClick={() => toggleTaskCompletion(task.id)}
+                            aria-label={`Mark ${task.text} as incomplete`}
+                          >
+                            <span className={`${styles.checkboxInner} ${styles.checked}`}>
+                              <span className="material-icons" style={{ fontSize: '14px' }}>check</span>
+                            </span>
+                          </button>
+                          <span className={styles.taskText}>{task.text}</span>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
           <div className={styles.chatbox}>
             <div className={styles.chatHeader}>Chat</div>
@@ -152,6 +299,13 @@ export default function Dashboard() {
           </div>
         </section>
       </div>
+      
+      {/* Add Modal */}
+      <AddModal 
+        isOpen={isAddModalOpen} 
+        onClose={handleCloseAddModal} 
+        onOptionSelect={handleOptionSelect} 
+      />
     </div>
   );
 }

@@ -31,7 +31,10 @@ export default function SettingsPage() {
             width={120} 
             height={35} 
             priority
-            style={{objectFit: 'contain'}} 
+            style={{
+              objectFit: 'contain',
+              mixBlendMode: 'normal'
+            }} 
             className={styles.logo}
           />
         </div>
