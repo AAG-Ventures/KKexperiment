@@ -18,13 +18,23 @@ export default function Dashboard() {
             className={styles.logo}
           />
         </div>
+        <div className={styles.spacer}></div>
         <div className={styles.topBarRight}>
           <button className={styles.iconButton} title="Notifications">
-            <span className="material-icons" style={{fontSize: 32}}>notifications</span>
+            <span className="material-icons" style={{fontSize: 24}}>notifications</span>
+            <span className={styles.notificationBadge}>3</span>
           </button>
-          <Link href="/settings" className={styles.profileButton} title="Profile & Settings">
-            <span className="material-icons" style={{fontSize: 32}}>account_circle</span>
-          </Link>
+          <div className={styles.profileBar}>
+            <div className={styles.userInfo}>
+              <span className={styles.userName}>User Name</span>
+              <span className={styles.userRole}>Premium Account</span>
+            </div>
+            <div className={styles.profileImage}>
+              <Link href="/settings" title="Profile & Settings">
+                <span className="material-icons" style={{fontSize: 32}}>account_circle</span>
+              </Link>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -51,14 +61,76 @@ export default function Dashboard() {
 
         {/* Main Content */}
         <main className={styles.mainContent}>
-          <div className={styles.fileDisplay}>
-            <h2>Welcome to your Dashboard</h2>
-            <p>This is where your files and main workspace will appear.</p>
+          <h2 className={styles.pageTitle}>Dashboard Overview</h2>
+          
+          <div className={styles.cardGrid}>
+
+            {/* Recent Activity Card */}
+            <div className={styles.card}>
+              <div className={styles.cardHeader}>
+                <h3>Recent Activity</h3>
+                <span className="material-icons">history</span>
+              </div>
+              <div className={styles.cardContent}>
+                <ul className={styles.activityList}>
+                  <li className={styles.activityItem}>
+                    <span className="material-icons">edit</span>
+                    <div className={styles.activityText}>
+                      <div>Updated <strong>Marketing Plan</strong></div>
+                      <div className={styles.activityTime}>10 minutes ago</div>
+                    </div>
+                  </li>
+                  <li className={styles.activityItem}>
+                    <span className="material-icons">folder</span>
+                    <div className={styles.activityText}>
+                      <div>Created <strong>Q2 Reports</strong> folder</div>
+                      <div className={styles.activityTime}>Yesterday</div>
+                    </div>
+                  </li>
+                  <li className={styles.activityItem}>
+                    <span className="material-icons">chat</span>
+                    <div className={styles.activityText}>
+                      <div>New message in <strong>Team Chat</strong></div>
+                      <div className={styles.activityTime}>Yesterday</div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Quick Actions Card */}
+            <div className={styles.card}>
+              <div className={styles.cardHeader}>
+                <h3>Quick Actions</h3>
+                <span className="material-icons">bolt</span>
+              </div>
+              <div className={styles.cardContent}>
+                <div className={styles.actionButtons}>
+                  <button className={styles.actionButton}>
+                    <span className="material-icons">note_add</span>
+                    New File
+                  </button>
+                  <button className={styles.actionButton}>
+                    <span className="material-icons">upload_file</span>
+                    Upload
+                  </button>
+                  <button className={styles.actionButton}>
+                    <span className="material-icons">share</span>
+                    Share
+                  </button>
+                  <button className={styles.actionButton}>
+                    <span className="material-icons">search</span>
+                    Search
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </main>
 
         {/* Right Widgets */}
         <section className={styles.widgets}>
+
           <div className={styles.widgetBox}>
             <h3>My Tasks</h3>
             <ul>

@@ -44,14 +44,72 @@
   align-items: center;
   gap: 16px;
 }
-.iconButton, .profileButton {
+.iconButton {
   background: none;
   border: none;
   cursor: pointer;
   padding: 8px;
   border-radius: 50%;
   transition: background 0.2s;
-  font-size: 28px;
+  font-size: 24px;
+  position: relative;
+}
+
+.notificationBadge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: var(--brand-primary);
+  color: white;
+  font-size: 11px;
+  height: 16px;
+  min-width: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  padding: 0 4px;
+}
+
+.profileBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px 6px 16px;
+  background: var(--background-secondary);
+  border-radius: 30px;
+  transition: all 0.2s;
+  border: 1px solid var(--border-light);
+}
+
+.profileBar:hover {
+  background: var(--background-tertiary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+}
+
+.userName {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.userRole {
+  font-size: 11px;
+  color: var(--foreground-secondary);
+}
+
+.profileImage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .iconButton:hover, .profileButton:hover {
   background: var(--background-tertiary);
@@ -148,6 +206,148 @@
 }
 .fileDisplay p {
   color: var(--foreground-secondary);
+}
+
+.pageTitle {
+  margin: 0 0 24px 0;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: var(--foreground-primary);
+}
+
+/* Card Grid Styles */
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* Card Styles */
+.card {
+  background: var(--background-secondary);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid var(--border-light);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: var(--background-tertiary);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.cardHeader h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.cardContent {
+  padding: 20px;
+}
+
+/* Analytics Card Styles */
+.statsRow {
+  display: flex;
+  justify-content: space-between;
+}
+
+.stat {
+  text-align: center;
+  flex: 1;
+}
+
+.statValue {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  margin-bottom: 4px;
+}
+
+.statLabel {
+  font-size: 0.9rem;
+  color: var(--foreground-secondary);
+}
+
+/* Activity List Styles */
+.activityList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.activityItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.activityItem:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.activityItem span.material-icons {
+  color: var(--brand-primary);
+  font-size: 20px;
+}
+
+.activityText {
+  flex: 1;
+  font-size: 0.95rem;
+}
+
+.activityTime {
+  color: var(--foreground-secondary);
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+/* Quick Actions Styles */
+.actionButtons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.actionButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-primary);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--foreground-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.actionButton:hover {
+  background: var(--background-tertiary);
+  transform: translateY(-2px);
+}
+
+.actionButton span.material-icons {
+  font-size: 24px;
+  margin-bottom: 8px;
+  color: var(--brand-primary);
 }
 
 .widgets {
