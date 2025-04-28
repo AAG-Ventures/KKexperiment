@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import styles from './AddModal.module.css';
 
@@ -14,31 +16,31 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose, onOptionSelect }) 
     { 
       id: 'folder', 
       label: 'Folder', 
-      icon: 'folder',
+      iconClass: styles.folderIcon,
       description: 'Organize your content' 
     },
     { 
       id: 'file', 
       label: 'File', 
-      icon: 'description',
+      iconClass: styles.fileIcon,
       description: 'Create a new document' 
     },
     { 
       id: 'agent', 
       label: 'Agent', 
-      icon: 'smart_toy',
+      iconClass: styles.agentIcon,
       description: 'Add an AI assistant' 
     },
     { 
       id: 'workflow', 
       label: 'Workflow', 
-      icon: 'account_tree',
+      iconClass: styles.workflowIcon,
       description: 'Set up automation' 
     },
     { 
       id: 'custom', 
       label: 'Custom / Other', 
-      icon: 'add_circle',
+      iconClass: styles.customIcon,
       description: 'Create something else' 
     }
   ];
@@ -59,7 +61,7 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose, onOptionSelect }) 
             onClick={onClose}
             aria-label="Close"
           >
-            <span className="material-symbols-outlined" aria-hidden="true">close</span>
+            <span className={styles.closeIcon}>×</span>
           </button>
         </div>
         <div className={styles.optionsList}>
@@ -70,15 +72,13 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose, onOptionSelect }) 
               onClick={() => onOptionSelect(option.id)}
             >
               <div className={styles.optionIconWrapper}>
-                <span className={`material-symbols-outlined ${styles.optionIcon}`} aria-hidden="true">
-                  {option.icon}
-                </span>
+                <div className={`${styles.optionIcon} ${option.iconClass}`}></div>
               </div>
               <div className={styles.optionContent}>
                 <span className={styles.optionLabel}>{option.label}</span>
                 <span className={styles.optionDescription}>{option.description}</span>
               </div>
-              <span className={`material-symbols-outlined ${styles.arrowIcon}`} aria-hidden="true">arrow_forward_ios</span>
+              <span className={styles.arrowIcon}>›</span>
             </button>
           ))}
         </div>

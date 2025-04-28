@@ -21,7 +21,7 @@ export default function SettingsPage() {
     <div className={styles.settingsWrapper}>
       <div className={styles.header}>
         <Link href="/" className={styles.backLink}>
-          <span className="material-icons">arrow_back</span>
+          <span className="icon icon-arrow-back"></span>
           Back to Dashboard
         </Link>
         <div className={styles.logoContainer}>

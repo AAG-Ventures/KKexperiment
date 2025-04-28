@@ -110,7 +110,7 @@ export default function Dashboard() {
         <div className={styles.spacer}></div>
         <div className={styles.topBarRight}>
           <button className={styles.iconButton} title="Notifications">
-            <span className="material-icons" style={{fontSize: 24}}>notifications</span>
+            <span className="icon icon-notification"></span>
             <span className={styles.notificationBadge}>3</span>
           </button>
           <div className={styles.profileBar}>
@@ -119,8 +119,8 @@ export default function Dashboard() {
               <span className={styles.userRole}>Premium Account</span>
             </div>
             <div className={styles.profileImage}>
-              <Link href="/settings" title="Profile & Settings">
-                <span className="material-icons" style={{fontSize: 32}}>account_circle</span>
+              <Link href="/settings" className={styles.profileButton} title="Profile & Settings">
+                <span className="icon icon-account"></span>
               </Link>
             </div>
           </div>
@@ -146,12 +146,12 @@ export default function Dashboard() {
               <h3>Active Processes</h3>
               <ul className={styles.processList}>
                 <li>
-                  <span className="material-icons" style={{fontSize: 16, marginRight: 6}}>sync</span>
+                  <span className="icon icon-sync" style={{marginRight: 6}}></span>
                   Data Sync
                   <span className={styles.processStatus}>In Progress</span>
                 </li>
                 <li>
-                  <span className="material-icons" style={{fontSize: 16, marginRight: 6}}>description</span>
+                  <span className="icon icon-document" style={{marginRight: 6}}></span>
                   Report Generation
                   <span className={styles.processStatus + ' ' + styles.complete}>Complete</span>
                 </li>
@@ -175,26 +175,26 @@ export default function Dashboard() {
             <div className={styles.card}>
               <div className={styles.cardHeader}>
                 <h3>Recent Activity</h3>
-                <span className="material-icons">history</span>
+                <span className="icon icon-history"></span>
               </div>
               <div className={styles.cardContent}>
                 <ul className={styles.activityList}>
                   <li className={styles.activityItem}>
-                    <span className="material-icons">edit</span>
+                    <span className="icon icon-edit"></span>
                     <div className={styles.activityText}>
                       <div>Updated <strong>Marketing Plan</strong></div>
                       <div className={styles.activityTime}>10 minutes ago</div>
                     </div>
                   </li>
                   <li className={styles.activityItem}>
-                    <span className="material-icons">folder</span>
+                    <span className="icon icon-folder"></span>
                     <div className={styles.activityText}>
                       <div>Created <strong>Q2 Reports</strong> folder</div>
                       <div className={styles.activityTime}>Yesterday</div>
                     </div>
                   </li>
                   <li className={styles.activityItem}>
-                    <span className="material-icons">chat</span>
+                    <span className="icon icon-chat"></span>
                     <div className={styles.activityText}>
                       <div>New message in <strong>Team Chat</strong></div>
                       <div className={styles.activityTime}>Yesterday</div>
@@ -208,24 +208,24 @@ export default function Dashboard() {
             <div className={styles.card}>
               <div className={styles.cardHeader}>
                 <h3>Quick Actions</h3>
-                <span className="material-icons">bolt</span>
+                <span className="icon icon-bolt"></span>
               </div>
               <div className={styles.cardContent}>
                 <div className={styles.actionButtons}>
                   <button className={styles.actionButton}>
-                    <span className="material-icons">note_add</span>
-                    New File
+                    <span className="icon icon-note-add"></span>
+                    New Note
                   </button>
                   <button className={styles.actionButton}>
-                    <span className="material-icons">upload_file</span>
+                    <span className="icon icon-upload"></span>
                     Upload
                   </button>
                   <button className={styles.actionButton}>
-                    <span className="material-icons">share</span>
+                    <span className="icon icon-share"></span>
                     Share
                   </button>
                   <button className={styles.actionButton}>
-                    <span className="material-icons">search</span>
+                    <span className="icon icon-search"></span>
                     Search
                   </button>
                 </div>
@@ -275,7 +275,7 @@ export default function Dashboard() {
                             aria-label={`Mark ${task.text} as incomplete`}
                           >
                             <span className={`${styles.checkboxInner} ${styles.checked}`}>
-                              <span className="material-icons" style={{ fontSize: '14px' }}>check</span>
+                              <span className="icon icon-check" style={{ transform: 'scale(0.7)' }}></span>
                             </span>
                           </button>
                           <span className={styles.taskText}>{task.text}</span>
