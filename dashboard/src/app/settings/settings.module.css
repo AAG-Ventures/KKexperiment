@@ -1,0 +1,341 @@
+.settingsWrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  color: var(--foreground-primary);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 0 0.5rem;
+}
+
+.backLink {
+  display: flex;
+  align-items: center;
+  color: var(--brand-primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-pill);
+}
+
+.backLink:hover {
+  color: var(--brand-primary-hover);
+  background-color: var(--background-tertiary);
+}
+
+.backLink span {
+  margin-right: 0.5rem;
+}
+
+.title {
+  font-size: 2.2rem;
+  margin-bottom: 2rem;
+  font-weight: var(--font-weight-bold);
+  background: linear-gradient(135deg, var(--brand-gradient-start), var(--brand-gradient-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline-block;
+}
+
+.settingsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+.settingsSection {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem;
+  height: fit-content;
+  transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
+  border: 1px solid var(--border-light);
+}
+
+.settingsSection h2 {
+  font-size: 1.4rem;
+  margin-bottom: 1.5rem;
+  color: var(--foreground-primary);
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 0.75rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.02em;
+}
+
+.settingItem {
+  margin-bottom: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.settingItem label {
+  font-weight: var(--font-weight-medium);
+  color: var(--foreground-secondary);
+  letter-spacing: 0.01em;
+}
+
+.settingItem input[type="text"],
+.settingItem input[type="email"],
+.settingItem select {
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--input-border);
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  width: 60%;
+  font-size: 0.9rem;
+}
+
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle label {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 13px;
+}
+
+.toggle label:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+.toggle input:checked + label {
+  background-color: #2196F3;
+}
+
+.toggle input:checked + label:before {
+  transform: translateX(24px);
+}
+
+/* Connected services styles */
+.connectedTools {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.toolItem {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--background-tertiary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+}
+
+.toolIcon {
+  font-size: 1.5rem;
+  margin-right: 0.75rem;
+}
+
+.toolName {
+  flex: 1;
+  font-weight: 500;
+}
+
+.connectButton {
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--brand-primary);
+  background: var(--background-primary);
+  color: var(--brand-primary);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+}
+
+.connectButton:hover {
+  background: #e6f2ff;
+}
+
+.connectButton.connected {
+  background: linear-gradient(135deg, var(--brand-gradient-start), var(--brand-gradient-end));
+  color: var(--button-primary-text);
+  border: none;
+}
+
+.moreButton {
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background: #f5f5f5;
+  border: 1px dashed #ccc;
+  border-radius: 4px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.moreButton:hover {
+  background: #eee;
+  color: #333;
+}
+
+/* Theme selector styles */
+.themeSelector {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.themeOption {
+  display: flex;
+  align-items: center;
+}
+
+.themeOption input {
+  margin-right: 0.75rem;
+}
+
+.themeOption label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.themeSample {
+  width: 40px;
+  height: 24px;
+  border-radius: 4px;
+  margin-right: 0.75rem;
+  border: 1px solid #ddd;
+}
+
+.lightTheme {
+  background: white;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
+}
+
+.darkTheme {
+  background: #222;
+}
+
+.systemTheme {
+  background: linear-gradient(to right, white 50%, #222 50%);
+}
+
+/* Quick actions styles */
+.quickActionsInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.shortcutItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.shortcutItem span {
+  color: #444;
+}
+
+.shortcutItem kbd {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  box-shadow: 0 1px 1px rgba(0,0,0,.1);
+  color: #666;
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1;
+  padding: 0.25rem 0.4rem;
+  white-space: nowrap;
+}
+
+/* Action buttons */
+.actionButton {
+  padding: 0.6rem 1rem;
+  background: linear-gradient(135deg, var(--brand-gradient-start), var(--brand-gradient-end));
+  color: var(--button-primary-text);
+  border: none;
+  border-radius: var(--radius-pill);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  width: 100%;
+  margin-top: 0.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.actionButton:hover {
+  background: #0d8aee;
+}
+
+.dangerButton {
+  background: #ff5252;
+  margin-top: 1rem;
+}
+
+.dangerButton:hover {
+  background: #ff3838;
+}
+
+.accountActions {
+  display: flex;
+  flex-direction: column;
+}
+
+.notification {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, var(--success), var(--brand-gradient-end));
+  color: white;
+  border-radius: var(--radius-md);
+  text-align: center;
+  animation: fadeIn 0.3s ease-in-out;
+  box-shadow: var(--shadow-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.logo {
+  transition: opacity var(--transition-normal);
+  height: auto;
+}

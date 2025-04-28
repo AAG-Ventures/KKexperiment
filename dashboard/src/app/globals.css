@@ -1,13 +1,127 @@
+/* Base Theme Variables */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Font */
+  --font-sans: var(--font-space-grotesk), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+  
+  /* Font Weights */
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  
+  /* Border Radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-pill: 9999px;
+  
+  /* Transition */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+  --transition-slow: 0.4s ease;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Light Theme (default) - MindExtension Style */
+.light-theme {
+  /* Colors */
+  --background-primary: #ffffff;
+  --background-secondary: #f8fafc;
+  --background-tertiary: #f1f5f9;
+  
+  --foreground-primary: #0f172a;
+  --foreground-secondary: #334155;
+  --foreground-tertiary: #64748b;
+  
+  --border-light: #e2e8f0;
+  --border-medium: #cbd5e1;
+  --border-heavy: #94a3b8;
+  
+  /* Brand Colors - MindExtension */
+  --brand-primary: #7c3aed; /* Purple-600 */
+  --brand-primary-hover: #8b5cf6; /* Purple-500 */
+  --brand-secondary: #2563eb; /* Blue-600 */
+  --brand-secondary-hover: #3b82f6; /* Blue-500 */
+  --brand-accent: #ec4899; /* Pink-500 */
+  --brand-gradient-start: #7c3aed;
+  --brand-gradient-end: #2563eb;
+  
+  /* UI Colors */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
+  
+  /* Component Colors */
+  --sidebar-bg: var(--background-secondary);
+  --topbar-bg: var(--background-primary);
+  --card-bg: var(--background-primary);
+  --button-primary-bg: var(--brand-primary);
+  --button-primary-text: white;
+  --input-bg: white;
+  --input-border: var(--border-medium);
+  --input-text: var(--foreground-primary);
+  
+  /* Shadow */
+  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.1), 0 2px 4px -1px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -2px rgba(15, 23, 42, 0.05);
+}
+
+/* Dark Theme - MindExtension Style */
+.dark-theme {
+  /* Colors */
+  --background-primary: #0f172a;
+  --background-secondary: #1e293b;
+  --background-tertiary: #334155;
+  
+  --foreground-primary: #f8fafc;
+  --foreground-secondary: #e2e8f0;
+  --foreground-tertiary: #cbd5e1;
+  
+  --border-light: #334155;
+  --border-medium: #475569;
+  --border-heavy: #64748b;
+  
+  /* Brand Colors - MindExtension */
+  --brand-primary: #a78bfa; /* Purple-400 - lighter for dark mode */
+  --brand-primary-hover: #c4b5fd; /* Purple-300 */
+  --brand-secondary: #60a5fa; /* Blue-400 - lighter for dark mode */
+  --brand-secondary-hover: #93c5fd; /* Blue-300 */
+  --brand-accent: #f472b6; /* Pink-400 - lighter for dark mode */
+  --brand-gradient-start: #a78bfa;
+  --brand-gradient-end: #60a5fa;
+  
+  /* UI Colors - adjusted for dark mode */
+  --success: #34d399;
+  --warning: #fbbf24;
+  --error: #f87171;
+  --info: #60a5fa;
+  
+  /* Component Colors */
+  --sidebar-bg: var(--background-secondary);
+  --topbar-bg: var(--background-primary);
+  --card-bg: var(--background-secondary);
+  --button-primary-bg: var(--brand-primary);
+  --button-primary-text: white;
+  --input-bg: var(--background-tertiary);
+  --input-border: var(--border-medium);
+  --input-text: var(--foreground-primary);
+  
+  /* Shadow - adjusted for dark mode */
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.24);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
 }
 
 html,
@@ -17,11 +131,12 @@ body {
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--foreground-primary);
+  background: var(--background-primary);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
 * {
