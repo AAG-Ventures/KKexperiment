@@ -11,6 +11,7 @@
   display: flex;
   flex-direction: column;
   transition: background-color var(--transition-normal), color var(--transition-normal);
+  overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
 .topBar {
@@ -25,6 +26,11 @@
   z-index: 10;
   transition: background-color var(--transition-normal), border-color var(--transition-normal);
   box-shadow: var(--shadow-sm);
+  
+  @media (max-width: 768px) {
+    padding: 0 16px;
+    height: 64px;
+  }
 }
 .logoArea {
   display: flex;
@@ -83,6 +89,17 @@
   border-radius: 30px;
   transition: all 0.2s;
   border: 1px solid var(--border-light);
+  
+  @media (max-width: 768px) {
+    padding: 6px 8px 6px 12px;
+  }
+  
+  @media (max-width: 576px) {
+    /* Hide text on very small screens, just show icon */
+    .userInfo {
+      display: none;
+    }
+  }
 }
 
 .profileBar:hover {
@@ -124,6 +141,35 @@
   gap: 32px;
   padding: 32px 32px 0 32px;
   box-sizing: border-box;
+  
+  /* Responsive adjustments */
+  @media (max-width: 1200px) {
+    grid-template-columns: 200px 1fr 300px;
+    gap: 20px;
+    padding: 24px 24px 0 24px;
+  }
+  
+  @media (max-width: 992px) {
+    grid-template-columns: 180px 1fr;
+    gap: 20px;
+  }
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 16px 16px 0 16px;
+  }
+}
+
+.mobileMenuWrapper {
+  display: none;
+  grid-column: 1 / -1;
+  width: 100%;
+  margin-bottom: 16px;
+  
+  @media (max-width: 768px) {
+    display: block;
+  }
 }
 
 .sidebar {
@@ -138,6 +184,23 @@
   justify-content: space-between;
   transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
   border: 1px solid var(--border-light);
+  
+  @media (max-width: 992px) {
+    min-width: 180px;
+    padding: 20px 12px 12px 12px;
+  }
+  
+  @media (max-width: 768px) {
+    display: none; /* Hide desktop sidebar on mobile */
+  }
+}
+
+.sidebarMobile {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: calc(100vh - 60px);
 }
 
 .sidebarBottom {
@@ -145,6 +208,10 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  
+  @media (max-width: 768px) {
+    margin-top: 20px;
+  }
 }
 .sectionTitle {
   font-weight: var(--font-weight-semibold);

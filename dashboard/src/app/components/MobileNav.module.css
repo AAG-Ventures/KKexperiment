@@ -1,0 +1,123 @@
+.mobileMenuToggle {
+  display: none;
+  position: relative;
+  width: 32px;
+  height: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 101;
+  margin-right: 12px;
+}
+
+.bar {
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--foreground-primary);
+  transition: all 0.3s;
+}
+
+.bar:nth-child(1) {
+  top: 0;
+}
+
+.bar:nth-child(2) {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.bar:nth-child(3) {
+  bottom: 0;
+}
+
+.mobileMenuToggle.active .bar:nth-child(1) {
+  transform: rotate(45deg);
+  top: 10px;
+}
+
+.mobileMenuToggle.active .bar:nth-child(2) {
+  opacity: 0;
+}
+
+.mobileMenuToggle.active .bar:nth-child(3) {
+  transform: rotate(-45deg);
+  bottom: 11px;
+}
+
+.mobileNavOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.3s, visibility 0s 0.3s;
+  backdrop-filter: blur(2px);
+}
+
+.mobileNavOverlay.open {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.3s, visibility 0s;
+}
+
+.mobileNavContent {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  background: var(--sidebar-bg);
+  z-index: 100;
+  transform: translateX(-100%);
+  transition: transform 0.3s;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  border-right: 1px solid var(--border-light);
+}
+
+.mobileNavContent.open {
+  transform: translateX(0);
+}
+
+.mobileNavHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.mobileNavHeader h2 {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  margin: 0;
+  color: var(--foreground-primary);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  color: var(--foreground-secondary);
+  cursor: pointer;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .mobileMenuToggle {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+}

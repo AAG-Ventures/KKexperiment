@@ -23,6 +23,11 @@
   animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
   transform-origin: center center;
+  
+  @media (max-width: 576px) {
+    width: 95vw;
+    max-width: 95vw;
+  }
 }
 
 .modalHeader {
@@ -87,6 +92,11 @@
   flex-wrap: wrap;
   gap: 16px;
   justify-content: center;
+  
+  @media (max-width: 576px) {
+    padding: 16px;
+    gap: 10px;
+  }
 }
 
 .optionButton {
@@ -105,6 +115,17 @@
   width: 100px;
   height: 100px;
   justify-content: center;
+  
+  @media (max-width: 576px) {
+    width: 80px;
+    height: 80px;
+    padding: 12px 8px;
+  }
+  
+  @media (max-width: 360px) {
+    width: 70px;
+    height: 70px;
+  }
 }
 
 .optionButton::after {
@@ -342,5 +363,25 @@
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 576px) {
+  .modalHeader {
+    padding: 16px 20px;
+  }
+  
+  .modalHeader h3 {
+    font-size: var(--font-size-sm);
+  }
+  
+  .optionIcon {
+    height: 40px;
+    width: 40px;
+  }
+  
+  .optionLabel {
+    font-size: var(--font-size-xs);
   }
 }

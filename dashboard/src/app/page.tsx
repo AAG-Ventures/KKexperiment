@@ -1,10 +1,12 @@
 "use client";
 
+import React from 'react';
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import styles from "./page.module.css";
 import AddModal from "./components/AddModal";
+import MobileNav from "./components/MobileNav";
 
 // Task type definition
 type Task = {
@@ -129,7 +131,47 @@ export default function Dashboard() {
 
       {/* Main Layout */}
       <div className={styles.layout}>
-        {/* Sidebar */}
+        {/* Mobile Menu Button - Only visible on mobile */}
+        <div className={styles.mobileMenuWrapper}>
+          <MobileNav>
+            <aside className={styles.sidebarMobile}>
+              <nav>
+                <div className={styles.sectionTitle}>Knowledgebase</div>
+                {/* Example folders/files */}
+                <ul className={styles.kbList}>
+                  <li>📁 Projects</li>
+                  <li>📄 Meeting Notes</li>
+                  <li>📁 Shared Space</li>
+                </ul>
+              </nav>
+              <div className={styles.sidebarBottom}>
+                {/* Process Widget */}
+                <div className={styles.processWidget}>
+                  <h3>Active Processes</h3>
+                  <ul className={styles.processList}>
+                    <li>
+                      <span className="icon icon-sync" style={{marginRight: 6}}></span>
+                      Data Sync
+                      <span className={styles.processStatus}>In Progress</span>
+                    </li>
+                    <li>
+                      <span className="icon icon-document" style={{marginRight: 6}}></span>
+                      Report Generation
+                      <span className={styles.processStatus + ' ' + styles.complete}>Complete</span>
+                    </li>
+                  </ul>
+                </div>
+                <button 
+                  className={styles.createButton}
+                  onClick={handleOpenAddModal}
+                  aria-label="Create new item"
+                >＋</button>
+              </div>
+            </aside>
+          </MobileNav>
+        </div>
+        
+        {/* Desktop Sidebar - Hidden on mobile */}
         <aside className={styles.sidebar}>
           <nav>
             <div className={styles.sectionTitle}>Knowledgebase</div>
