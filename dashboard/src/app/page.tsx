@@ -5,12 +5,18 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import styles from "./page.module.css";
 import AddModal from "./components/AddModal";
+import { DraggableWidgetContainer } from "./components/DraggableWidgetContainer";
 
-// Task type definition
+// Type definitions
 type Task = {
   id: string;
   text: string;
   completed: boolean;
+};
+
+type WidgetItem = {
+  id: string;
+  content: React.ReactNode;
 };
 
 export default function Dashboard() {
@@ -21,6 +27,14 @@ export default function Dashboard() {
   // Expandable folders state
   const [isProjectsExpanded, setIsProjectsExpanded] = useState(false);
   const [isSharedSpaceExpanded, setIsSharedSpaceExpanded] = useState(false);
+  
+  // Sidebar collapsed state
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  
+  // Toggle sidebar function
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed(!isSidebarCollapsed);
+  };
   
   // Tab system state
   const [openTabs, setOpenTabs] = useState([
@@ -81,7 +95,7 @@ export default function Dashboard() {
     console.log(`Selected option: ${option}`);
     // Here you would handle each option differently
     // For this implementation, we'll just close the modal
-    setIsAddModalOpen(false);
+    handleCloseAddModal();
     
     // You can add specific logic for each option type here
     switch (option) {
@@ -90,6 +104,11 @@ export default function Dashboard() {
         break;
       case 'file':
         // Logic for creating a file
+        break;
+      case 'widget':
+        // Logic for creating a new dashboard widget
+        console.log('Creating a new widget');
+        // Here you could show a modal for widget creation or add a default widget
         break;
       case 'agent':
         // Logic for creating an agent
@@ -109,14 +128,15 @@ export default function Dashboard() {
       <header className={styles.topBar}>
         <div className={styles.logoArea}>
           <Image 
-            src="/logo.png" 
+            src={`/logo.png?v=${new Date().getTime()}`} 
             alt="Mind Extension Logo" 
-            width={140} 
-            height={40} 
+            width={180} 
+            height={60} 
             priority
             style={{
               objectFit: 'contain',
-              mixBlendMode: 'normal'
+              maxHeight: '40px',
+              width: 'auto'
             }} 
             className={styles.logo}
           />
@@ -142,80 +162,130 @@ export default function Dashboard() {
       </header>
 
       {/* Main Layout */}
-      <div className={styles.layout}>
-        {/* Sidebar */}
-        <aside className={styles.sidebar}>
-          <nav>
-            <div className={styles.sectionTitle}>Knowledgebase</div>
-            {/* Example folders/files */}
-            <ul className={styles.kbList}>
-              <li className={styles.folderItem}>
+      <div className={`${styles.layout} ${isSidebarCollapsed ? styles.layoutCollapsed : ''}`}>
+        {/* Sticky Create Button */}
+        <button 
+          className={styles.stickyCreateButton}
+          onClick={handleOpenAddModal}
+          aria-label="Create new item"
+        >
+          <span className={styles.plusIcon}>＋</span>
+        </button>
+        
+        {/* Left Sidebar - Full version */}
+        <div className={styles.leftColumn}>
+          {/* Toggle button at the edge */}
+          <button 
+            className={`${styles.sidebarToggle} ${isSidebarCollapsed ? styles.sidebarToggleCollapsed : ''}`} 
+            onClick={toggleSidebar}
+            aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15 6L9 12L15 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+            {!isSidebarCollapsed ? (
+              /* Show full widgets when expanded */
+              <DraggableWidgetContainer
+                columnId="left-column"
+                initialItems={[
+                  {
+                    id: 'knowledgebase',
+                    content: (
+                  <aside className={styles.knowledgeWidget}>
+                    <div className={styles.widgetHeader}>
+                      <h3>Knowledgebase</h3>
+                      <span className={styles.widgetIcon}>📚</span>
+                    </div>
+                    {/* Example folders/files */}
+                    <nav>
+                      <ul className={styles.kbList}>
+                        <li className={styles.folderItem}>
+                          <div 
+                            className={styles.folderHeader} 
+                            onClick={() => setIsProjectsExpanded(!isProjectsExpanded)}
+                          >
+                            <span>{isProjectsExpanded ? '📂' : '📁'} Topics</span>
+                            <span className={styles.expandIcon}>{isProjectsExpanded ? '▼' : '▶'}</span>
+                          </div>
+                          {isProjectsExpanded && (
+                            <ul className={styles.nestedList}>
+                              <li className={styles.nestedItem}>💼 Work</li>
+                              <li className={styles.nestedItem}>❤️ Health</li>
+                              <li className={styles.nestedItem}>💰 Finance</li>
+                              <li className={styles.nestedItem}>✈️ Travel</li>
+                              <li className={styles.nestedItem}>🎮 Hobbies</li>
+                            </ul>
+                          )}
+                        </li>
+                        <li>📄 Meeting Notes</li>
+                        <li className={styles.folderItem}>
+                          <div 
+                            className={styles.folderHeader} 
+                            onClick={() => setIsSharedSpaceExpanded(!isSharedSpaceExpanded)}
+                          >
+                            <span>{isSharedSpaceExpanded ? '📂' : '📁'} Shared Space</span>
+                            <span className={styles.expandIcon}>{isSharedSpaceExpanded ? '▼' : '▶'}</span>
+                          </div>
+                          {isSharedSpaceExpanded && (
+                            <ul className={styles.nestedList}>
+                              <li className={styles.nestedItem}>📈 Marketing Plan</li>
+                              <li className={styles.nestedItem}>📚 Team Documentation</li>
+                              <li className={styles.nestedItem}>📊 Analytics</li>
+                            </ul>
+                          )}
+                        </li>
+                      </ul>
+                    </nav>
+                  </aside>
+                )
+              },
+              {
+                id: 'active-processes',
+                content: (
+                  <aside className={styles.activeProcessesWidget}>
+                    <div className={styles.widgetHeader}>
+                      <h3>Active Processes</h3>
+                      <span className={styles.widgetIcon}>🔄</span>
+                    </div>
+                    <div className={styles.processList}>
+                      <div className={styles.processItem}>
+                        <div className={styles.processIcon}>🔄</div>
+                        <div className={styles.processDetails}>
+                          <div className={styles.processName}>Data Sync</div>
+                          <div className={styles.processStatus}>
+                            <span className={styles.statusBadgeInProgress}>In Progress</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </aside>
+                  )
+                }
+              ]}
+              />
+            ) : (
+              /* Show mini icons when collapsed */
+              <div className={styles.miniSidebar}>
                 <div 
-                  className={styles.folderHeader} 
-                  onClick={() => setIsProjectsExpanded(!isProjectsExpanded)}
+                  className={styles.miniWidgetIcon} 
+                  title="Knowledgebase"
+                  onClick={toggleSidebar}
                 >
-                  <span>{isProjectsExpanded ? '📂' : '📁'} Topics</span>
-                  <span className={styles.expandIcon}>{isProjectsExpanded ? '▼' : '▶'}</span>
+                  <span className={styles.bookIcon}></span>
                 </div>
-                {isProjectsExpanded && (
-                  <ul className={styles.nestedList}>
-                    <li className={styles.nestedItem}>💼 Work</li>
-                    <li className={styles.nestedItem}>❤️ Health</li>
-                    <li className={styles.nestedItem}>💰 Finance</li>
-                    <li className={styles.nestedItem}>✈️ Travel</li>
-                    <li className={styles.nestedItem}>🎮 Hobbies</li>
-                  </ul>
-                )}
-              </li>
-              <li>📄 Meeting Notes</li>
-              <li className={styles.folderItem}>
+                
                 <div 
-                  className={styles.folderHeader} 
-                  onClick={() => setIsSharedSpaceExpanded(!isSharedSpaceExpanded)}
+                  className={styles.miniWidgetIcon} 
+                  title="Active Processes"
+                  onClick={toggleSidebar}
                 >
-                  <span>{isSharedSpaceExpanded ? '📂' : '📁'} Shared Space</span>
-                  <span className={styles.expandIcon}>{isSharedSpaceExpanded ? '▼' : '▶'}</span>
+                  <span className={styles.clockIcon}></span>
                 </div>
-                {isSharedSpaceExpanded && (
-                  <ul className={styles.nestedList}>
-                    <li className={styles.nestedItem}>📈 Marketing Plan</li>
-                    <li className={styles.nestedItem}>📚 Team Documentation</li>
-                  </ul>
-                )}
-              </li>
-            </ul>
-          </nav>
-          <div className={styles.sidebarBottom}>
-            {/* Process Widget */}
-            <div className={styles.processWidget}>
-              <div className={styles.sectionHeader}>
-                <h3>Active Processes</h3>
-                <span style={{fontSize: 22}}>⏳</span>
               </div>
-              <ul className={styles.processList}>
-                <li>
-                  <div className={styles.processInfo}>
-                    <span style={{fontSize: 18, marginRight: 8}}>🔄</span>
-                    <span>Data Sync</span>
-                  </div>
-                  <span className={styles.processStatus}>In Progress</span>
-                </li>
-                <li>
-                  <div className={styles.processInfo}>
-                    <span style={{fontSize: 18, marginRight: 8}}>📄</span>
-                    <span>Report Generation</span>
-                  </div>
-                  <span className={styles.processStatus + ' ' + styles.complete}>Complete</span>
-                </li>
-              </ul>
-            </div>
-            <button 
-              className={styles.createButton}
-              onClick={handleOpenAddModal}
-              aria-label="Create new item"
-            >＋</button>
+            )}
           </div>
-        </aside>
 
         {/* Main Content */}
         <main className={styles.mainContent}>
@@ -287,9 +357,9 @@ export default function Dashboard() {
 
             {/* Recent Activity Card */}
             <div className={styles.card}>
-              <div className={styles.cardHeader}>
+              <div className={styles.widgetHeader}>
                 <h3>Recent Activity</h3>
-                <span style={{fontSize: 22}}>🕒</span>
+                <span className={styles.widgetIcon}>🕒</span>
               </div>
               <div className={styles.cardContent}>
                 <ul className={styles.activityList}>
@@ -320,9 +390,9 @@ export default function Dashboard() {
 
             {/* Quick Actions Card */}
             <div className={styles.card}>
-              <div className={styles.cardHeader}>
+              <div className={styles.widgetHeader}>
                 <h3>Quick Actions</h3>
-                <span style={{fontSize: 22}}>⚡</span>
+                <span className={styles.widgetIcon}>⚡</span>
               </div>
               <div className={styles.cardContent}>
                 <div className={styles.actionButtons}>
@@ -350,75 +420,87 @@ export default function Dashboard() {
 
         {/* Right Widgets */}
         <section className={styles.widgets}>
-
-          <div className={styles.widgetBox}>
-            <div className={styles.sectionHeader}>
-              <h3>My Tasks</h3>
-              <span style={{fontSize: 22}}>✅</span>
-            </div>
-            <div className={styles.tasksContainer}>
-              {/* Active Tasks */}
-              <div className={styles.taskSection}>
-                <ul className={styles.taskList}>
-                  {tasks
-                    .filter(task => !task.completed)
-                    .map(task => (
-                      <li key={task.id} className={styles.taskItem}>
-                        <button 
-                          className={styles.taskCheckbox} 
-                          onClick={() => toggleTaskCompletion(task.id)}
-                          aria-label={`Mark ${task.text} as complete`}
-                        >
-                          <span className={styles.checkboxInner}></span>
-                        </button>
-                        <span className={styles.taskText}>{task.text}</span>
-                      </li>
-                    ))}
-                </ul>
-              </div>
-              
-              {/* Completed Tasks */}
-              {tasks.some(task => task.completed) && (
-                <div className={styles.completedTasksSection}>
-                  <div className={styles.completedTasksHeader}>Completed</div>
-                  <ul className={styles.taskList}>
-                    {tasks
-                      .filter(task => task.completed)
-                      .map(task => (
-                        <li key={task.id} className={`${styles.taskItem} ${styles.completedTask}`}>
-                          <button 
-                            className={`${styles.taskCheckbox} ${styles.checked}`}
-                            onClick={() => toggleTaskCompletion(task.id)}
-                            aria-label={`Mark ${task.text} as incomplete`}
-                          >
-                            <span className={`${styles.checkboxInner} ${styles.checked}`}>
-                              <span className="material-icons" style={{ fontSize: '14px' }}>check</span>
-                            </span>
-                          </button>
-                          <span className={styles.taskText}>{task.text}</span>
-                        </li>
-                      ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className={styles.chatbox}>
-            <div className={styles.chatHeader}>
-              <div className={styles.sectionHeader}>
-                <span>Chat</span>
-                <span style={{fontSize: 20}}>💬</span>
-              </div>
-            </div>
-            <div className={styles.chatTabs}>
-              <button className={styles.activeTab}>General</button>
-              <button>New Tab ＋</button>
-            </div>
-            <div className={styles.chatBody}>
-              <div className={styles.chatMsg}>🤖 Hi! How can I help you today?</div>
-            </div>
-            <input className={styles.chatInput} placeholder="Type a message..." />
-          </div>
+          <DraggableWidgetContainer
+            columnId="right-column"
+            initialItems={[
+              {
+                id: 'tasks',
+                content: (
+                  <div className={styles.widgetBox}>
+                    <div className={styles.widgetHeader}>
+                      <h3>My Tasks</h3>
+                      <span className={styles.widgetIcon}>✅</span>
+                    </div>
+                    <div className={styles.tasksContainer}>
+                      {/* Active Tasks */}
+                      <div className={styles.taskSection}>
+                        <ul className={styles.taskList}>
+                          {tasks
+                            .filter(task => !task.completed)
+                            .map(task => (
+                              <li key={task.id} className={styles.taskItem}>
+                                <button 
+                                  className={styles.taskCheckbox} 
+                                  onClick={() => toggleTaskCompletion(task.id)}
+                                  aria-label={`Mark ${task.text} as complete`}
+                                >
+                                  <span className={styles.checkboxInner}></span>
+                                </button>
+                                <span className={styles.taskText}>{task.text}</span>
+                              </li>
+                            ))}
+                        </ul>
+                      </div>
+                      
+                      {/* Completed Tasks */}
+                      {tasks.some(task => task.completed) && (
+                        <div className={styles.completedTasksSection}>
+                          <div className={styles.completedTasksHeader}>Completed</div>
+                          <ul className={styles.taskList}>
+                            {tasks
+                              .filter(task => task.completed)
+                              .map(task => (
+                                <li key={task.id} className={`${styles.taskItem} ${styles.completedTask}`}>
+                                  <button 
+                                    className={`${styles.taskCheckbox} ${styles.checked}`}
+                                    onClick={() => toggleTaskCompletion(task.id)}
+                                    aria-label={`Mark ${task.text} as incomplete`}
+                                  >
+                                    <span className={`${styles.checkboxInner} ${styles.checked}`}>
+                                      <span className="material-icons" style={{ fontSize: '14px' }}>check</span>
+                                    </span>
+                                  </button>
+                                  <span className={styles.taskText}>{task.text}</span>
+                                </li>
+                              ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              },
+              {
+                id: 'chat',
+                content: (
+                  <div className={styles.chatbox}>
+                    <div className={styles.widgetHeader}>
+                      <h3>Chat</h3>
+                      <span className={styles.widgetIcon}>💬</span>
+                    </div>
+                    <div className={styles.chatTabs}>
+                      <button className={styles.activeTab}>General</button>
+                      <button>New Tab ＋</button>
+                    </div>
+                    <div className={styles.chatBody}>
+                      <div className={styles.chatMsg}>🤖 Hi! How can I help you today?</div>
+                    </div>
+                    <input className={styles.chatInput} placeholder="Type a message..." />
+                  </div>
+                )
+              }
+            ]}
+          />
         </section>
       </div>
       
@@ -427,6 +509,10 @@ export default function Dashboard() {
         isOpen={isAddModalOpen} 
         onClose={handleCloseAddModal} 
         onOptionSelect={handleOptionSelect} 
+        onFolderCreate={(folderName, files) => {
+          console.log(`Creating folder: ${folderName} with ${files.length} files`);
+          // Handle folder creation logic here
+        }}
       />
     </div>
   );

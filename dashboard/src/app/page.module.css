@@ -4,7 +4,7 @@
 }
 
 .dashboardWrapper {
-  min-height: 100vh;
+  height: 100vh; /* Use exact viewport height */
   background: var(--background-primary);
   font-family: var(--font-sans);
   color: var(--foreground-primary);
@@ -12,6 +12,7 @@
   flex-direction: column;
   transition: background-color var(--transition-normal), color var(--transition-normal);
   overflow-x: hidden; /* Prevent horizontal scrolling */
+  overflow-y: hidden; /* Prevent vertical scrolling at container level */
 }
 
 .topBar {
@@ -41,8 +42,10 @@
 .logo {
   transition: opacity var(--transition-normal);
   height: auto;
-  filter: drop-shadow(0px 0px 1px rgba(0,0,0,0.1));
+  filter: drop-shadow(0px 1px 2px rgba(0,0,0,0.08));
   isolation: isolate;
+  max-height: 40px;
+  display: block;
 }
 .spacer {
   flex: 1;
@@ -135,177 +138,271 @@
 }
 
 .layout {
-  flex: 1;
   display: grid;
-  grid-template-columns: 240px 1fr 340px;
-  gap: 24px;
-  padding: 24px;
+  grid-template-areas:
+    "leftColumn main widgets";
+  grid-template-columns: minmax(250px, 300px) 1fr minmax(280px, 350px);
+  grid-template-rows: 1fr;
+  height: calc(100vh - 72px); /* Full height minus header */
+  gap: clamp(16px, 2vw, 32px);
+  padding: clamp(16px, 2vw, 32px) clamp(12px, 2vw, 24px) 0 clamp(12px, 2vw, 24px);
+  position: relative;
   box-sizing: border-box;
-  height: calc(100vh - 72px); /* Subtract header height */
-  max-height: calc(100vh - 72px);
-  overflow: hidden;
-  
-  /* Responsive adjustments */
-  @media (max-width: 1200px) {
-    grid-template-columns: 200px 1fr 300px;
-    gap: 20px;
-    padding: 24px 24px 0 24px;
-  }
-  
-  @media (max-width: 992px) {
-    grid-template-columns: 180px 1fr;
-    gap: 20px;
-  }
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 16px 16px 0 16px;
-  }
+  transition: grid-template-columns 0.3s ease;
 }
 
-.mobileMenuWrapper {
-  display: none;
-  grid-column: 1 / -1;
+.layoutCollapsed {
+  grid-template-columns: 60px 1fr minmax(280px, 350px);
+}
+
+.miniLeftColumn {
+  grid-area: leftColumn;
+  width: 60px;
+  height: 100%;
+  padding: 20px 0;
+  overflow: visible;
+  position: relative;
+  background-color: var(--background-card);
+  border-radius: 12px;
+}
+
+.leftColumn {
+  grid-area: leftColumn;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 2vw, 24px);
+  position: relative;
+  transition: all 0.3s ease;
+  background-color: var(--background-card);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.sidebarToggle {
+  position: absolute;
+  top: 50%;
+  right: -16px; /* Position at the edge of the sidebar */
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  background: var(--brand-primary);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s ease;
+}
+
+.sidebarToggle:hover {
+  background: var(--brand-dark);
+}
+
+.sidebarToggle svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.3s ease;
+}
+
+.sidebarToggleCollapsed {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+/* No need for special positioning as we embed it directly in the left column */
+
+.leftColumnCollapsed {
+  overflow: visible;
+}
+
+/* Styles for the minimized sidebar */
+.leftColumnCollapsed {
+  overflow: visible;
+}
+
+/* Hide all regular content when collapsed - more aggressive selector */
+.leftColumnCollapsed > div:not(.miniSidebar),
+.leftColumnCollapsed .draggableWidget,
+.leftColumnCollapsed .widgetContent,
+.leftColumnCollapsed .draggableWidget *,
+.leftColumnCollapsed > *:not(.sidebarToggle):not(.miniSidebar) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Mini header for collapsed sidebar */
+.miniHeader {
+  padding: 10px 0;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.miniSidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 60px;
   width: 100%;
-  margin-bottom: 16px;
-  
-  @media (max-width: 768px) {
-    display: block;
-  }
 }
 
-.sidebar {
+.miniWidgetIcon {
+  font-size: 24px;
+  height: 36px;
+  width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px auto;
+  color: var(--brand-primary);
+  cursor: pointer;
+  position: relative;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 6px;
+}
+
+.miniWidgetIcon:hover {
+  color: var(--brand-dark);
+}
+
+/* Book icon for Knowledgebase */
+.bookIcon {
+  display: inline-block;
+  position: relative;
+  width: 24px;
+  height: 24px;
+}
+
+.bookIcon:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 18px;
+  height: 22px;
+  border: 2px solid currentColor;
+  border-radius: 2px 3px 3px 2px;
+}
+
+.bookIcon:after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  width: 10px;
+  height: 2px;
+  background-color: currentColor;
+  box-shadow: 0 4px 0 currentColor, 0 8px 0 currentColor;
+}
+
+/* Clock icon for Active Processes */
+.clockIcon {
+  display: inline-block;
+  position: relative;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+}
+
+.clockIcon:before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 2px;
+  background-color: currentColor;
+  transform: translate(-50%, -50%) rotate(45deg);
+  transform-origin: 0 0;
+}
+
+.clockIcon:after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 11px;
+  width: 2px;
+  height: 8px;
+  background-color: currentColor;
+}
+
+.leftColumnExpanded {
+  overflow-y: auto;
+}
+
+.knowledgeWidget {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-md);
+  overflow-y: auto;
+  height: clamp(300px, calc(60vh - 80px), 600px); /* Responsive height */
+  transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.activeProcessesWidget {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 16px;
+  border: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  height: clamp(140px, calc(30vh - 100px), 200px); /* Responsive height */
+  transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
+  overflow-y: auto; /* Enable scrolling */
+}
+
+.processWidget {
+  grid-area: processes;
   background: var(--sidebar-bg);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
-  padding: 16px 12px 12px 12px;
+  padding: clamp(12px, 1.5vw, 24px) clamp(8px, 1vw, 16px) clamp(8px, 1vw, 16px) clamp(8px, 1vw, 16px);
   display: flex;
   flex-direction: column;
-  min-width: 200px;
-  height: 100%;
-  justify-content: space-between;
+  gap: clamp(8px, 1vw, 16px);
+  height: clamp(120px, calc(25vh - 80px), 200px); /* Responsive height that fits viewport */
   transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
   border: 1px solid var(--border-light);
+  overflow-y: auto; /* Enable scrolling if needed */
   
   @media (max-width: 992px) {
-    min-width: 180px;
     padding: 20px 12px 12px 12px;
   }
   
   @media (max-width: 768px) {
-    display: none; /* Hide desktop sidebar on mobile */
+    margin-top: 16px;
   }
-}
-
-.sidebarMobile {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: calc(100vh - 60px);
-}
-
-.sidebarBottom {
-  margin-top: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  
-  @media (max-width: 768px) {
-    margin-top: 20px;
-  }
-}
-.sectionTitle {
-  font-weight: var(--font-weight-semibold);
-  font-size: var(--font-size-sm);
-  margin-top: 8px;
-  margin-bottom: 4px;
-  color: var(--foreground-primary);
-  letter-spacing: var(--letter-spacing-wide);
-  line-height: var(--line-height-tight);
-}
-.kbList, .processList {
-  list-style: none;
-  padding: 0 0 8px 0;
-  margin: 0 0 8px 0;
-  font-size: 15px;
-}
-.kbList li, .processList li {
-  margin-bottom: 6px;
-  padding: 4px 0 4px 8px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.folderItem {
-  display: flex;
-  flex-direction: column;
-}
-
-.folderHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
-
-.expandIcon {
-  font-size: 10px;
-  margin-right: 4px;
-  color: var(--foreground-secondary);
-}
-
-.nestedList {
-  list-style: none;
-  padding-left: 16px;
-  margin-top: 6px;
-  padding-right: 0;
-}
-
-.nestedItem {
-  font-size: 13px;
-  padding: 4px 0 4px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.nestedItem:hover {
-  background: var(--background-tertiary);
-}
-.kbList li:hover {
-  background: var(--background-tertiary);
-}
-
-/* Process Widget Styles */
-.processWidget {
-  background: var(--dark-bg, #1e2738);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  padding: 18px;
-  border: 1px solid var(--border-light);
-  transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
-  color: white;
 }
 
 .processWidget h3 {
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
   margin-bottom: 0;
-  color: white;
+  color: var(--foreground-primary);
   letter-spacing: var(--letter-spacing-tight);
 }
 
 .processWidget .sectionHeader {
-  margin-bottom: 16px;
-  color: white;
-}
-
-.processWidget .sectionHeader .material-icons {
-  color: white;
-  opacity: 0.9;
+  margin-bottom: 12px;
+  color: var(--foreground-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .processList {
@@ -352,32 +449,93 @@
   background: var(--success);
 }
 .createButton {
-  align-self: center;
-  background: linear-gradient(135deg, var(--brand-gradient-start), var(--brand-gradient-end));
-  color: var(--button-primary-text);
+  background: var(--brand-primary);
+  color: white;
   border: none;
   border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  font-size: 28px;
+  width: 48px;
+  height: 48px;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   box-shadow: var(--shadow-md);
-  transition: all var(--transition-fast);
-  backdrop-filter: blur(4px);
+  margin: 16px auto 0;
+  transition: all 0.2s;
 }
+
 .createButton:hover {
-  background: var(--brand-primary-hover);
-  transform: translateY(-2px) scale(1.05);
+  transform: translateY(-3px);
   box-shadow: var(--shadow-lg);
+  background: var(--brand-dark);
+}
+
+.stickyCreateButton {
+  position: fixed;
+  bottom: 32px;
+  left: 32px;
+  z-index: 100;
+  background: var(--brand-primary);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  transition: all 0.2s;
+}
+
+.stickyCreateButton:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 30px rgba(var(--brand-primary-rgb), 0.4);
+  background: var(--brand-dark);
+}
+
+.plusIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+@media (max-width: 768px) {
+  .stickyCreateButton {
+    bottom: 24px;
+    left: 24px;
+    width: 52px;
+    height: 52px;
+  }
+}
+
+.mainContent.kbList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto; /* Enable scrolling if list gets too long */
+  max-height: calc(100% - 40px); /* Allow scrolling when content exceeds container */
 }
 
 .mainContent {
+  grid-area: main;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 2vw, 24px);
   background: var(--card-bg);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
-  padding: 20px 24px;
+  padding: clamp(16px, 2vw, 20px) clamp(16px, 2vw, 24px);
   height: 100%;
-  display: flex;
+  overflow-y: auto;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
@@ -434,6 +592,32 @@
   box-shadow: var(--shadow-md);
 }
 
+.widgetHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 4px;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-base);
+  color: var(--foreground-primary);
+  letter-spacing: var(--letter-spacing-tight);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.widgetHeader h3,
+.widgetHeader span {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  margin: 0;
+}
+
+.widgetHeader .widgetIcon {
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+}
+
 .cardHeader {
   display: flex;
   justify-content: space-between;
@@ -445,8 +629,8 @@
 
 .cardHeader h3 {
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 500;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
 }
 
 .cardContent {
@@ -560,23 +744,26 @@
 }
 
 .widgets {
+  grid-area: widgets;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: clamp(16px, 2vw, 32px);
   height: 100%;
+  overflow-y: auto;
+  max-height: calc(100vh - 90px); /* Ensure it stays in viewport */
+  padding-bottom: 16px; /* Add some bottom padding */
 }
 .widgetBox {
   background: var(--card-bg);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
-  padding: 16px 16px 8px 16px;
-  margin-bottom: 16px;
-  transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
+  padding: 16px;
   border: 1px solid var(--border-light);
-  max-height: calc(100% - 398px);
-  display: flex;
-  flex-direction: column;
+  overflow-y: auto;
+  max-height: 420px;
+  transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
 }
+
 .widgetBox h3 {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
@@ -589,8 +776,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
-  width: 100%;
+  margin-bottom: 16px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .sectionHeader .material-icons {
@@ -599,34 +787,32 @@
   opacity: 0.8;
 }
 /* Task Styles */
-/* Tasks container no longer needs scrolling */
+/* Tasks container styling */
 .tasksContainer {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  padding: 0;
 }
 
 .taskSection {
   display: flex;
   flex-direction: column;
-  height: 148px; /* Increased height to fit all tasks properly */
+  height: 148px;
   border: 1px solid var(--border-light);
-  border-radius: 8px;
-  padding: 8px 0 8px 8px; /* Padding on left only, not right (for scrollbar) */
+  border-radius: var(--radius-md);
+  padding: 8px;
   background-color: var(--background-secondary);
 }
 
 .taskList {
   list-style: none;
-  padding: 0;
+  padding: 0 4px 0 0;
   margin: 0;
   overflow-y: auto; /* Show scrollbar only when needed */
   height: 100%;
-  padding-right: 2px;
-  padding-top: 2px; /* Add a bit of top padding */
   scrollbar-width: thin;
-  scrollbar-color: rgba(103, 58, 183, 0.8) transparent;
-  border-right: 1px solid var(--border-light);
+  scrollbar-color: rgba(103, 58, 183, 0.5) transparent;
 }
 
 /* Webkit browsers scrollbar styling */
@@ -649,15 +835,12 @@
 .taskItem {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-  padding-bottom: 5px;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-bottom: 4px;
   font-size: var(--font-size-sm);
-  transition: opacity var(--transition-normal), transform var(--transition-normal);
-  line-height: var(--line-height-normal);
-  padding-right: 8px;
-  min-height: 20px; /* Minimum height rather than fixed height */
-  border-bottom: 1px solid var(--border-light);
 }
 
 .taskCheckbox {
@@ -713,52 +896,39 @@
 }
 
 .completedTasksSection {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border-light);
-  padding-right: 8px; /* Add space for the scrollbar */
+  margin-top: 8px;
 }
 
 .completedTasksHeader {
-  font-size: var(--font-size-xs);
-  color: var(--foreground-tertiary);
-  margin-bottom: 10px;
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  letter-spacing: var(--letter-spacing-wide);
-  text-transform: uppercase;
+  margin-bottom: 8px;
+  padding-left: 4px;
 }
 
 .chatbox {
   background: var(--card-bg);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
+  height: clamp(320px, calc(50vh - 60px), 500px); /* Responsive height */
   display: flex;
   flex-direction: column;
-  transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
-  border: 1px solid var(--border-light);
-  height: 380px;
-  margin-top: auto; /* This pushes it to the bottom */
-  margin-bottom: 0;
-}
-.chatHeader {
-  font-weight: var(--font-weight-semibold);
-  font-size: var(--font-size-base);
-  padding: 8px 12px 4px 12px;
-  border-bottom: 1px solid var(--border-light);
-  letter-spacing: var(--letter-spacing-tight);
+  position: relative; /* For absolute positioning of chat input */
+  padding: 16px 16px 0 16px; /* Add consistent padding like other widgets */
 }
 
-.chatHeader .sectionHeader {
-  margin-bottom: 0;
-}
+/* Removed .chatHeader as we're using .widgetHeader for chat now */
 
-.chatHeader .sectionHeader span:first-child {
-  font-weight: var(--font-weight-semibold);
-}
+/* Removed old chat header stylings as we're using standardized widget header */
 .chatTabs {
   display: flex;
   gap: 6px;
-  padding: 6px 12px 0 12px;
+  padding: 12px 0 8px 0;
+  margin-top: -4px; /* Adjust positioning to align with header */
 }
 .activeTab {
   background: linear-gradient(135deg, var(--brand-gradient-start), var(--brand-gradient-end));
@@ -785,11 +955,12 @@
 }
 .chatBody {
   flex: 1;
-  padding: 10px 12px;
+  padding: 8px 0 60px 0; /* Extra padding to account for fixed input */
   overflow-y: auto;
-  font-size: 14px;
+  font-size: var(--font-size-sm);
   color: var(--foreground-primary);
-  max-height: 275px;
+  height: 100%;
+  box-sizing: border-box;
 }
 .chatMsg {
   background: var(--background-tertiary);
@@ -803,14 +974,21 @@
 .chatInput {
   border: none;
   border-top: 1px solid var(--border-light);
-  padding: 12px 18px;
-  font-size: 15px;
-  border-radius: 0 0 var(--border-radius) var(--border-radius);
+  padding: 12px 16px;
+  font-size: var(--font-size-sm);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg); /* Match parent border radius */
   outline: none;
   width: 100%;
   background: var(--input-bg);
   color: var(--input-text);
   transition: background-color var(--transition-normal), color var(--transition-normal);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  z-index: 5; /* Ensure it's above other content */
 }
 
 @media (max-width: 1200px) {

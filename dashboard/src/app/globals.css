@@ -4,8 +4,8 @@
 /* Base Theme Variables */
 :root {
   /* Font */
-  --font-sans: var(--font-space-grotesk);
-  --font-mono: var(--font-geist-mono), monospace;
+  --font-sans: var(--font-space-grotesk), system-ui, sans-serif;
+  --font-mono: var(--font-space-grotesk), monospace;
   
   /* Font Weights */
   --font-weight-light: 300;
@@ -154,16 +154,18 @@ body {
   overflow-x: hidden;
 }
 
-html, body {
+body {
+  font-family: var(--font-sans);
   color: var(--foreground-primary);
   background: var(--background-primary);
-  font-family: var(--font-sans);
-  font-size: var(--font-size-base);
-  line-height: var(--line-height-normal);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  letter-spacing: var(--letter-spacing-normal);
-  transition: background-color var(--transition-normal), color var(--transition-normal);
+  transition: color var(--transition-normal), background-color var(--transition-normal);
+}
+
+/* Ensure all elements use Space Grotesk by default */
+*, *::before, *::after,
+body, html, div, span, h1, h2, h3, h4, h5, h6, p,
+ul, ol, li, button, input, textarea, select {
+  font-family: var(--font-sans) !important;
 }
 
 input, button, textarea, select {
@@ -177,7 +179,6 @@ input, button, textarea, select {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: var(--font-sans) !important;
 }
 
 a {
