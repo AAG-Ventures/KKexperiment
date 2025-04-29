@@ -1,16 +1,40 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import styles from './AddModal.module.css';
+import FolderCreateModal from './FolderCreateModal';
 
 type AddModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onOptionSelect: (option: string) => void;
+  onFolderCreate: (folderName: string, files: File[]) => void;
 };
 
-const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose, onOptionSelect }) => {
+const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose, onOptionSelect, onFolderCreate }) => {
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  
+  const handleOptionSelect = (option: string) => {
+    setSelectedOption(option);
+    onOptionSelect(option);
+  };
+  
+  const handleClose = () => {
+    setSelectedOption(null);
+    onClose();
+  };
   if (!isOpen) return null;
+  
+  // Show folder creation modal if folder option is selected
+  if (selectedOption === 'folder') {
+    return (
+      <FolderCreateModal 
+        isOpen={true}
+        onClose={handleClose}
+        onSubmit={onFolderCreate}
+      />
+    );
+  }
 
   const options = [
     { 
@@ -24,6 +48,12 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose, onOptionSelect }) 
       label: 'File', 
       iconClass: styles.fileIcon,
       description: 'Create a new document' 
+    },
+    { 
+      id: 'widget', 
+      label: 'Widget', 
+      iconClass: styles.widgetIcon,
+      description: 'Add a dashboard widget' 
     },
     { 
       id: 'agent', 
@@ -69,7 +99,7 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose, onOptionSelect }) 
             <button
               key={option.id}
               className={styles.optionButton}
-              onClick={() => onOptionSelect(option.id)}
+              onClick={() => handleOptionSelect(option.id)}
             >
               <div className={styles.optionIconWrapper}>
                 <div className={`${styles.optionIcon} ${option.iconClass}`}></div>

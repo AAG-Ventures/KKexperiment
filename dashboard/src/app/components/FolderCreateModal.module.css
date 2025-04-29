@@ -1,0 +1,320 @@
+.modalBackdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: backdropFadeIn 0.2s ease-out;
+}
+
+.modalContent {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg), 0 0 40px rgba(131, 61, 255, 0.15);
+  width: 480px;
+  max-width: 90vw;
+  border: 1px solid var(--border-light);
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  transform-origin: center center;
+  
+  @media (max-width: 576px) {
+    width: 95vw;
+    max-width: 95vw;
+  }
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.modalHeader h3 {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--foreground-primary);
+  margin: 0;
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  color: var(--foreground-secondary);
+  cursor: pointer;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.closeButton:hover {
+  background: var(--background-tertiary);
+  color: var(--foreground-primary);
+}
+
+.closeIcon {
+  height: 24px;
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.folderForm {
+  padding: 24px;
+}
+
+.formGroup {
+  margin-bottom: 24px;
+}
+
+.formLabel {
+  display: block;
+  font-weight: var(--font-weight-medium);
+  margin-bottom: 8px;
+  color: var(--foreground-primary);
+  font-size: var(--font-size-sm);
+}
+
+.formInput {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: var(--font-size-sm);
+  border: 1px solid var(--border-light);
+  background: var(--background-primary);
+  color: var(--foreground-primary);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  transition: all 0.2s;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px rgba(131, 61, 255, 0.1);
+}
+
+.formInput::placeholder {
+  color: var(--foreground-secondary);
+  opacity: 0.7;
+}
+
+.dropzone {
+  border: 2px dashed var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 30px 20px;
+  text-align: center;
+  background: var(--background-secondary);
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.dropzone:hover {
+  border-color: var(--brand-primary);
+  background: var(--background-tertiary);
+}
+
+.dragging {
+  border-color: var(--brand-primary);
+  background: var(--background-tertiary);
+  box-shadow: 0 0 0 2px rgba(131, 61, 255, 0.1);
+}
+
+.dropzoneContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.uploadIcon {
+  font-size: 28px;
+  color: var(--brand-primary);
+}
+
+.dropzoneContent p {
+  margin: 0;
+  color: var(--foreground-secondary);
+}
+
+.filePreviewArea {
+  margin-bottom: 24px;
+}
+
+.previewHeading {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: 12px;
+  color: var(--foreground-primary);
+}
+
+.fileList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--background-primary);
+}
+
+.fileItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.fileItem:last-child {
+  border-bottom: none;
+}
+
+.fileInfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+}
+
+.fileName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-sm);
+  color: var(--foreground-primary);
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileIcon {
+  font-size: 18px;
+  color: var(--brand-primary);
+}
+
+.fileSize {
+  font-size: var(--font-size-xs);
+  color: var(--foreground-secondary);
+}
+
+.removeButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--foreground-secondary);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.removeButton:hover {
+  color: var(--error);
+  background: rgba(var(--error-rgb), 0.1);
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cancelButton {
+  padding: 10px 16px;
+  background: var(--background-tertiary);
+  border: 1px solid var(--border-light);
+  color: var(--foreground-primary);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.submitButton {
+  padding: 10px 20px;
+  background: var(--brand-primary);
+  color: white;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancelButton:hover {
+  background: var(--background-quaternary);
+}
+
+.submitButton:hover {
+  background: var(--brand-dark);
+  transform: translateY(-1px);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: var(--brand-primary);
+  transform: none;
+}
+
+@keyframes backdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 576px) {
+  .folderForm {
+    padding: 16px;
+  }
+  
+  .formGroup {
+    margin-bottom: 16px;
+  }
+  
+  .dropzone {
+    padding: 20px 16px;
+  }
+  
+  .fileList {
+    max-height: 160px;
+  }
+}
