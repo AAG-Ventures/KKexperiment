@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from 'react';
 import styles from "./page.module.css";
 import AddModal from "./components/AddModal";
 import { DraggableWidgetContainer } from "./components/DraggableWidgetContainer";
@@ -26,6 +26,8 @@ type ChatTab = {
   title: string;
   messages: { sender: 'user' | 'bot', content: string }[];
   active: boolean;
+  isRenaming?: boolean;
+  isProcessing?: boolean;
 };
 
 type Process = {
@@ -40,6 +42,11 @@ export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [openTabKey, setOpenTabKey] = useState('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAddingTask, setIsAddingTask] = useState(false);
+  const [newTaskText, setNewTaskText] = useState('');
+  
+  // Refs
+  const newTaskInputRef = useRef<HTMLInputElement>(null);
   
   // Expandable folders state
   const [isProjectsExpanded, setIsProjectsExpanded] = useState(false);
@@ -62,9 +69,14 @@ export default function Dashboard() {
       id: 'chat-1',
       title: 'Chat 1',
       messages: [{ sender: 'bot' as const, content: 'Hi! How can I help you today?' }],
-      active: true
+      active: true,
+      isRenaming: false,
+      isProcessing: false
     }
   ]);
+  
+  // Chat tab input reference
+  const renameInputRef = useRef<HTMLInputElement>(null);
   
   // Active processes state
   const [processes, setProcesses] = useState<Process[]>([]);
@@ -73,7 +85,6 @@ export default function Dashboard() {
   const createNewChatTab = () => {
     const newId = `chat-${Date.now()}`;
     const newTitle = `Chat ${chatTabs.length + 1}`;
-    console.log('Creating new chat tab:', newId, newTitle);
     
     // Create updated tabs array with the new tab
     const updatedTabs = [
@@ -82,12 +93,76 @@ export default function Dashboard() {
         id: newId,
         title: newTitle,
         messages: [{ sender: 'bot' as const, content: 'Hi! How can I help you today?' }],
-        active: true
+        active: true,
+        isProcessing: false
       }
     ];
     
-    console.log('Setting chat tabs to:', updatedTabs);
     setChatTabs(updatedTabs);
+    
+    // Add to Active Processes
+    setProcesses(prev => [
+      ...prev,
+      {
+        id: newId,
+        name: newTitle,
+        type: 'chat',
+        status: 'completed'
+      }
+    ]);
+  };
+  
+  // Function to handle tab rename
+  const startTabRename = (tabId: string) => {
+    setChatTabs(prevTabs => 
+      prevTabs.map(t => ({
+        ...t,
+        isRenaming: t.id === tabId
+      }))
+    );
+    
+    // Focus the input after a short delay
+    setTimeout(() => {
+      if (renameInputRef.current) {
+        renameInputRef.current.focus();
+        renameInputRef.current.select();
+      }
+    }, 100);
+  };
+  
+  // Function to save tab rename
+  const saveTabRename = (tabId: string, newTitle: string) => {
+    if (newTitle.trim()) {
+      // Update tab title
+      setChatTabs(prevTabs => prevTabs.map(t => ({
+        ...t,
+        title: t.id === tabId ? newTitle.trim() : t.title,
+        isRenaming: false
+      })));
+      
+      // Also update the process name in Active Processes
+      setProcesses(prevProcesses => 
+        prevProcesses.map(process => 
+          process.id === tabId 
+            ? { ...process, name: newTitle.trim() } 
+            : process
+        )
+      );
+    } else {
+      // Just exit rename mode if empty
+      setChatTabs(prevTabs => prevTabs.map(t => ({
+        ...t,
+        isRenaming: false
+      })));
+    }
+  };
+  
+  // Function to cancel tab rename
+  const cancelTabRename = () => {
+    setChatTabs(prevTabs => prevTabs.map(t => ({
+      ...t,
+      isRenaming: false
+    })));
   };
 
   // Toggle sidebar function
@@ -113,6 +188,16 @@ export default function Dashboard() {
       ];
       setTasks(defaultTasks);
     }
+    
+    // Initialize Active Processes with current chat tabs
+    if (chatTabs.length > 0) {
+      setProcesses(chatTabs.map(tab => ({
+        id: tab.id,
+        name: tab.title,
+        type: 'chat' as const,
+        status: 'completed' as const
+      })));
+    }
   }, []);
 
   // Save tasks to localStorage whenever they change
@@ -122,13 +207,50 @@ export default function Dashboard() {
     }
   }, [tasks]);
 
-  // Toggle task completion
+  // Function to toggle task completion status
   const toggleTaskCompletion = (taskId: string) => {
     setTasks(prevTasks => 
       prevTasks.map(task => 
         task.id === taskId ? { ...task, completed: !task.completed } : task
       )
     );
+  };
+  
+  // Function to start adding a new task
+  const startAddingTask = () => {
+    setIsAddingTask(true);
+    setNewTaskText('');
+    
+    // Focus the input after a short delay
+    setTimeout(() => {
+      if (newTaskInputRef.current) {
+        newTaskInputRef.current.focus();
+      }
+    }, 100);
+  };
+  
+  // Function to save a new task
+  const saveNewTask = () => {
+    if (newTaskText.trim()) {
+      // Create a new task and add it to the list
+      const newTask = {
+        id: `task-${Date.now()}`,
+        text: newTaskText.trim(),
+        completed: false
+      };
+      
+      setTasks(prevTasks => [...prevTasks, newTask]);
+    }
+    
+    // Reset the adding task state
+    setIsAddingTask(false);
+    setNewTaskText('');
+  };
+  
+  // Function to cancel adding a task
+  const cancelAddingTask = () => {
+    setIsAddingTask(false);
+    setNewTaskText('');
   };
 
   // Handle opening the add modal
@@ -279,11 +401,11 @@ export default function Dashboard() {
                                 className={styles.processItem}
                                 onClick={() => {
                                   if (process.type === 'chat') {
-                                    // Find if this chat already exists in tabs
+                                    // Highlight the tab if it exists already
                                     const existingTab = chatTabs.find(tab => tab.id === process.id);
                                     
                                     if (existingTab) {
-                                      // Update active state
+                                      // Just make the tab active
                                       setChatTabs(prevTabs => 
                                         prevTabs.map(tab => ({
                                           ...tab,
@@ -295,7 +417,7 @@ export default function Dashboard() {
                                       const newTab: ChatTab = {
                                         id: process.id,
                                         title: process.name,
-                                        messages: [{ sender: 'bot' as const, content: 'Resuming previous conversation...' }],
+                                        messages: [{ sender: 'bot' as const, content: 'Resuming conversation...' }],
                                         active: true
                                       };
                                       
@@ -305,9 +427,13 @@ export default function Dashboard() {
                                       ]);
                                     }
                                     
-                                    // Remove from processes
+                                    // Update process status but don't remove it
                                     setProcesses(prevProcesses => 
-                                      prevProcesses.filter(p => p.id !== process.id)
+                                      prevProcesses.map(p => 
+                                        p.id === process.id 
+                                          ? { ...p, status: 'inProgress' as const } 
+                                          : p
+                                      )
                                     );
                                   }
                                 }}
@@ -505,51 +631,113 @@ export default function Dashboard() {
                   <div className={styles.widgetBox}>
                     <div className={styles.widgetHeader}>
                       <h3>My Tasks</h3>
-                      <span className={styles.widgetIcon}>✅</span>
+                      <button 
+                        className={styles.newTabButton} 
+                        title="Add New Task"
+                        type="button"
+                        onClick={startAddingTask}
+                      >
+                        <svg width="18" height="18" viewBox="0 0 24 24">
+                          <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
+                          <path d="M12 8V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                          <path d="M8 12H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                      </button>
                     </div>
                     <div className={styles.tasksContainer}>
                       {/* Active Tasks */}
                       <div className={styles.taskSection}>
-                        <ul className={styles.taskList}>
-                          {tasks
-                            .filter(task => !task.completed)
-                            .map(task => (
-                              <li key={task.id} className={styles.taskItem}>
-                                <button 
-                                  className={styles.taskCheckbox} 
-                                  onClick={() => toggleTaskCompletion(task.id)}
-                                  aria-label={`Mark ${task.text} as complete`}
-                                >
+                        {tasks.filter(task => !task.completed).length === 0 && !isAddingTask ? (
+                          <div className={styles.emptyTasksMessage}>
+                            <div className={styles.emptyTasksIcon}>✓</div>
+                            <p>You've completed everything in your plan!</p>
+                            <button 
+                              className={styles.addTaskButton}
+                              onClick={startAddingTask}
+                            >
+                              Add a new task
+                            </button>
+                          </div>
+                        ) : (
+                          <ul className={styles.taskList}>
+                            {tasks
+                              .filter(task => !task.completed)
+                              .map(task => (
+                                <li key={task.id} className={styles.taskItem}>
+                                  <button 
+                                    className={styles.taskCheckbox} 
+                                    onClick={() => toggleTaskCompletion(task.id)}
+                                    aria-label={`Mark ${task.text} as complete`}
+                                  >
+                                    <span className={styles.checkboxInner}></span>
+                                  </button>
+                                  <span className={styles.taskText}>{task.text}</span>
+                                </li>
+                              ))}
+                            
+                            {isAddingTask && (
+                              <li className={styles.taskItem}>
+                                <button className={styles.taskCheckbox}>
                                   <span className={styles.checkboxInner}></span>
                                 </button>
-                                <span className={styles.taskText}>{task.text}</span>
+                                <input
+                                  ref={newTaskInputRef}
+                                  className={styles.newTaskInput}
+                                  type="text"
+                                  placeholder="Type a new task..."
+                                  value={newTaskText}
+                                  onChange={(e) => setNewTaskText(e.target.value)}
+                                  onBlur={saveNewTask}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      saveNewTask();
+                                    } else if (e.key === 'Escape') {
+                                      cancelAddingTask();
+                                    }
+                                  }}
+                                />
                               </li>
-                            ))}
-                        </ul>
+                            )}
+                          </ul>
+                        )}         
                       </div>
                       
                       {/* Completed Tasks */}
                       {tasks.some(task => task.completed) && (
                         <div className={styles.completedTasksSection}>
-                          <div className={styles.completedTasksHeader}>Completed</div>
-                          <ul className={styles.taskList}>
-                            {tasks
-                              .filter(task => task.completed)
-                              .map(task => (
-                                <li key={task.id} className={`${styles.taskItem} ${styles.completedTask}`}>
-                                  <button 
-                                    className={`${styles.taskCheckbox} ${styles.checked}`}
-                                    onClick={() => toggleTaskCompletion(task.id)}
-                                    aria-label={`Mark ${task.text} as incomplete`}
-                                  >
-                                    <span className={`${styles.checkboxInner} ${styles.checked}`}>
-                                      <span className="material-icons" style={{ fontSize: '14px' }}>check</span>
-                                    </span>
-                                  </button>
-                                  <span className={styles.taskText}>{task.text}</span>
-                                </li>
-                              ))}
-                          </ul>
+                          <button 
+                            className={styles.completedTasksHeader} 
+                            onClick={() => {
+                              const completedSection = document.querySelector(`.${styles.completedTasksList}`);
+                              if (completedSection) {
+                                completedSection.scrollIntoView({ behavior: 'smooth' });
+                              }
+                            }}
+                          >
+                            Completed ({tasks.filter(task => task.completed).length})
+                          </button>
+                          <div className={styles.completedTasksList}>
+                            <ul className={styles.taskList}>
+                              {tasks
+                                .filter(task => task.completed)
+                                .map(task => (
+                                  <li key={task.id} className={`${styles.taskItem} ${styles.completedTask}`}>
+                                    <button 
+                                      className={`${styles.taskCheckbox} ${styles.checked}`}
+                                      onClick={() => toggleTaskCompletion(task.id)}
+                                      aria-label={`Mark ${task.text} as incomplete`}
+                                    >
+                                      <span className={`${styles.checkboxInner} ${styles.checked}`}>
+                                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                          <path d="M3 6L5 8L9 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        </svg>
+                                      </span>
+                                    </button>
+                                    <span className={styles.taskText}>{task.text}</span>
+                                  </li>
+                                ))}
+                            </ul>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -583,28 +771,53 @@ export default function Dashboard() {
                               key={tab.id}
                               className={tab.active ? styles.activeTab : styles.chatTab}
                               onClick={() => {
+                                // Make this tab active
                                 setChatTabs(prevTabs => prevTabs.map(t => ({
                                   ...t,
                                   active: t.id === tab.id
                                 })));
                               }}
+                              onDoubleClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                startTabRename(tab.id);
+                              }}
                             >
-                              {tab.title}
+                              {tab.isRenaming ? (
+                                <input
+                                  ref={renameInputRef}
+                                  className={styles.tabRenameInput}
+                                  type="text"
+                                  defaultValue={tab.title}
+                                  onClick={(e) => e.stopPropagation()}
+                                  onMouseDown={(e) => e.stopPropagation()}
+                                  onBlur={(e) => {
+                                    saveTabRename(tab.id, e.target.value);
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      saveTabRename(tab.id, e.currentTarget.value);
+                                    } else if (e.key === 'Escape') {
+                                      cancelTabRename();
+                                    }
+                                  }}
+                                />
+                              ) : (
+                                tab.title
+                              )}
                               <span 
                                 className={styles.closeTab}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   
-                                  // Add to processes list
-                                  setProcesses(prev => [
-                                    ...prev,
-                                    {
-                                      id: tab.id,
-                                      name: tab.title,
-                                      type: 'chat',
-                                      status: 'inProgress'
-                                    }
-                                  ]);
+                                  // Update the status of this chat in the processes list to 'completed'
+                                  setProcesses(prevProcesses => 
+                                    prevProcesses.map(p => 
+                                      p.id === tab.id 
+                                        ? { ...p, status: 'completed' as const } 
+                                        : p
+                                    )
+                                  );
                                   
                                   // Remove from chat tabs
                                   const newTabs = chatTabs.filter(t => t.id !== tab.id);
@@ -612,13 +825,24 @@ export default function Dashboard() {
                                   if (newTabs.length === 0) {
                                     // If no tabs left, create a new one
                                     const newId = `chat-${Date.now()}`;
-                                    console.log('Creating new tab after closing the last one');
                                     setChatTabs([{
                                       id: newId,
                                       title: `Chat ${1}`,
-                                      messages: [{ sender: 'bot' as 'bot', content: 'Hi! How can I help you today?' }],
-                                      active: true
+                                      messages: [{ sender: 'bot' as const, content: 'Hi! How can I help you today?' }],
+                                      active: true,
+                                      isProcessing: false
                                     }]);
+                                    
+                                    // Add new tab to Active Processes
+                                    setProcesses(prev => [
+                                      ...prev,
+                                      {
+                                        id: newId,
+                                        name: `Chat ${1}`,
+                                        type: 'chat',
+                                        status: 'inProgress'
+                                      }
+                                    ]);
                                   } else {
                                     // Set first tab as active if we're removing the active tab
                                     if (tab.active) {
@@ -671,6 +895,23 @@ export default function Dashboard() {
                                 // Clear input
                                 e.currentTarget.value = '';
                                 
+                                // Set the chat as processing
+                                setChatTabs(prevTabs => 
+                                  prevTabs.map(tab => ({
+                                    ...tab,
+                                    isProcessing: tab.id === activeTab.id
+                                  }))
+                                );
+                                
+                                // Update status in Active Processes to in progress
+                                setProcesses(prevProcesses => 
+                                  prevProcesses.map(process => 
+                                    process.id === activeTab.id 
+                                      ? { ...process, status: 'inProgress' as const } 
+                                      : process
+                                  )
+                                );
+                                
                                 // Simulate bot response after delay
                                 setTimeout(() => {
                                   setChatTabs(prevTabs => 
@@ -678,6 +919,7 @@ export default function Dashboard() {
                                       if (tab.id === activeTab.id) {
                                         return { 
                                           ...tab, 
+                                          isProcessing: false,
                                           messages: [
                                             ...tab.messages,
                                             { sender: 'bot' as const, content: `I received your message: "${userMsg}"` }
@@ -687,7 +929,16 @@ export default function Dashboard() {
                                       return tab;
                                     })
                                   );
-                                }, 500);
+                                  
+                                  // Set back to completed in Active Processes
+                                  setProcesses(prevProcesses => 
+                                    prevProcesses.map(process => 
+                                      process.id === activeTab.id 
+                                        ? { ...process, status: 'completed' as const } 
+                                        : process
+                                    )
+                                  );
+                                }, 2000);
                               }
                             }
                           }}
