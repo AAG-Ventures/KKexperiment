@@ -288,7 +288,7 @@ export default function Dashboard() {
           </div>
 
         {/* Main Content */}
-        <main className={styles.mainContent}>
+        <main className={`${styles.mainContent} ${isSidebarCollapsed ? styles.mainContentExpanded : ''}`}>
           {/* Tabs Bar */}
           <div style={{
             display: 'flex',

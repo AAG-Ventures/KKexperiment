@@ -152,7 +152,7 @@
 }
 
 .layoutCollapsed {
-  grid-template-columns: 60px 1fr minmax(280px, 350px);
+  grid-template-columns: 60px minmax(450px, 1fr) minmax(280px, 350px);
 }
 
 .miniLeftColumn {
@@ -533,9 +533,14 @@
   background: var(--card-bg);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
+  transition: all 0.3s ease;
   padding: clamp(16px, 2vw, 20px) clamp(16px, 2vw, 24px);
   height: 100%;
   overflow-y: auto;
+}
+
+/* Remove specific width and margin adjustments - rely on grid layout instead */
+.mainContentExpanded {
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
