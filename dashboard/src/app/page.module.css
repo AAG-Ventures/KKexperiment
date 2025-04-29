@@ -140,8 +140,8 @@
 .layout {
   display: grid;
   grid-template-areas:
-    "leftColumn main widgets";
-  grid-template-columns: minmax(250px, 300px) 1fr minmax(280px, 350px);
+    "knowledgebase main widgets";
+  grid-template-columns: minmax(200px, 270px) 1fr minmax(280px, 350px);
   grid-template-rows: 1fr;
   height: calc(100vh - 72px); /* Full height minus header */
   gap: clamp(16px, 2vw, 32px);
@@ -152,7 +152,7 @@
 }
 
 .layoutCollapsed {
-  grid-template-columns: 60px minmax(450px, 1fr) minmax(280px, 350px);
+  grid-template-columns: 36px minmax(544px, 1fr) minmax(280px, 350px);
 }
 
 .miniLeftColumn {
@@ -167,50 +167,51 @@
 }
 
 .leftColumn {
-  grid-area: leftColumn;
+  grid-area: knowledgebase;
   height: 100%;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: clamp(16px, 2vw, 24px);
   position: relative;
   transition: all 0.3s ease;
-  background-color: var(--background-card);
-  border-radius: 12px;
-  padding: 16px;
+  padding: 0;
 }
 
 .sidebarToggle {
   position: absolute;
   top: 50%;
-  right: -16px; /* Position at the edge of the sidebar */
+  left: -12px;
   transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
-  background: var(--brand-primary);
-  border: none;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  color: white;
+  background-color: white;
+  color: rgba(131, 61, 255, 1);
+  border: 1px solid rgba(131, 61, 255, 0.5);
+  box-shadow: 0 0 8px rgba(131, 61, 255, 0.3);
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  z-index: 100;
-  box-shadow: var(--shadow-md);
+  z-index: 10;
   transition: all 0.3s ease;
-}
-
-.sidebarToggle:hover {
-  background: var(--brand-dark);
 }
 
 .sidebarToggle svg {
   width: 16px;
   height: 16px;
+}
+
+.arrowIcon {
+  width: 14px;
+  height: 14px;
+  color: rgba(131, 61, 255, 1);
+  transform: rotate(0deg);
   transition: transform 0.3s ease;
 }
 
 .sidebarToggleCollapsed {
+  left: 22px;
   transform: translateY(-50%) rotate(180deg);
 }
 
@@ -251,90 +252,71 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 60px;
-  width: 100%;
+  gap: 12px;
+  width: 28px;
+  margin: 0 auto;
+  background-color: rgba(131, 61, 255, 0.1);
+  padding: 12px 4px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(131, 61, 255, 0.15);
 }
 
 .miniWidgetIcon {
-  font-size: 24px;
-  height: 36px;
-  width: 36px;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 8px auto;
-  color: var(--brand-primary);
+  border-radius: 6px;
+  background-color: white;
   cursor: pointer;
-  position: relative;
-  background-color: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  padding: 6px;
+  color: rgba(131, 61, 255, 1);
+  transition: all 0.2s ease;
+  margin: 3px 0;
+  border: 1px solid rgba(131, 61, 255, 0.5);
+  box-shadow: 0 0 5px rgba(131, 61, 255, 0.25);
 }
 
 .miniWidgetIcon:hover {
-  color: var(--brand-dark);
+  background-color: rgba(131, 61, 255, 0.1);
+  transform: scale(1.05);
+  box-shadow: 0 0 8px rgba(131, 61, 255, 0.4);
+  border-color: rgba(131, 61, 255, 0.7);
 }
 
 /* Book icon for Knowledgebase */
 .bookIcon {
   display: inline-block;
+  width: 16px;
+  height: 16px;
   position: relative;
-  width: 24px;
-  height: 24px;
+  color: rgba(131, 61, 255, 1);
 }
 
-.bookIcon:before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 18px;
-  height: 22px;
-  border: 2px solid currentColor;
-  border-radius: 2px 3px 3px 2px;
-}
-
-.bookIcon:after {
-  content: '';
-  position: absolute;
-  left: 4px;
-  top: 4px;
-  width: 10px;
-  height: 2px;
-  background-color: currentColor;
-  box-shadow: 0 4px 0 currentColor, 0 8px 0 currentColor;
-}
-
-/* Clock icon for Active Processes */
-.clockIcon {
-  display: inline-block;
-  position: relative;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 2px solid currentColor;
-}
-
-.clockIcon:before {
-  content: '';
+.bookIcon::before {
+  content: "📚";
+  font-size: 14px;
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 8px;
-  height: 2px;
-  background-color: currentColor;
-  transform: translate(-50%, -50%) rotate(45deg);
-  transform-origin: 0 0;
+  transform: translate(-50%, -50%);
 }
 
-.clockIcon:after {
-  content: '';
+.clockIcon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  position: relative;
+  color: rgba(131, 61, 255, 1);
+}
+
+.clockIcon::before {
+  content: "🔄";
+  font-size: 14px;
   position: absolute;
-  top: 4px;
-  left: 11px;
-  width: 2px;
-  height: 8px;
-  background-color: currentColor;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .leftColumnExpanded {
@@ -347,9 +329,18 @@
   padding: 16px;
   border: 1px solid var(--border-light);
   box-shadow: var(--shadow-md);
-  overflow-y: auto;
-  height: clamp(300px, calc(60vh - 80px), 600px); /* Responsive height */
+  height: calc(60vh - 100px);
+  max-height: 650px;
   transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+
+.fileExplorerContainer {
+  margin-top: 10px;
+  padding: 0 4px;
+  height: calc(100% - 60px); /* Subtract header height plus margins */
+  overflow-y: auto;
 }
 
 .activeProcessesWidget {
@@ -361,7 +352,8 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  height: clamp(140px, calc(30vh - 100px), 200px); /* Responsive height */
+  height: calc(40vh - 100px);
+  max-height: 300px;
   transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
   overflow-y: auto; /* Enable scrolling */
 }
@@ -409,19 +401,23 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.processList li {
+.processItem {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px 12px;
-  margin-bottom: 8px;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-xs);
-  background: var(--background-tertiary);
-  position: relative;
-  transition: background-color var(--transition-normal);
+  padding: 8px 10px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-light);
+  transition: background-color 0.15s ease;
+}
+
+.processItem:hover {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .processInfo {
@@ -430,24 +426,51 @@
   font-weight: var(--font-weight-medium);
 }
 
-.processList li:hover {
-  background: var(--background-tertiary);
-}
-
-.processStatus {
-  font-size: var(--font-size-xs);
-  padding: 4px 12px;
-  border-radius: var(--radius-pill);
-  background: var(--brand-primary);
-  color: white;
+.processName {
   font-weight: var(--font-weight-medium);
-  min-width: 80px;
-  text-align: center;
+  font-size: var(--font-size-sm);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.processStatus.complete {
-  background: var(--success);
+.processIcon {
+  font-size: 20px;
+  margin-right: 10px;
+  color: var(--primary-color);
 }
+
+.processDetails {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.statusIndicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.statusInProgress {
+  background-color: #F9D923; /* Yellow */
+  box-shadow: 0 0 4px rgba(249, 217, 35, 0.5);
+}
+
+.statusCompleted {
+  background-color: #4CAF50; /* Green */
+  box-shadow: 0 0 4px rgba(76, 175, 80, 0.5);
+}
+
+.statusFailed {
+  background-color: #F44336; /* Red */
+  box-shadow: 0 0 4px rgba(244, 67, 54, 0.5);
+}
+
 .createButton {
   background: var(--brand-primary);
   color: white;
@@ -601,13 +624,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  padding-bottom: 4px;
-  font-weight: var(--font-weight-semibold);
-  font-size: var(--font-size-base);
+  margin-bottom: 16px;
   color: var(--foreground-primary);
-  letter-spacing: var(--letter-spacing-tight);
-  border-bottom: 1px solid var(--border-light);
 }
 
 .widgetHeader h3,
@@ -621,6 +639,24 @@
   font-size: 20px;
   display: flex;
   align-items: center;
+}
+
+.newTabButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  color: var(--primary-color);
+  z-index: 10;
+  position: relative;
+}
+
+.newTabButton:hover {
+  background-color: rgba(131, 61, 255, 0.1);
 }
 
 .cardHeader {
@@ -670,6 +706,14 @@
   list-style: none;
   padding: 0;
   margin: 0;
+}
+
+.processList {
+  padding: 0;
+  margin: 8px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .activityItem {
@@ -752,7 +796,7 @@
   grid-area: widgets;
   display: flex;
   flex-direction: column;
-  gap: clamp(16px, 2vw, 32px);
+  gap: 24px;
   height: 100%;
   overflow-y: auto;
   max-height: calc(100vh - 90px); /* Ensure it stays in viewport */
@@ -793,10 +837,10 @@
 }
 /* Task Styles */
 /* Tasks container styling */
-.tasksContainer {
+.tasksContainer.sidebarSection {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   padding: 0;
 }
 
@@ -929,35 +973,91 @@
 /* Removed .chatHeader as we're using .widgetHeader for chat now */
 
 /* Removed old chat header stylings as we're using standardized widget header */
+.processList {
+  margin-top: 12px;
+  overflow-y: auto;
+}
+
+.emptyState {
+  padding: 12px;
+  text-align: center;
+  color: var(--foreground-secondary);
+  font-size: 0.9rem;
+}
+
 .chatTabs {
   display: flex;
-  gap: 6px;
-  padding: 12px 0 8px 0;
-  margin-top: -4px; /* Adjust positioning to align with header */
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 12px;
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
 }
-.activeTab {
-  background: linear-gradient(135deg, var(--brand-gradient-start), var(--brand-gradient-end));
-  color: var(--button-primary-text);
-  border-radius: 8px 8px 0 0;
-  border: none;
-  padding: 6px 16px;
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  box-shadow: var(--shadow-sm);
+
+.chatTabs::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
 }
-.chatTabs button {
+
+.chatTab, .activeTab {
   background: none;
   border: none;
-  color: var(--foreground-primary);
-  font-weight: 500;
+  padding: 8px 12px;
+  margin-right: 2px;
+  border-radius: 4px 4px 0 0;
+  font-size: 0.85rem;
   cursor: pointer;
-  padding: 4px 10px;
-  border-radius: 8px 8px 0 0;
-  transition: background var(--transition-fast);
+  position: relative;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
 }
-.chatTabs button:hover {
-  background: var(--background-tertiary);
+
+.chatTab {
+  color: var(--foreground-secondary);
+  border-bottom: 2px solid transparent;
 }
+
+.activeTab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid var(--primary-color);
+  color: var(--primary-color);
+  padding: 8px 12px;
+  margin-right: 2px;
+  border-radius: 4px 4px 0 0;
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  position: relative;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chatTab:hover {
+  background-color: rgba(131, 61, 255, 0.05);
+}
+
+.closeTab {
+  margin-left: 5px;
+  font-size: 16px;
+  line-height: 14px;
+  opacity: 0.7;
+  border-radius: 50%;
+  height: 16px;
+  width: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeTab:hover {
+  opacity: 1;
+  background-color: rgba(131, 61, 255, 0.1);
+}
+
 .chatBody {
   flex: 1;
   padding: 8px 0 60px 0; /* Extra padding to account for fixed input */
@@ -967,6 +1067,7 @@
   height: 100%;
   box-sizing: border-box;
 }
+
 .chatMsg {
   background: var(--background-tertiary);
   border-radius: 18px;
@@ -976,6 +1077,7 @@
   border: 1px solid var(--border-light);
   box-shadow: var(--shadow-sm);
 }
+
 .chatInput {
   border: none;
   border-top: 1px solid var(--border-light);

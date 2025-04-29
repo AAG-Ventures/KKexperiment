@@ -6,6 +6,8 @@ import { useState, useEffect } from "react";
 import styles from "./page.module.css";
 import AddModal from "./components/AddModal";
 import { DraggableWidgetContainer } from "./components/DraggableWidgetContainer";
+import FileExplorer from './components/FileExplorer';
+import { knowledgebaseData } from './components/KnowledgebaseSampleData';
 
 // Type definitions
 type Task = {
@@ -19,9 +21,24 @@ type WidgetItem = {
   content: React.ReactNode;
 };
 
+type ChatTab = {
+  id: string;
+  title: string;
+  messages: { sender: 'user' | 'bot', content: string }[];
+  active: boolean;
+};
+
+type Process = {
+  id: string;
+  name: string;
+  type: 'chat';
+  status: 'inProgress' | 'completed' | 'failed';
+};
+
 export default function Dashboard() {
   // Initial tasks state
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [openTabKey, setOpenTabKey] = useState('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   
   // Expandable folders state
@@ -31,11 +48,6 @@ export default function Dashboard() {
   // Sidebar collapsed state
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   
-  // Toggle sidebar function
-  const toggleSidebar = () => {
-    setIsSidebarCollapsed(!isSidebarCollapsed);
-  };
-  
   // Tab system state
   const [openTabs, setOpenTabs] = useState([
     { id: 'dashboard', title: 'Dashboard', isPermanent: true },
@@ -43,7 +55,46 @@ export default function Dashboard() {
     { id: 'health', title: 'Health' }
   ]);
   const [activeTabId, setActiveTabId] = useState('dashboard');
+  
+  // Chat state management
+  const [chatTabs, setChatTabs] = useState<ChatTab[]>([
+    {
+      id: 'chat-1',
+      title: 'Chat 1',
+      messages: [{ sender: 'bot' as const, content: 'Hi! How can I help you today?' }],
+      active: true
+    }
+  ]);
+  
+  // Active processes state
+  const [processes, setProcesses] = useState<Process[]>([]);
+  
+  // Function to create a new chat tab
+  const createNewChatTab = () => {
+    const newId = `chat-${Date.now()}`;
+    const newTitle = `Chat ${chatTabs.length + 1}`;
+    console.log('Creating new chat tab:', newId, newTitle);
+    
+    // Create updated tabs array with the new tab
+    const updatedTabs = [
+      ...chatTabs.map(tab => ({ ...tab, active: false })),
+      {
+        id: newId,
+        title: newTitle,
+        messages: [{ sender: 'bot' as const, content: 'Hi! How can I help you today?' }],
+        active: true
+      }
+    ];
+    
+    console.log('Setting chat tabs to:', updatedTabs);
+    setChatTabs(updatedTabs);
+  };
 
+  // Toggle sidebar function
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed(!isSidebarCollapsed);
+  };
+  
   // Initialize tasks on component mount
   useEffect(() => {
     // Get saved tasks from localStorage or use default tasks
@@ -172,102 +223,127 @@ export default function Dashboard() {
           <span className={styles.plusIcon}>＋</span>
         </button>
         
-        {/* Left Sidebar - Full version */}
+        {/* Left Column - Knowledge Section */}
         <div className={styles.leftColumn}>
-          {/* Toggle button at the edge */}
-          <button 
-            className={`${styles.sidebarToggle} ${isSidebarCollapsed ? styles.sidebarToggleCollapsed : ''}`} 
-            onClick={toggleSidebar}
-            aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M15 6L9 12L15 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-            {!isSidebarCollapsed ? (
-              /* Show full widgets when expanded */
+          
+          {!isSidebarCollapsed ? (
+            /* Knowledge Section - Full size version */
+            <>
+              {/* Toggle button at the edge in expanded state */}
+              <button 
+                className={styles.sidebarToggle} 
+                onClick={toggleSidebar}
+                aria-label="Collapse sidebar"
+                title="Collapse sidebar"
+              >
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M15 6L9 12L15 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              
+              {/* Draggable widget container for left column */}
               <DraggableWidgetContainer
                 columnId="left-column"
                 initialItems={[
                   {
                     id: 'knowledgebase',
                     content: (
-                  <aside className={styles.knowledgeWidget}>
-                    <div className={styles.widgetHeader}>
-                      <h3>Knowledgebase</h3>
-                      <span className={styles.widgetIcon}>📚</span>
-                    </div>
-                    {/* Example folders/files */}
-                    <nav>
-                      <ul className={styles.kbList}>
-                        <li className={styles.folderItem}>
-                          <div 
-                            className={styles.folderHeader} 
-                            onClick={() => setIsProjectsExpanded(!isProjectsExpanded)}
-                          >
-                            <span>{isProjectsExpanded ? '📂' : '📁'} Topics</span>
-                            <span className={styles.expandIcon}>{isProjectsExpanded ? '▼' : '▶'}</span>
-                          </div>
-                          {isProjectsExpanded && (
-                            <ul className={styles.nestedList}>
-                              <li className={styles.nestedItem}>💼 Work</li>
-                              <li className={styles.nestedItem}>❤️ Health</li>
-                              <li className={styles.nestedItem}>💰 Finance</li>
-                              <li className={styles.nestedItem}>✈️ Travel</li>
-                              <li className={styles.nestedItem}>🎮 Hobbies</li>
-                            </ul>
-                          )}
-                        </li>
-                        <li>📄 Meeting Notes</li>
-                        <li className={styles.folderItem}>
-                          <div 
-                            className={styles.folderHeader} 
-                            onClick={() => setIsSharedSpaceExpanded(!isSharedSpaceExpanded)}
-                          >
-                            <span>{isSharedSpaceExpanded ? '📂' : '📁'} Shared Space</span>
-                            <span className={styles.expandIcon}>{isSharedSpaceExpanded ? '▼' : '▶'}</span>
-                          </div>
-                          {isSharedSpaceExpanded && (
-                            <ul className={styles.nestedList}>
-                              <li className={styles.nestedItem}>📈 Marketing Plan</li>
-                              <li className={styles.nestedItem}>📚 Team Documentation</li>
-                              <li className={styles.nestedItem}>📊 Analytics</li>
-                            </ul>
-                          )}
-                        </li>
-                      </ul>
-                    </nav>
-                  </aside>
-                )
-              },
-              {
-                id: 'active-processes',
-                content: (
-                  <aside className={styles.activeProcessesWidget}>
-                    <div className={styles.widgetHeader}>
-                      <h3>Active Processes</h3>
-                      <span className={styles.widgetIcon}>🔄</span>
-                    </div>
-                    <div className={styles.processList}>
-                      <div className={styles.processItem}>
-                        <div className={styles.processIcon}>🔄</div>
-                        <div className={styles.processDetails}>
-                          <div className={styles.processName}>Data Sync</div>
-                          <div className={styles.processStatus}>
-                            <span className={styles.statusBadgeInProgress}>In Progress</span>
-                          </div>
+                      <aside className={styles.knowledgeWidget}>
+                        <div className={styles.widgetHeader}>
+                          <h3>Knowledgebase</h3>
+                          <span className={styles.widgetIcon}>📚</span>
                         </div>
-                      </div>
-                    </div>
-                  </aside>
-                  )
-                }
-              ]}
+                        {/* File Explorer Component */}
+                        <div className={styles.fileExplorerContainer}>
+                          <FileExplorer 
+                            data={knowledgebaseData}
+                            onSelect={(item) => console.log('Selected:', item.name)}
+                          />
+                        </div>
+                      </aside>
+                    )
+                  },
+                  {
+                    id: 'active-processes',
+                    content: (
+                      <aside className={styles.activeProcessesWidget}>
+                        <div className={styles.widgetHeader}>
+                          <h3>Active Processes</h3>
+                          <span className={styles.widgetIcon}>🔄</span>
+                        </div>
+                        <div className={styles.processList}>
+                          {processes.length > 0 ? (
+                            processes.map(process => (
+                              <div 
+                                key={process.id} 
+                                className={styles.processItem}
+                                onClick={() => {
+                                  if (process.type === 'chat') {
+                                    // Find if this chat already exists in tabs
+                                    const existingTab = chatTabs.find(tab => tab.id === process.id);
+                                    
+                                    if (existingTab) {
+                                      // Update active state
+                                      setChatTabs(prevTabs => 
+                                        prevTabs.map(tab => ({
+                                          ...tab,
+                                          active: tab.id === process.id
+                                        }))
+                                      );
+                                    } else {
+                                      // Create new tab and set it as active
+                                      const newTab: ChatTab = {
+                                        id: process.id,
+                                        title: process.name,
+                                        messages: [{ sender: 'bot' as const, content: 'Resuming previous conversation...' }],
+                                        active: true
+                                      };
+                                      
+                                      setChatTabs(prevTabs => [
+                                        ...prevTabs.map(tab => ({ ...tab, active: false })),
+                                        newTab
+                                      ]);
+                                    }
+                                    
+                                    // Remove from processes
+                                    setProcesses(prevProcesses => 
+                                      prevProcesses.filter(p => p.id !== process.id)
+                                    );
+                                  }
+                                }}
+                              >
+                                <span className={`${styles.statusIndicator} ${styles[`status${process.status.charAt(0).toUpperCase() + process.status.slice(1)}`]}`} 
+                                  title={`${process.status.charAt(0).toUpperCase() + process.status.slice(1)}`}>
+                                </span>
+                                <div className={styles.processDetails}>
+                                  <div className={styles.processName}>{process.name}</div>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className={styles.emptyState}>No active processes</div>
+                          )}
+                        </div>
+                      </aside>
+                    )
+                  }
+                ]}
               />
+            </>
             ) : (
               /* Show mini icons when collapsed */
               <div className={styles.miniSidebar}>
+                {/* Toggle button as the first mini icon */}
+                <div 
+                  className={styles.miniWidgetIcon} 
+                  title="Expand sidebar"
+                  onClick={toggleSidebar}
+                >
+                  <svg className={styles.arrowIcon} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 6L15 12L9 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                
                 <div 
                   className={styles.miniWidgetIcon} 
                   title="Knowledgebase"
@@ -486,16 +562,138 @@ export default function Dashboard() {
                   <div className={styles.chatbox}>
                     <div className={styles.widgetHeader}>
                       <h3>Chat</h3>
-                      <span className={styles.widgetIcon}>💬</span>
+                      <button 
+                        className={styles.newTabButton} 
+                        title="New Chat Tab"
+                        type="button"
+                        onClick={() => createNewChatTab()}
+                      >
+                        <svg width="18" height="18" viewBox="0 0 24 24">
+                          <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
+                          <path d="M12 8V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                          <path d="M8 12H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                      </button>
                     </div>
-                    <div className={styles.chatTabs}>
-                      <button className={styles.activeTab}>General</button>
-                      <button>New Tab ＋</button>
-                    </div>
-                    <div className={styles.chatBody}>
-                      <div className={styles.chatMsg}>🤖 Hi! How can I help you today?</div>
-                    </div>
-                    <input className={styles.chatInput} placeholder="Type a message..." />
+                    {chatTabs.length > 0 && (
+                      <>
+                        <div className={styles.chatTabs}>
+                          {chatTabs.map((tab) => (
+                            <button 
+                              key={tab.id}
+                              className={tab.active ? styles.activeTab : styles.chatTab}
+                              onClick={() => {
+                                setChatTabs(prevTabs => prevTabs.map(t => ({
+                                  ...t,
+                                  active: t.id === tab.id
+                                })));
+                              }}
+                            >
+                              {tab.title}
+                              <span 
+                                className={styles.closeTab}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  
+                                  // Add to processes list
+                                  setProcesses(prev => [
+                                    ...prev,
+                                    {
+                                      id: tab.id,
+                                      name: tab.title,
+                                      type: 'chat',
+                                      status: 'inProgress'
+                                    }
+                                  ]);
+                                  
+                                  // Remove from chat tabs
+                                  const newTabs = chatTabs.filter(t => t.id !== tab.id);
+                                  
+                                  if (newTabs.length === 0) {
+                                    // If no tabs left, create a new one
+                                    const newId = `chat-${Date.now()}`;
+                                    console.log('Creating new tab after closing the last one');
+                                    setChatTabs([{
+                                      id: newId,
+                                      title: `Chat ${1}`,
+                                      messages: [{ sender: 'bot' as 'bot', content: 'Hi! How can I help you today?' }],
+                                      active: true
+                                    }]);
+                                  } else {
+                                    // Set first tab as active if we're removing the active tab
+                                    if (tab.active) {
+                                      newTabs[0].active = true;
+                                    }
+                                    setChatTabs(newTabs);
+                                  }
+                                }}
+                              >
+                                ×
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                        
+                        {chatTabs.map((tab) => tab.active && (
+                          <div key={tab.id} className={styles.chatBody}>
+                            {tab.messages.map((msg, i) => (
+                              <div key={i} className={styles.chatMsg}>
+                                {msg.sender === 'bot' && '🤖 '}{msg.content}
+                              </div>
+                            ))}
+                          </div>
+                        ))}
+                        
+                        <input 
+                          className={styles.chatInput} 
+                          placeholder="Type a message..." 
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                              const activeTab = chatTabs.find(tab => tab.active);
+                              if (activeTab) {
+                                // Add user message
+                                const userMsg = e.currentTarget.value.trim();
+                                const newMessages = [
+                                  ...activeTab.messages,
+                                  { sender: 'user' as const, content: userMsg }
+                                ];
+                                
+                                // Update the active tab
+                                setChatTabs(prevTabs => 
+                                  prevTabs.map(tab => {
+                                    if (tab.id === activeTab.id) {
+                                      return { ...tab, messages: newMessages };
+                                    }
+                                    return tab;
+                                  })
+                                );
+                                
+                                // Clear input
+                                e.currentTarget.value = '';
+                                
+                                // Simulate bot response after delay
+                                setTimeout(() => {
+                                  setChatTabs(prevTabs => 
+                                    prevTabs.map(tab => {
+                                      if (tab.id === activeTab.id) {
+                                        return { 
+                                          ...tab, 
+                                          messages: [
+                                            ...tab.messages,
+                                            { sender: 'bot' as const, content: `I received your message: "${userMsg}"` }
+                                          ]
+                                        };
+                                      }
+                                      return tab;
+                                    })
+                                  );
+                                }, 500);
+                              }
+                            }
+                          }}
+                        />
+                      </>
+                    )}
                   </div>
                 )
               }
