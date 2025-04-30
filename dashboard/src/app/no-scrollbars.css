@@ -1,0 +1,26 @@
+/* Global styles to completely remove all scrollbars */
+.widgets *,
+.widgetBox *,
+.taskSection *,
+.taskList *,
+.tasksContainer *,
+.chatBody *,
+.draggableWidget *,
+.widgetContent * {
+  overflow: hidden !important;
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+.widgets *::-webkit-scrollbar,
+.widgetBox *::-webkit-scrollbar,
+.taskSection *::-webkit-scrollbar, 
+.taskList *::-webkit-scrollbar,
+.tasksContainer *::-webkit-scrollbar,
+.chatBody *::-webkit-scrollbar,
+.draggableWidget *::-webkit-scrollbar,
+.widgetContent *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}

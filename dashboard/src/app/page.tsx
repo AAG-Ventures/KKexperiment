@@ -379,7 +379,25 @@ export default function Dashboard() {
                         <div className={styles.fileExplorerContainer}>
                           <FileExplorer 
                             data={knowledgebaseData}
-                            onSelect={(item) => console.log('Selected:', item.name)}
+                            onSelect={(item) => {
+                              console.log('Selected:', item.name);
+                              // Open Work tab when the Work topic is clicked
+                              if (item.id === 'work') {
+                                // Check if Work tab already exists
+                                const workTabExists = openTabs.some(tab => tab.id === 'work');
+                                if (!workTabExists) {
+                                  // Add Work tab after the Health tab
+                                  const newTabs = [...openTabs];
+                                  // Find the index of the Health tab
+                                  const healthTabIndex = newTabs.findIndex(tab => tab.id === 'health');
+                                  // Insert Work tab after Health tab
+                                  newTabs.splice(healthTabIndex + 1, 0, { id: 'work', title: 'Work' });
+                                  setOpenTabs(newTabs);
+                                }
+                                // Set Work tab as active
+                                setActiveTabId('work');
+                              }
+                            }}
                           />
                         </div>
                       </aside>
@@ -553,71 +571,247 @@ export default function Dashboard() {
             ))}
           </div>
           
-          <h2 className={styles.pageTitle}>Dashboard Overview</h2>
-          
-          <div className={styles.cardGrid}>
+          {/* Display different content based on active tab */}
+          {activeTabId !== 'work' ? (
+            /* Show regular dashboard content for non-Work tabs */
+            <>
+              <h2 className={styles.pageTitle}>Dashboard Overview</h2>
+              
+              <div className={styles.cardGrid}>
+                {/* Recent Activity Card */}
+                <div className={styles.card}>
+                  <div className={styles.widgetHeader}>
+                    <h3>Recent Activity</h3>
+                    <span className={styles.widgetIcon}>🕒</span>
+                  </div>
+                  <div className={styles.cardContent}>
+                    <ul className={styles.activityList}>
+                      <li className={styles.activityItem}>
+                        <span style={{fontSize: 24, marginRight: 10}}>✏️</span>
+                        <div className={styles.activityText}>
+                          <div>Updated <strong>Marketing Plan</strong></div>
+                          <div className={styles.activityTime}>10 minutes ago</div>
+                        </div>
+                      </li>
+                      <li className={styles.activityItem}>
+                        <span style={{fontSize: 24, marginRight: 10}}>📁</span>
+                        <div className={styles.activityText}>
+                          <div>Created <strong>Q2 Reports</strong> folder</div>
+                          <div className={styles.activityTime}>Yesterday</div>
+                        </div>
+                      </li>
+                      <li className={styles.activityItem}>
+                        <span style={{fontSize: 24, marginRight: 10}}>💬</span>
+                        <div className={styles.activityText}>
+                          <div>New message in <strong>Team Chat</strong></div>
+                          <div className={styles.activityTime}>Yesterday</div>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
 
-            {/* Recent Activity Card */}
-            <div className={styles.card}>
-              <div className={styles.widgetHeader}>
-                <h3>Recent Activity</h3>
-                <span className={styles.widgetIcon}>🕒</span>
-              </div>
-              <div className={styles.cardContent}>
-                <ul className={styles.activityList}>
-                  <li className={styles.activityItem}>
-                    <span style={{fontSize: 24, marginRight: 10}}>✏️</span>
-                    <div className={styles.activityText}>
-                      <div>Updated <strong>Marketing Plan</strong></div>
-                      <div className={styles.activityTime}>10 minutes ago</div>
+                {/* Quick Actions Card */}
+                <div className={styles.card}>
+                  <div className={styles.widgetHeader}>
+                    <h3>Quick Actions</h3>
+                    <span className={styles.widgetIcon}>⚡</span>
+                  </div>
+                  <div className={styles.cardContent}>
+                    <div className={styles.actionButtons}>
+                      <button className={styles.actionButton}>
+                        <span style={{fontSize: 20, marginRight: 5}}>📄</span>
+                        New File
+                      </button>
+                      <button className={styles.actionButton}>
+                        <span style={{fontSize: 20, marginRight: 5}}>⬆️</span>
+                        Upload
+                      </button>
+                      <button className={styles.actionButton}>
+                        <span style={{fontSize: 20, marginRight: 5}}>🔗</span>
+                        Share
+                      </button>
+                      <button className={styles.actionButton}>
+                        <span style={{fontSize: 20, marginRight: 5}}>🔍</span>
+                        Search
+                      </button>
                     </div>
-                  </li>
-                  <li className={styles.activityItem}>
-                    <span style={{fontSize: 24, marginRight: 10}}>📁</span>
-                    <div className={styles.activityText}>
-                      <div>Created <strong>Q2 Reports</strong> folder</div>
-                      <div className={styles.activityTime}>Yesterday</div>
-                    </div>
-                  </li>
-                  <li className={styles.activityItem}>
-                    <span style={{fontSize: 24, marginRight: 10}}>💬</span>
-                    <div className={styles.activityText}>
-                      <div>New message in <strong>Team Chat</strong></div>
-                      <div className={styles.activityTime}>Yesterday</div>
-                    </div>
-                  </li>
-                </ul>
+                  </div>
+                </div>
               </div>
-            </div>
-
-            {/* Quick Actions Card */}
-            <div className={styles.card}>
-              <div className={styles.widgetHeader}>
-                <h3>Quick Actions</h3>
-                <span className={styles.widgetIcon}>⚡</span>
-              </div>
-              <div className={styles.cardContent}>
-                <div className={styles.actionButtons}>
-                  <button className={styles.actionButton}>
-                    <span style={{fontSize: 20, marginRight: 5}}>📄</span>
-                    New File
-                  </button>
-                  <button className={styles.actionButton}>
-                    <span style={{fontSize: 20, marginRight: 5}}>⬆️</span>
-                    Upload
-                  </button>
-                  <button className={styles.actionButton}>
-                    <span style={{fontSize: 20, marginRight: 5}}>🔗</span>
-                    Share
-                  </button>
-                  <button className={styles.actionButton}>
-                    <span style={{fontSize: 20, marginRight: 5}}>🔍</span>
-                    Search
-                  </button>
+            </>
+          ) : (
+            /* Show Work tab content with subtabs */
+            <div>
+              {/* Work tab with subtabs in a single line */}
+              <div style={{
+                marginTop: '0',
+                position: 'relative',
+                display: 'flex',
+                width: '100%'
+              }}>
+                {/* All four tabs in one line, aligned to the left */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'flex-start', 
+                  gap: '10px',
+                  width: '100%',
+                  paddingLeft: '10px'
+                }}>
+                  {/* Knowledge base tab with active indicator */}
+                  <div
+                    className={styles.workSubtab}
+                    style={{
+                      padding: '4px 14px',
+                      backgroundColor: 'var(--background-secondary)',
+                      border: '1px solid var(--border-light)',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                      fontWeight: 500,
+                      color: 'var(--foreground-primary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      position: 'relative',
+                      borderTop: '3px solid var(--brand-primary)',
+                      marginTop: '-3px',
+                      paddingTop: '2px'
+                    }}
+                  >
+                    <span>Knowledge base</span>
+                  </div>
+                  
+                  {/* Marketing Strategy tab */}
+                  <div
+                    className={styles.workSubtab}
+                    style={{
+                      padding: '4px 14px',
+                      backgroundColor: 'var(--background-secondary)',
+                      border: '1px solid var(--border-light)',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                      fontWeight: 500,
+                      color: 'var(--foreground-primary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}
+                  >
+                    <span>Marketing Strategy</span>
+                    <button 
+                      style={{
+                        marginLeft: '8px',
+                        background: 'none',
+                        border: 'none',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        color: 'var(--foreground-secondary)',
+                        padding: '0 2px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('Close Marketing Strategy tab');
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  
+                  {/* Notes for Meeting tab */}
+                  <div
+                    className={styles.workSubtab}
+                    style={{
+                      padding: '4px 14px',
+                      backgroundColor: 'var(--background-secondary)',
+                      border: '1px solid var(--border-light)',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                      fontWeight: 500,
+                      color: 'var(--foreground-primary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}
+                  >
+                    <span>Notes for Meeting</span>
+                    <button 
+                      style={{
+                        marginLeft: '8px',
+                        background: 'none',
+                        border: 'none',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        color: 'var(--foreground-secondary)',
+                        padding: '0 2px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('Close Notes for Meeting tab');
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  
+                  {/* Q2 Report tab */}
+                  <div
+                    className={styles.workSubtab}
+                    style={{
+                      padding: '4px 14px',
+                      backgroundColor: 'var(--background-secondary)',
+                      border: '1px solid var(--border-light)',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                      fontWeight: 500,
+                      color: 'var(--foreground-primary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}
+                  >
+                    <span>Q2 Report</span>
+                    <button 
+                      style={{
+                        marginLeft: '8px',
+                        background: 'none',
+                        border: 'none',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        color: 'var(--foreground-secondary)',
+                        padding: '0 2px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('Close Q2 Report tab');
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </main>
 
         {/* Right Widgets */}
