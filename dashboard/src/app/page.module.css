@@ -737,9 +737,15 @@
 }
 
 .tasksContainer:hover .completedTasksList,
-.completedTasksList:hover {
-  max-height: 300px;
-  overflow-y: auto;
+.completedTasksList {
+  max-height: 200px;
+  overflow-y: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.completedTasksList::-webkit-scrollbar {
+  display: none;
 }
 
 /* Activity List Styles */
@@ -1045,9 +1051,17 @@
   flex-direction: column;
   gap: 24px;
   height: 100%;
-  overflow-y: auto;
+  overflow-y: hidden;
   max-height: calc(100vh - 90px); /* Ensure it stays in viewport */
   padding-bottom: 16px; /* Add some bottom padding */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.widgets::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 .widgetBox {
   background: var(--card-bg);
@@ -1055,9 +1069,17 @@
   box-shadow: var(--shadow-md);
   padding: 16px;
   border: 1px solid var(--border-light);
-  overflow-y: auto;
+  overflow-y: hidden;
   height: auto;
   transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.widgetBox::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .widgetBox h3 {
@@ -1097,7 +1119,7 @@
   height: auto;
   max-height: 300px;
   padding: 4px 0;
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 
 .fileExplorer.tasksContainer {
@@ -1111,27 +1133,17 @@
   list-style: none;
   padding: 0 4px 0 0;
   margin: 0;
-  overflow-y: auto; /* Show scrollbar only when needed */
+  overflow-y: hidden; /* Changed from auto to hide scrollbar */
   height: 100%;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(103, 58, 183, 0.5) transparent;
+  scrollbar-width: none; /* Remove scrollbar completely */
+  -ms-overflow-style: none; /* IE and Edge */
 }
 
-/* Webkit browsers scrollbar styling */
+/* Hide webkit scrollbar completely */
 .taskList::-webkit-scrollbar {
-  width: 10px;
-}
-
-.taskList::-webkit-scrollbar-track {
-  background: var(--background-tertiary);
-  border-radius: 10px;
-}
-
-.taskList::-webkit-scrollbar-thumb {
-  background-color: rgba(103, 58, 183, 0.8);
-  border-radius: 5px;
-  border: 1px solid rgba(103, 58, 183, 0.6);
-  box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .taskItem {
@@ -1331,7 +1343,7 @@
 .chatBody {
   flex: 1;
   padding: 8px 0 60px 0; /* Extra padding to account for fixed input */
-  overflow-y: auto;
+  overflow-y: hidden;
   font-size: var(--font-size-sm);
   color: var(--foreground-primary);
   height: 100%;

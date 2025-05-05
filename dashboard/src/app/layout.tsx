@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
 import { ThemeProvider } from "./context/ThemeContext";
 import "./globals.css";
+import "./no-scrollbars.css"; // Import the no-scrollbars CSS
 
 // Using only Space Grotesk as our primary font
 
