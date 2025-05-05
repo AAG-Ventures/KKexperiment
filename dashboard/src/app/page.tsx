@@ -2,12 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import styles from "./page.module.css";
 import AddModal from "./components/AddModal";
 import { DraggableWidgetContainer } from "./components/DraggableWidgetContainer";
 import FileExplorer from './components/FileExplorer';
 import { knowledgebaseData } from './components/KnowledgebaseSampleData';
+// Import explicitly for client component
+import { useRouter } from 'next/navigation';
 
 // Type definitions
 type Task = {
@@ -28,6 +30,7 @@ type ChatTab = {
   active: boolean;
   isRenaming?: boolean;
   isProcessing?: boolean;
+  sessionId?: string; // AI agent session ID
 };
 
 type Process = {
@@ -37,11 +40,27 @@ type Process = {
   status: 'inProgress' | 'completed' | 'failed';
 };
 
+type Notification = {
+  id: string;
+  title: string;
+  message: string;
+  timestamp: Date;
+  read: boolean;
+  type: 'info' | 'warning' | 'success' | 'error';
+};
+
 export default function Dashboard() {
+  // Use useRouter hook to mark the component as client-side only
+  useRouter();
+  
   // Initial tasks state
   const [tasks, setTasks] = useState<Task[]>([]);
   const [openTabKey, setOpenTabKey] = useState('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  
+  // Notification panel state
+  const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
+  const notificationPanelRef = useRef<HTMLDivElement>(null);
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [newTaskText, setNewTaskText] = useState('');
   
@@ -63,30 +82,231 @@ export default function Dashboard() {
   ]);
   const [activeTabId, setActiveTabId] = useState('dashboard');
   
-  // Chat state management
-  const [chatTabs, setChatTabs] = useState<ChatTab[]>([
-    {
-      id: 'chat-1',
-      title: 'Chat 1',
-      messages: [{ sender: 'bot' as const, content: 'Hi! How can I help you today?' }],
-      active: true,
-      isRenaming: false,
-      isProcessing: false
-    }
-  ]);
+  // Initialize with empty states to prevent server/client hydration mismatch
+  const [chatTabs, setChatTabs] = useState<ChatTab[]>([]);
+  const [processes, setProcesses] = useState<Process[]>([]);
   
   // Chat tab input reference
   const renameInputRef = useRef<HTMLInputElement>(null);
   
-  // Active processes state
-  const [processes, setProcesses] = useState<Process[]>([]);
+  // Initialize chat state client-side only
+  useEffect(() => {
+    // Only run this on the client
+    if (typeof window !== 'undefined') {
+      // Only initialize if not already done
+      if (chatTabs.length === 0) {
+        const initialChatId = 'chat-1';
+        
+        // Set up initial chat tab
+        setChatTabs([
+          {
+            id: initialChatId,
+            title: 'Chat 1',
+            messages: [{ sender: 'bot' as const, content: 'Hi! How can I help you today?' }],
+            active: true,
+            isRenaming: false,
+            isProcessing: false,
+            sessionId: generateUUID()
+          }
+        ]);
+        
+        // Set up initial process
+        setProcesses([
+          {
+            id: initialChatId,
+            name: 'Chat 1',
+            type: 'chat',
+            status: 'completed'
+          }
+        ]);
+      }
+    }
+  }, [chatTabs.length]);
   
+  // Initialize with empty array to prevent hydration mismatch
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  
+  // Initialize notifications on client-side only
+  useEffect(() => {
+    // Only run once and only on the client
+    if (typeof window !== 'undefined' && notifications.length === 0) {
+      const now = Date.now();
+      setNotifications([
+        {
+          id: '1',
+          title: 'New task assigned',
+          message: 'You have been assigned a new task "Review documentation"',
+          timestamp: new Date(now - 1000 * 60 * 15), // 15 minutes ago
+          read: false,
+          type: 'info'
+        },
+        {
+          id: '2',
+          title: 'Process completed',
+          message: 'Your agent has finished analyzing the data',
+          timestamp: new Date(now - 1000 * 60 * 60), // 1 hour ago
+          read: true,
+          type: 'success'
+        },
+        {
+          id: '3',
+          title: 'System warning',
+          message: 'Low storage space available',
+          timestamp: new Date(now - 1000 * 60 * 60 * 3), // 3 hours ago
+          read: false,
+          type: 'warning'
+        },
+        {
+          id: '4',
+          title: 'Connection error',
+          message: 'Unable to connect to external service',
+          timestamp: new Date(now - 1000 * 60 * 60 * 24), // 1 day ago
+          read: true,
+          type: 'error'
+        }
+      ]);
+    }
+  }, [notifications.length]);
+  
+  // Add click outside handler for notification panel
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notificationPanelRef.current && 
+          !notificationPanelRef.current.contains(event.target as Node) &&
+          !(event.target as Element).closest(`.${styles.iconButton}`)) {
+        setIsNotificationPanelOpen(false);
+      }
+    };
+    
+    if (isNotificationPanelOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isNotificationPanelOpen, styles.iconButton]);
+  
+  // Get unread notification count
+  const unreadCount = useMemo(() => {
+    return notifications.filter(notification => !notification.read).length;
+  }, [notifications]);
+  
+  // AI Agent constants
+  const AI_AGENT_CONFIG = {
+    API_KEY: 'test',
+    BACKEND_DOMAIN: 'https://ai-agent-soc-media-template-ddd7b1afdf47.herokuapp.com',
+    AGENT_ID: '95ba603a-9479-4f6a-8e1e-1e63638053a9',
+    USER_ID: '86d3eaaa-51e0-43a3-ba79-e42ed82ee30f'
+  };
+  
+  // Helper function to generate UUID compatible with both server and client
+  const generateUUID = () => {
+    // Check if crypto.randomUUID is available (modern browsers)
+    if (typeof window !== 'undefined' && window.crypto && typeof window.crypto.randomUUID === 'function') {
+      return window.crypto.randomUUID();
+    }
+    
+    // Fallback method
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0,
+          v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  };
+  
+  // Function to interact with AI agent
+  const sendMessageToAIAgent = async (prompt: string, sessionId: string) => {
+    try {
+      console.log('Sending request to AI agent with:', {
+        endpoint: `${AI_AGENT_CONFIG.BACKEND_DOMAIN}/api/interact/voice`,
+        sessionId,
+        agentId: AI_AGENT_CONFIG.AGENT_ID,
+        userId: AI_AGENT_CONFIG.USER_ID
+      });
+      
+      const requestBody = {
+        agentId: AI_AGENT_CONFIG.AGENT_ID,
+        userId: AI_AGENT_CONFIG.USER_ID,
+        sessionId: sessionId,
+        prompt: prompt,
+        attachments: []
+      };
+      
+      console.log('Request payload:', JSON.stringify(requestBody, null, 2));
+      
+      const response = await fetch(`${AI_AGENT_CONFIG.BACKEND_DOMAIN}/api/interact/voice`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': AI_AGENT_CONFIG.API_KEY,
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+      
+      console.log('Response status:', response.status);
+      console.log('Response headers:', {
+        'content-type': response.headers.get('content-type'),
+        'cors': response.headers.get('access-control-allow-origin')
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API error response:', errorText);
+        throw new Error(`API error: ${response.status} - ${errorText}`);
+      }
+      
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('Parsed response data:', data);
+      } catch (parseError) {
+        console.error('Error parsing JSON response:', parseError);
+        throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}...`);
+      }
+      
+      // Extract AI response from the API's structure
+      let aiResponseText = '';
+      
+      // The API returns response in the 'text' field based on your console logs
+      if (data.text) {
+        aiResponseText = data.text;
+        console.log('Found response in text field:', aiResponseText);
+      } else if (data.response) {
+        aiResponseText = data.response;
+        console.log('Found response in response field:', aiResponseText);
+      } else {
+        console.warn('No text or response field found in data:', data);
+        // Look for any string field that might contain the response
+        for (const key in data) {
+          if (typeof data[key] === 'string' && data[key].length > 10) {
+            aiResponseText = data[key];
+            console.log(`Found potential response in ${key} field:`, aiResponseText);
+            break;
+          }
+        }
+      }
+      
+      return aiResponseText || "I'm here to help. What can I assist you with today?";
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error communicating with AI agent:', error);
+      return `Sorry, I couldn't connect to the AI agent at this moment. Technical details: ${errorMessage}`;
+    }
+  };
+
   // Function to create a new chat tab
   const createNewChatTab = () => {
     const newId = `chat-${Date.now()}`;
-    const newTitle = `Chat ${chatTabs.length + 1}`;
+    const newTabNumber = chatTabs.length + 1;
+    const newTitle = `Chat ${newTabNumber}`;
+    const sessionId = generateUUID(); // Generate a unique session ID for the chat
     
-    // Create updated tabs array with the new tab
+    // Update chat tabs state
     const updatedTabs = [
       ...chatTabs.map(tab => ({ ...tab, active: false })),
       {
@@ -94,7 +314,8 @@ export default function Dashboard() {
         title: newTitle,
         messages: [{ sender: 'bot' as const, content: 'Hi! How can I help you today?' }],
         active: true,
-        isProcessing: false
+        isProcessing: false,
+        sessionId: sessionId
       }
     ];
     
@@ -208,12 +429,40 @@ export default function Dashboard() {
   }, [tasks]);
 
   // Function to toggle task completion status
-  const toggleTaskCompletion = (taskId: string) => {
-    setTasks(prevTasks => 
-      prevTasks.map(task => 
-        task.id === taskId ? { ...task, completed: !task.completed } : task
-      )
-    );
+  const toggleTaskCompletion = (id: string) => {
+    setTasks(prevTasks => prevTasks.map(task => 
+      task.id === id ? { ...task, completed: !task.completed } : task
+    ));
+  };
+  
+  // Handle marking a notification as read
+  const markNotificationAsRead = (id: string) => {
+    setNotifications(prev => prev.map(notification => 
+      notification.id === id ? { ...notification, read: true } : notification
+    ));
+  };
+  
+  // Function to format notification timestamp - safe for SSR
+  const formatNotificationTime = (timestamp: Date): string => {
+    // Return empty string during server-side rendering
+    if (typeof window === 'undefined') {
+      return '';
+    }
+    
+    // Only run time calculations on client
+    const now = new Date();
+    const diffMs = now.getTime() - timestamp.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffMins < 60) {
+      return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
+    } else if (diffHours < 24) {
+      return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+    } else {
+      return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+    }
   };
   
   // Function to start adding a new task
@@ -316,10 +565,70 @@ export default function Dashboard() {
         </div>
         <div className={styles.spacer}></div>
         <div className={styles.topBarRight}>
-          <button className={styles.iconButton} title="Notifications">
+          <button 
+            className={styles.iconButton} 
+            title="Notifications"
+            onClick={() => setIsNotificationPanelOpen(!isNotificationPanelOpen)}
+          >
             <span style={{fontSize: 24}}>🔔</span>
-            <span className={styles.notificationBadge}>3</span>
+            {unreadCount > 0 && (
+              <span className={styles.notificationBadge}>{unreadCount}</span>
+            )}
           </button>
+          
+          {/* Notification Panel Popup */}
+          {isNotificationPanelOpen && (
+            <div ref={notificationPanelRef} className={styles.notificationPanel}>
+              <div className={styles.notificationPanelHeader}>
+                <h3>Notifications</h3>
+                <button 
+                  onClick={() => setIsNotificationPanelOpen(false)}
+                  className={styles.closeButton}
+                >
+                  ×
+                </button>
+              </div>
+              <div className={styles.notificationList}>
+                {notifications.length === 0 ? (
+                  <div className={styles.emptyNotifications}>No notifications</div>
+                ) : (
+                  // Show unread notifications or the 3 most recent
+                  (unreadCount > 0 ? 
+                    notifications.filter(n => !n.read) : 
+                    [...notifications].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 3)
+                  ).map(notification => (
+                    <div 
+                      key={notification.id}
+                      className={`${styles.notificationItem} ${!notification.read ? styles.unread : ''} ${styles[notification.type]}`}
+                      onClick={() => markNotificationAsRead(notification.id)}
+                    >
+                      <div className={styles.notificationContent}>
+                        <div className={styles.notificationTitle}>{notification.title}</div>
+                        <div className={styles.notificationMessage}>{notification.message}</div>
+                        <div className={styles.notificationTime}>
+                          {formatNotificationTime(notification.timestamp)}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              {notifications.length > 0 && (
+                <div className={styles.notificationPanelFooter}>
+                  <button 
+                    className={styles.markAllReadButton}
+                    onClick={() => {
+                      setNotifications(prevNotifications => 
+                        prevNotifications.map(n => ({ ...n, read: true }))
+                      );
+                    }}
+                  >
+                    Mark all as read
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
           <div className={styles.profileBar}>
             <div className={styles.userInfo}>
               <span className={styles.userName}>User Name</span>
@@ -912,33 +1221,95 @@ export default function Dashboard() {
                                   )
                                 );
                                 
-                                // Simulate bot response after delay
-                                setTimeout(() => {
+                                // Send message to AI agent
+                                const sessionId = activeTab.sessionId || generateUUID();
+                                
+                                // If no sessionId exists yet, add it to the tab
+                                if (!activeTab.sessionId) {
                                   setChatTabs(prevTabs => 
                                     prevTabs.map(tab => {
                                       if (tab.id === activeTab.id) {
-                                        return { 
-                                          ...tab, 
-                                          isProcessing: false,
-                                          messages: [
-                                            ...tab.messages,
-                                            { sender: 'bot' as const, content: `I received your message: "${userMsg}"` }
-                                          ]
-                                        };
+                                        return { ...tab, sessionId };
                                       }
                                       return tab;
                                     })
                                   );
-                                  
-                                  // Set back to completed in Active Processes
-                                  setProcesses(prevProcesses => 
-                                    prevProcesses.map(process => 
-                                      process.id === activeTab.id 
-                                        ? { ...process, status: 'completed' as const } 
-                                        : process
-                                    )
-                                  );
-                                }, 2000);
+                                }
+                                
+                                // Call the AI agent API
+                                sendMessageToAIAgent(userMsg, sessionId)
+                                  .then(response => {
+                                    // Check if the response indicates an actual error (not just conversational phrases)
+                                    const isErrorResponse = (
+                                      // Only flag as error when these appear as specific error phrases, not as part of normal conversation
+                                      (response.toLowerCase().includes("could not process your request") && response.length < 60) ||
+                                      (response.toLowerCase().includes("error:") && !response.toLowerCase().includes("interesting")) ||
+                                      response.toLowerCase().includes("api error:") ||
+                                      response.toLowerCase().includes("failed to process") ||
+                                      response.toLowerCase().includes("system error")
+                                    );
+                                    
+                                    console.log("AI response:", response);
+                                    console.log("Is error response?", isErrorResponse);
+                                    
+                                    // Update chat with the AI response
+                                    setChatTabs(prevTabs => 
+                                      prevTabs.map(tab => {
+                                        if (tab.id === activeTab.id) {
+                                          return { 
+                                            ...tab, 
+                                            isProcessing: false,
+                                            messages: [
+                                              ...tab.messages,
+                                              { sender: 'bot' as const, content: response }
+                                            ]
+                                          };
+                                        }
+                                        return tab;
+                                      })
+                                    );
+                                    
+                                    // Set status based on whether the response was an error
+                                    setProcesses(prevProcesses => 
+                                      prevProcesses.map(process => 
+                                        process.id === activeTab.id 
+                                          ? { 
+                                              ...process, 
+                                              status: isErrorResponse ? 'failed' as const : 'completed' as const 
+                                            } 
+                                          : process
+                                      )
+                                    );
+                                  })
+                                  .catch(error => {
+                                    console.error('Error calling AI agent:', error);
+                                    
+                                    // Update chat with error message
+                                    setChatTabs(prevTabs => 
+                                      prevTabs.map(tab => {
+                                        if (tab.id === activeTab.id) {
+                                          return { 
+                                            ...tab, 
+                                            isProcessing: false,
+                                            messages: [
+                                              ...tab.messages,
+                                              { sender: 'bot' as const, content: 'Sorry, there was an error connecting to the AI agent.' }
+                                            ]
+                                          };
+                                        }
+                                        return tab;
+                                      })
+                                    );
+                                    
+                                    // Set to failed in Active Processes
+                                    setProcesses(prevProcesses => 
+                                      prevProcesses.map(process => 
+                                        process.id === activeTab.id 
+                                          ? { ...process, status: 'failed' as const } 
+                                          : process
+                                      )
+                                    );
+                                  });
                               }
                             }
                           }}

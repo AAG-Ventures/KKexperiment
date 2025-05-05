@@ -38,6 +38,14 @@ export function DraggableWidgetContainer({ initialItems, columnId }: DraggableWi
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeItem, setActiveItem] = useState<WidgetItem | null>(null);
   
+  // Client-side only rendering state
+  const [isClient, setIsClient] = useState(false);
+  
+  // Mark as client side rendered after mount
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
   // Store widget order in localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -117,6 +125,20 @@ export function DraggableWidgetContainer({ initialItems, columnId }: DraggableWi
     document.body.classList.remove('dragging-active');
   }
 
+  // Simple non-interactive rendering for server-side
+  if (!isClient) {
+    return (
+      <div className={styles.container}>
+        {items.map((item) => (
+          <div key={item.id} className={widgetStyles.widget}>
+            {item.content}
+          </div>
+        ))}
+      </div>
+    );
+  }
+  
+  // Interactive DnD rendering for client-side
   return (
     <div className={styles.container}>
       <DndContext
