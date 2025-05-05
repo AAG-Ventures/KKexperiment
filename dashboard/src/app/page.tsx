@@ -7,7 +7,8 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import styles from "./page.module.css";
 import AddModal from "./components/AddModal";
 import { DraggableWidgetContainer } from "./components/DraggableWidgetContainer";
-import FileExplorer, { isFolder } from './components/FileExplorer';
+import FileExplorer, { isFolder, FileExplorerProps } from './components/FileExplorer';
+import { FileIcon, UploadIcon, ShareIcon, SearchIcon, BellIcon, UserIcon, PlusIcon, SendIcon, HomeIcon, CheckIcon } from './components/Icons';
 import { knowledgebaseData } from './components/KnowledgebaseSampleData';
 // Import explicitly for client component
 import { useRouter } from 'next/navigation';
@@ -745,14 +746,14 @@ export default function Dashboard() {
       <header className={styles.topBar}>
         <div className={styles.logoArea}>
           <Image 
-            src={`/logo.png?v=${new Date().getTime()}`} 
+            src="https://mindextension.me/logo.webp" 
             alt="Mind Extension Logo" 
-            width={180} 
-            height={60} 
+            width={200} 
+            height={70} 
             priority
             style={{
               objectFit: 'contain',
-              maxHeight: '40px',
+              maxHeight: '48px',
               width: 'auto'
             }} 
             className={styles.logo}
@@ -765,7 +766,7 @@ export default function Dashboard() {
             title="Notifications"
             onClick={() => setIsNotificationPanelOpen(!isNotificationPanelOpen)}
           >
-            <span style={{fontSize: 24}}>🔔</span>
+            <BellIcon size={20} />
             {unreadCount > 0 && (
               <span className={styles.notificationBadge}>{unreadCount}</span>
             )}
@@ -835,7 +836,7 @@ export default function Dashboard() {
                 title="Profile & Settings"
                 passHref
               >
-                <span style={{fontSize: 32}}>👤</span>
+                <UserIcon size={22} />
               </Link>
             </div>
           </div>
@@ -850,7 +851,7 @@ export default function Dashboard() {
           onClick={handleOpenAddModal}
           aria-label="Create new item"
         >
-          <span className={styles.plusIcon}>＋</span>
+          <PlusIcon size={20} />
         </button>
         
         {/* Left Column - Knowledge Section */}
@@ -914,25 +915,13 @@ export default function Dashboard() {
                             onSelect={(item) => {
                               console.log('Selected:', item.name);
                               // If it's a topic folder, set it as root
-                              if (isFolder(item) && item.id.includes('work') || item.id.includes('health') || 
-                                  item.id.includes('finance') || item.id.includes('travel') || item.id.includes('hobbies')) {
+                              if (isFolder(item) && 
+                                 (item.id.includes('work') || 
+                                  item.id.includes('health') || 
+                                  item.id.includes('finance') || 
+                                  item.id.includes('travel') || 
+                                  item.id.includes('hobbies'))) {
                                 setTopicAsRoot(item.id);
-                              }
-                              // For Work topic specifically (legacy code)
-                              else if (item.id === 'work') {
-                                // Check if Work tab already exists
-                                const workTabExists = openTabs.some(tab => tab.id === 'work');
-                                if (!workTabExists) {
-                                  // Add Work tab after the Health tab
-                                  const newTabs = [...openTabs];
-                                  // Find the index of the Health tab
-                                  const healthTabIndex = newTabs.findIndex(tab => tab.id === 'health');
-                                  // Insert Work tab after Health tab
-                                  newTabs.splice(healthTabIndex + 1, 0, { id: 'work', title: 'Work' });
-                                  setOpenTabs(newTabs);
-                                }
-                                // Set Work tab as active
-                                setActiveTabId('work');
                               }
                             }}
                           />
@@ -1310,19 +1299,19 @@ export default function Dashboard() {
                           }
                         }}
                       >
-                        <span style={{fontSize: 20, marginRight: 5}}>📄</span>
+                        <FileIcon size={20} className={styles.actionIcon} />
                         New File
                       </button>
                       <button className={styles.actionButton}>
-                        <span style={{fontSize: 20, marginRight: 5}}>⬆️</span>
+                        <UploadIcon size={20} className={styles.actionIcon} />
                         Upload
                       </button>
                       <button className={styles.actionButton}>
-                        <span style={{fontSize: 20, marginRight: 5}}>🔗</span>
+                        <ShareIcon size={20} className={styles.actionIcon} />
                         Share
                       </button>
                       <button className={styles.actionButton}>
-                        <span style={{fontSize: 20, marginRight: 5}}>🔍</span>
+                        <SearchIcon size={20} className={styles.actionIcon} />
                         Search
                       </button>
                     </div>
@@ -1521,11 +1510,7 @@ export default function Dashboard() {
                         type="button"
                         onClick={startAddingTask}
                       >
-                        <svg width="18" height="18" viewBox="0 0 24 24">
-                          <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
-                          <path d="M12 8V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                          <path d="M8 12H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                        </svg>
+                        <PlusIcon size={20} />
                       </button>
                     </div>
                     <div className={styles.tasksContainer}>
@@ -1988,10 +1973,11 @@ export default function Dashboard() {
           }
           
           // Show a success notification
+          const safeTopicName = typeof folderName === 'string' ? folderName : 'Untitled';
           addNotification({
             id: generateUUID(),
             title: 'Folder Created',
-            message: `New topic "${folderName}" has been added to your knowledgebase`, // Changed 'content' to 'message' to match type
+            message: `New topic "${safeTopicName}" has been added to your knowledgebase`,
             type: 'success',
             read: false,
             timestamp: new Date()

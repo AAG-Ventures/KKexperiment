@@ -15,24 +15,46 @@
   overflow-y: hidden; /* Prevent vertical scrolling at container level */
 }
 
-.topBar {
-  height: 72px;
-  background: var(--topbar-bg);
-  border-bottom: 1px solid var(--border-light);
+.chatInputBox {
+  position: relative;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-pill);
   display: flex;
   align-items: center;
-  padding: 0 24px;
+  padding: 0;
+  overflow: hidden;
+  transition: all var(--transition-normal);
+}
+
+.chatInputBox:focus-within {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
+}
+
+.topBar {
+  height: 60px;
+  background: rgba(10, 10, 18, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
   position: sticky;
   top: 0;
   z-index: 10;
-  transition: background-color var(--transition-normal), border-color var(--transition-normal);
-  box-shadow: var(--shadow-sm);
-  
-  @media (max-width: 768px) {
+  transition: all var(--transition-normal);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+@media (max-width: 768px) {
+  .topBar {
     padding: 0 16px;
     height: 64px;
   }
 }
+
 .logoArea {
   display: flex;
   align-items: center;
@@ -44,17 +66,21 @@
   height: auto;
   filter: drop-shadow(0px 1px 2px rgba(0,0,0,0.08));
   isolation: isolate;
-  max-height: 40px;
+  max-width: 180px;
+  max-height: 42px;
   display: block;
 }
+
 .spacer {
   flex: 1;
 }
+
 .topBarRight {
   display: flex;
   align-items: center;
   gap: 16px;
 }
+
 .iconButton {
   background: none;
   border: none;
@@ -92,16 +118,18 @@
   border-radius: 30px;
   transition: all 0.2s;
   border: 1px solid var(--border-light);
-  
-  @media (max-width: 768px) {
+}
+
+@media (max-width: 768px) {
+  .profileButton {
     padding: 6px 8px 6px 12px;
   }
-  
-  @media (max-width: 576px) {
-    /* Hide text on very small screens, just show icon */
-    .userInfo {
-      display: none;
-    }
+}
+
+@media (max-width: 576px) {
+  /* Hide text on very small screens, just show icon */
+  .profileButton .userInfo {
+    display: none;
   }
 }
 
@@ -133,8 +161,11 @@
   align-items: center;
   justify-content: center;
 }
+
 .iconButton:hover, .profileButton:hover {
-  background: var(--background-tertiary);
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+  border-color: rgba(10, 246, 187, 0.2);
 }
 
 .layout {
@@ -177,6 +208,21 @@
   padding: 0;
 }
 
+.sidebar {
+  width: 260px;
+  background: rgba(12, 12, 20, 0.8);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  height: calc(100vh - 60px);
+  overflow-y: auto;
+  padding: 16px 14px;
+  position: relative;
+  z-index: 5;
+  transition: all var(--transition-normal);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
 .sidebarToggle {
   position: absolute;
   top: 50%;
@@ -217,123 +263,21 @@
 
 /* No need for special positioning as we embed it directly in the left column */
 
-.leftColumnCollapsed {
-  overflow: visible;
-}
-
-/* Styles for the minimized sidebar */
-.leftColumnCollapsed {
-  overflow: visible;
-}
-
-/* Hide all regular content when collapsed - more aggressive selector */
-.leftColumnCollapsed > div:not(.miniSidebar),
-.leftColumnCollapsed .draggableWidget,
-.leftColumnCollapsed .widgetContent,
-.leftColumnCollapsed .draggableWidget *,
-.leftColumnCollapsed > *:not(.sidebarToggle):not(.miniSidebar) {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  height: 0 !important;
-  overflow: hidden !important;
-  padding: 0 !important;
-  margin: 0 !important;
-}
-
-/* Mini header for collapsed sidebar */
-.miniHeader {
-  padding: 10px 0;
-  text-align: center;
-  margin-bottom: 10px;
-}
-
-.miniSidebar {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  width: 28px;
-  margin: 0 auto;
-  background-color: rgba(131, 61, 255, 0.1);
-  padding: 12px 4px;
-  border-radius: 12px;
-  box-shadow: 0 0 10px rgba(131, 61, 255, 0.15);
-}
-
-.miniWidgetIcon {
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  background-color: white;
-  cursor: pointer;
-  color: rgba(131, 61, 255, 1);
-  transition: all 0.2s ease;
-  margin: 3px 0;
-  border: 1px solid rgba(131, 61, 255, 0.5);
-  box-shadow: 0 0 5px rgba(131, 61, 255, 0.25);
-}
-
-.miniWidgetIcon:hover {
-  background-color: rgba(131, 61, 255, 0.1);
-  transform: scale(1.05);
-  box-shadow: 0 0 8px rgba(131, 61, 255, 0.4);
-  border-color: rgba(131, 61, 255, 0.7);
-}
-
-/* Book icon for Knowledgebase */
-.bookIcon {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  position: relative;
-  color: rgba(131, 61, 255, 1);
-}
-
-.bookIcon::before {
-  content: "📚";
-  font-size: 14px;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.clockIcon {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  position: relative;
-  color: rgba(131, 61, 255, 1);
-}
-
-.clockIcon::before {
-  content: "🔄";
-  font-size: 14px;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
 .leftColumnExpanded {
   overflow-y: auto;
 }
 
-.knowledgeWidget {
-  background: var(--card-bg);
+.knowledgeWidget.card {
+  background: rgba(18, 18, 30, 0.6);
   border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   padding: 16px;
-  border: 1px solid var(--border-light);
   box-shadow: var(--shadow-md);
-  height: calc(60vh - 100px);
-  max-height: 650px;
-  transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
-  overflow-y: auto;
-  margin-bottom: 16px;
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .fileExplorerContainer {
@@ -371,12 +315,16 @@
   transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
   border: 1px solid var(--border-light);
   overflow-y: auto; /* Enable scrolling if needed */
-  
-  @media (max-width: 992px) {
+}
+
+@media (max-width: 992px) {
+  .knowledgeWidget {
     padding: 20px 12px 12px 12px;
   }
-  
-  @media (max-width: 768px) {
+}
+
+@media (max-width: 768px) {
+  .knowledgeWidget {
     margin-top: 16px;
   }
 }
@@ -557,7 +505,7 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   transition: all 0.3s ease;
-  padding: clamp(16px, 2vw, 20px) clamp(16px, 2vw, 24px);
+  padding: 16px;
   height: 100%;
   overflow-y: auto;
 }
@@ -570,6 +518,17 @@
   transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
   border: 1px solid var(--border-light);
 }
+
+.gradientHeading {
+  background: linear-gradient(to right, var(--brand-gradient-start), var(--brand-gradient-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent; /* Standard property instead of text-fill-color */
+  font-weight: var(--font-weight-bold);
+  letter-spacing: -0.5px;
+}
+
 .fileDisplay h2 {
   font-size: var(--font-size-3xl);
   font-weight: var(--font-weight-bold);
@@ -582,6 +541,7 @@
   line-height: var(--line-height-tight);
   letter-spacing: var(--letter-spacing-tight);
 }
+
 .fileDisplay p {
   color: var(--foreground-secondary);
   font-size: var(--font-size-md);
@@ -633,10 +593,11 @@
 
 .cardGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
-  width: 100%;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+  position: relative;
+  z-index: 1;
 }
 
 /* Card Styles */
@@ -654,12 +615,62 @@
   box-shadow: var(--shadow-md);
 }
 
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--brand-gradient-vibrant);
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+  z-index: 1;
+}
+
+.card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: var(--shadow-lg), 0 0 20px rgba(16, 185, 129, 0.07);
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
 .widgetHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  color: var(--foreground-primary);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+}
+
+.widgetHeader::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 50px;
+  height: 2px;
+  background: var(--brand-gradient-vibrant);
 }
 
 .clickableHeader {
@@ -860,16 +871,15 @@
 }
 
 .newTaskInput {
-  flex: 1;
-  margin-left: 10px;
+  flex-grow: 1;
   border: none;
-  background: transparent;
-  font-family: var(--font-sans);
-  font-size: 0.95rem;
-  color: var(--foreground-primary);
-  padding: 6px 0;
   outline: none;
-  border-bottom: 1px solid var(--border-light);
+  background: transparent;
+  padding: 12px 16px;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  color: var(--foreground-primary);
+  caret-color: var(--brand-primary);
 }
 
 .newTaskInput:focus {
@@ -916,7 +926,7 @@
 }
 
 .addTaskButton:hover {
-  background: rgba(131, 61, 245, 0.1);
+  background-color: rgba(131, 61, 245, 0.1);
 }
 
 /* Notification Panel Styles */
@@ -1079,30 +1089,82 @@
 }
 
 .actionButton {
+  background-color: rgba(10, 10, 18, 0.3);
+  color: var(--foreground-secondary);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--background-primary);
-  border: 1px solid var(--border-light);
-  border-radius: 12px;
-  padding: 16px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--foreground-primary);
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   cursor: pointer;
-  transition: all 0.2s;
+  backdrop-filter: blur(10px);
+  background: rgba(18, 18, 30, 0.6);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.actionIcon {
+  color: var(--brand-primary);
 }
 
 .actionButton:hover {
-  background: var(--background-tertiary);
-  transform: translateY(-2px);
+  background-color: rgba(10, 10, 18, 0.5);
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
-.actionButton span.material-icons {
-  font-size: 24px;
-  margin-bottom: 8px;
+.actionButton span.material-icons,
+.actionButton svg {
+  font-size: 20px;
+  margin-right: 8px;
   color: var(--brand-primary);
+}
+
+.primaryButton {
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover));
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-base);
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.25);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  letter-spacing: 0.01em;
+}
+
+.primaryButton:hover {
+  background: linear-gradient(135deg, var(--brand-primary-hover), var(--brand-primary));
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px 0 rgba(16, 185, 129, 0.35);
+}
+
+.primaryButton:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 10px 0 rgba(16, 185, 129, 0.25);
+}
+
+.primaryButton::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: all 0.6s;
+}
+
+.primaryButton:hover::after {
+  left: 100%;
 }
 
 .widgets {
@@ -1123,6 +1185,7 @@
   width: 0;
   height: 0;
 }
+
 .widgetBox {
   background: var(--card-bg);
   border-radius: var(--radius-lg);
@@ -1164,6 +1227,7 @@
   color: var(--foreground-secondary);
   opacity: 0.8;
 }
+
 /* Task Styles */
 /* Tasks container styling */
 .tasksContainer.sidebarSection {
@@ -1287,14 +1351,26 @@
   overflow: hidden;
   border: 1px solid var(--border-light);
   transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
-  height: clamp(320px, calc(50vh - 60px), 500px); /* Responsive height */
   display: flex;
   flex-direction: column;
   position: relative; /* For absolute positioning of chat input */
   padding: 16px 16px 0 16px; /* Add consistent padding like other widgets */
-  min-height: 400px; /* Ensure minimum height for content */
   /* Ensure there's always room for the input */
   padding-bottom: 60px;
+  /* Appropriate minimum height */
+  min-height: 250px;
+  /* When added to DraggableWidgetContainer, make it grow but not too much */
+  flex-grow: 1;
+  /* Allow it to shrink when space is limited */
+  flex-shrink: 1;
+  /* Dynamically adjust to available space - use max-height dependent on viewport */
+  max-height: calc(100vh - 240px);
+  /* Use percentage-based height for better responsiveness */
+  height: 60vh;
+  /* Only push to bottom when there's room */
+  margin-top: 16px; 
+  /* Ensure scrolling works inside the chat if content overflows */
+  overflow-y: auto;
 }
 
 /* Removed .chatHeader as we're using .widgetHeader for chat now */
@@ -1406,13 +1482,17 @@
 .chatBody {
   flex: 1;
   padding: 8px 0 60px 0; /* Extra padding to account for fixed input */
-  overflow-y: auto; /* Changed from hidden to auto to allow scrolling */
+  overflow-y: auto; /* Allow scrolling for messages */
   font-size: var(--font-size-sm);
   color: var(--foreground-primary);
-  height: calc(100% - 60px); /* Adjusted height to account for input */
-  max-height: 300px; /* Maximum height to prevent overflow */
+  /* Make it take all available space in the chatbox minus the input height */
+  height: calc(100% - 90px);
+  /* Don't restrict with a max-height */
+  max-height: none;
   box-sizing: border-box;
-  margin-bottom: 10px; /* Extra space at bottom */
+  margin-bottom: 10px; /* Space before input */
+  /* Show a scrollbar when needed */
+  scrollbar-width: thin;
 }
 
 .chatMsg {
@@ -1433,19 +1513,130 @@
   border-radius: 0 0 var(--radius-lg) var(--radius-lg); /* Match parent border radius */
   outline: none;
   width: calc(100% - 32px); /* Adjusted width to account for padding */
-  margin: 0 16px; /* Horizontal margin for spacing */
+  margin: 0;
   background: var(--input-bg);
   color: var(--input-text);
   transition: background-color var(--transition-normal), color var(--transition-normal);
   position: absolute;
-  bottom: 10px; /* Small space from bottom */
+  bottom: 0; /* Stick to the bottom */
   left: 0;
   right: 0;
   box-sizing: border-box;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-  z-index: 10; /* Increased z-index to ensure visibility */
-  display: block !important; /* Force display */
-  height: 45px; /* Fixed height for the input */
+  z-index: 10; /* Ensure it's above other content */
+  display: block !important; /* Always show */
+  height: 45px; /* Fixed height */
+}
+
+.chatInputBox {
+  position: relative;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  padding: 0;
+  overflow: hidden;
+  transition: all var(--transition-normal);
+}
+
+.chatInputBox:focus-within {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
+}
+
+.chatSendButton {
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-accent));
+  color: white;
+  border: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-right: 6px;
+  box-shadow: 0 3px 10px rgba(10, 246, 187, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.chatSendButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 50%;
+}
+
+.chatSendButton:hover::before {
+  opacity: 1;
+}
+
+.chatSendButton:hover {
+  background: var(--brand-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+}
+
+.mainContent.chatContainer {
+  overflow-y: auto;
+  flex-grow: 1;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+  scrollbar-width: thin;
+}
+
+.chatWidget {
+  background: rgba(18, 18, 30, 0.7);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--shadow-lg);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: all var(--transition-normal);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.chatWidget::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--brand-gradient-vibrant);
+  z-index: 1;
+}
+
+.chatWidget::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
 
 @media (max-width: 1200px) {
@@ -1494,7 +1685,6 @@
     padding: 16px 8px;
   }
 }
-
 
 @media (prefers-color-scheme: dark) {
   .page {
@@ -1591,8 +1781,9 @@ a.secondary {
 /* Enable hover only on non-touch devices */
 @media (hover: hover) and (pointer: fine) {
   a.primary:hover {
-    background: var(--button-primary-hover);
-    border-color: transparent;
+    background: var(--brand-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px 0 rgba(16, 185, 129, 0.35);
   }
 
   a.secondary:hover {

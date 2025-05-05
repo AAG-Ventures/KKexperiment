@@ -1,11 +1,14 @@
 /* Import custom icons */
 @import './styles/icons.css';
 
+/* Import Space Grotesk font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
 /* Base Theme Variables */
 :root {
   /* Font */
-  --font-sans: var(--font-space-grotesk), system-ui, sans-serif;
-  --font-mono: var(--font-space-grotesk), monospace;
+  --font-sans: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'Space Grotesk', monospace;
   
   /* Font Weights */
   --font-weight-light: 300;
@@ -71,14 +74,14 @@
   --border-medium: #cbd5e1;
   --border-heavy: #94a3b8;
   
-  /* Brand Colors - MindExtension */
-  --brand-primary: #7c3aed; /* Purple-600 */
-  --brand-primary-hover: #8b5cf6; /* Purple-500 */
-  --brand-secondary: #2563eb; /* Blue-600 */
-  --brand-secondary-hover: #3b82f6; /* Blue-500 */
-  --brand-accent: #ec4899; /* Pink-500 */
-  --brand-gradient-start: #7c3aed;
-  --brand-gradient-end: #2563eb;
+  /* Brand Colors - MindExtension - Updated to green and electric blue */
+  --brand-primary: #059669; /* Green - darker for light mode */
+  --brand-primary-hover: #10B981; /* Green */
+  --brand-secondary: #0284C7; /* Electric Blue - darker for light mode */
+  --brand-secondary-hover: #0EA5E9; /* Electric Blue */
+  --brand-accent: #0891B2; /* Teal accent - darker for light mode */
+  --brand-gradient-start: #059669;
+  --brand-gradient-end: #0284C7;
   
   /* UI Colors */
   --success: #10b981;
@@ -104,10 +107,11 @@
 
 /* Dark Theme - MindExtension Style */
 .dark-theme {
-  /* Colors */
-  --background-primary: #0f172a;
-  --background-secondary: #1e293b;
-  --background-tertiary: #334155;
+  /* Colors - Updated to match MindExtension.me dark mode */
+  --background-primary: #0B0B13; /* Darker navy/black */
+  --background-secondary: #12121E; /* Dark navy */
+  --background-tertiary: #1A1A2E; /* Navy blue */
+  --background-darker: #070710; /* Darkest background */
   
   --foreground-primary: #f8fafc;
   --foreground-secondary: #e2e8f0;
@@ -117,14 +121,21 @@
   --border-medium: #475569;
   --border-heavy: #64748b;
   
-  /* Brand Colors - MindExtension */
-  --brand-primary: #a78bfa; /* Purple-400 - lighter for dark mode */
-  --brand-primary-hover: #c4b5fd; /* Purple-300 */
-  --brand-secondary: #60a5fa; /* Blue-400 - lighter for dark mode */
-  --brand-secondary-hover: #93c5fd; /* Blue-300 */
-  --brand-accent: #f472b6; /* Pink-400 - lighter for dark mode */
-  --brand-gradient-start: #a78bfa;
-  --brand-gradient-end: #60a5fa;
+  /* Brand Colors - MindExtension - Updated to match the correct turquoise #0AF6BB */
+  --brand-primary: #0AF6BB; /* Turquoise */
+  --brand-primary-hover: #2CFFD0; /* Lighter Turquoise */
+  --brand-primary-subtle: rgba(10, 246, 187, 0.12); /* Subtle turquoise for backgrounds */
+  --brand-secondary: #0EA5E9; /* Electric Blue */
+  --brand-secondary-hover: #38BDF8; /* Lighter Electric Blue */
+  --brand-secondary-subtle: rgba(14, 165, 233, 0.12); /* Subtle blue for backgrounds */
+  --brand-accent: #08D4A0; /* Complementary green */
+  --brand-accent-hover: #10F6B9; /* Lighter complementary */
+  --brand-accent-subtle: rgba(8, 212, 160, 0.12); /* Subtle accent for backgrounds */
+  --brand-gradient-start: #0AF6BB;
+  --brand-gradient-mid: #08E4C0;
+  --brand-gradient-end: #0EA5E9;
+  --brand-gradient-soft: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+  --brand-gradient-vibrant: linear-gradient(135deg, #0AF6BB, #0EA5E9);
   
   /* UI Colors - adjusted for dark mode */
   --success: #34d399;
@@ -142,22 +153,82 @@
   --input-border: var(--border-medium);
   --input-text: var(--foreground-primary);
   
-  /* Shadow - adjusted for dark mode */
-  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.24);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  /* Shadow system - enhanced for modern UI */
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.24);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+  
+  /* Glow effects - for highlighting important elements */
+  --glow-primary: 0 0 15px rgba(16, 185, 129, 0.4);
+  --glow-secondary: 0 0 15px rgba(14, 165, 233, 0.4);
+  --glow-accent: 0 0 15px rgba(6, 182, 212, 0.4);
 }
 
 html,
 body {
-  max-width: 100vw;
+  margin: 0;
+  padding: 0;
   overflow-x: hidden;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  background: var(--background-primary);
+  background-image: 
+    radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 25%),
+    radial-gradient(circle at 100% 0%, rgba(14, 165, 233, 0.15) 0%, transparent 25%),
+    radial-gradient(circle at 50% 100%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
+    linear-gradient(180deg, var(--background-primary) 0%, var(--background-darker) 100%);
+  background-attachment: fixed;
+  color: var(--foreground-primary);
+  letter-spacing: -0.01em;
+  line-height: 1.5;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Add subtle animation for interactive elements */
+a, button, input, select, textarea, [role="button"] {
+  transition: all 0.2s ease;
+}
+
+/* Refined scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.3);
+  border-color: rgba(16, 185, 129, 0.1);
+}
+
+/* Modern focus styles for better accessibility */
+:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 1px;
+}
+
+/* Smooth transitions for state changes */
+* {
+  transition-property: color, background-color, border-color, outline-color, opacity, box-shadow, transform, filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
 }
 
 body {
-  font-family: var(--font-sans);
-  color: var(--foreground-primary);
-  background: var(--background-primary);
   transition: color var(--transition-normal), background-color var(--transition-normal);
 }
 

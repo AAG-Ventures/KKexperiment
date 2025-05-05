@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import styles from './FileExplorer.module.css';
+import { FolderIcon, FileIcon, ChevronRightIcon, ChevronDownIcon } from '../components/Icons';
 
 // Define types for our file structure
 type FileType = 'document' | 'spreadsheet' | 'presentation' | 'pdf' | 'image' | 'code' | 'other';
@@ -77,17 +78,16 @@ const File: React.FC<FileItemProps> = ({ file, onSelect, selected }) => {
   const fileClass = getFileClass(file.type);
   
   return (
-    <div className={`${styles.fileItem} ${fileClass}`}>
-      <div 
-        className={`${styles.fileRow} ${isActive ? styles.active : ''}`}
-        onClick={() => onSelect(file)}
-      >
-        <span className={styles.icon}>
-          <span className={styles.fileIcon}>{fileIcon}</span>
-        </span>
-        <span className={styles.name}>{file.name}</span>
-        <span className={styles.contextMenuTrigger}>⋮</span>
-      </div>
+    <div 
+      className={`${styles.fileItem} ${fileClass} ${isActive ? styles.active : ''}`}
+      onClick={() => onSelect(file)}
+    >
+      <span className={styles.fileDot}></span>
+      <span className={styles.icon}>
+        <span className={styles.fileIcon}><FileIcon size={16} /></span>
+      </span>
+      <span className={styles.name}>{file.name}</span>
+      <span className={styles.contextMenuTrigger}>⋮</span>
     </div>
   );
 };
@@ -128,7 +128,6 @@ const Folder: React.FC<FolderProps> = ({
   }, [shouldBeExpanded, expanded, folder.id]);
   
   const isActive = selected === folder.id;
-  const folderIcon = folder.icon || (expanded ? '📂' : '📁');
   
   const toggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -173,10 +172,16 @@ const Folder: React.FC<FolderProps> = ({
             }
           }}
         >
-          {folder.id === 'topics' && expandedFolders.includes('topics') ? '↓' : folder.id === 'topics' ? '→' : expanded ? '↓' : '→'}
+          {folder.id === 'topics' && expandedFolders.includes('topics') ? 
+            <ChevronDownIcon size={14} /> : 
+            folder.id === 'topics' ? 
+            <ChevronRightIcon size={14} /> : 
+            expanded ? 
+            <ChevronDownIcon size={14} /> : 
+            <ChevronRightIcon size={14} />}
         </span>
         <span className={styles.icon}>
-          <span className={styles.folderIcon}>{folderIcon}</span>
+          <span className={styles.folderIcon}><FolderIcon size={16} /></span>
         </span>
         <span className={styles.name}>{folder.name}</span>
         <span className={styles.contextMenuTrigger}>⋮</span>
@@ -209,7 +214,8 @@ const Folder: React.FC<FolderProps> = ({
   );
 };
 
-interface FileExplorerProps {
+// Export the props interface to make it available outside this file
+export interface FileExplorerProps {
   data: ExplorerItem[];
   onSelect?: (item: ExplorerItem) => void;
   expandedFolders?: string[];
