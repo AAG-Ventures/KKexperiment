@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import FileContent from './components/FileContent';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import styles from "./page.module.css";
 import AddModal from "./components/AddModal";
@@ -64,6 +65,10 @@ export default function Dashboard() {
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [newTaskText, setNewTaskText] = useState('');
   
+  // File handling state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const dashboardRef = useRef<HTMLDivElement>(null);
+  
   // Refs
   const newTaskInputRef = useRef<HTMLInputElement>(null);
   
@@ -88,6 +93,25 @@ export default function Dashboard() {
   
   // Track expanded folders in knowledgebase
   const [expandedFolders, setExpandedFolders] = useState<string[]>(['topics']);
+  
+  // Function to toggle folder expansion (including Topics)
+  const toggleFolderExpansion = (folderId: string) => {
+    console.log(`Toggling folder: ${folderId}`);
+    setExpandedFolders(prev => {
+      // Log current expanded folders
+      console.log('Current expanded folders:', prev);
+      
+      if (prev.includes(folderId)) {
+        const result = prev.filter(id => id !== folderId);
+        console.log('Removing from expanded folders, new state:', result);
+        return result;
+      } else {
+        const result = [...prev, folderId];
+        console.log('Adding to expanded folders, new state:', result);
+        return result;
+      }
+    });
+  };
   
   // Track active topic in knowledgebase
   const [activeTopicId, setActiveTopicId] = useState<string | null>(null);
@@ -448,6 +472,11 @@ export default function Dashboard() {
     ));
   };
   
+  // Add a new notification
+  const addNotification = (notification: Notification) => {
+    setNotifications(prev => [notification, ...prev]);
+  };
+  
   // Function to format notification timestamp - safe for SSR
   const formatNotificationTime = (timestamp: Date): string => {
     // Return empty string during server-side rendering
@@ -539,21 +568,27 @@ export default function Dashboard() {
   // Handle option selection in the add modal
   const handleOptionSelect = (option: string) => {
     console.log(`Selected option: ${option}`);
-    // Here you would handle each option differently
-    // For this implementation, we'll just close the modal
-    handleCloseAddModal();
     
-    // You can add specific logic for each option type here
+    // Handle each option type differently
     switch (option) {
       case 'folder':
-        // Logic for creating a folder
-        break;
+        // Don't close the modal for folder - the AddModal component will show FolderCreateModal
+        return; // Return early to prevent closing the modal
+        
       case 'file':
         // Logic for creating a file
+        handleCloseAddModal();
         break;
+        
       case 'widget':
         // Logic for creating a new dashboard widget
         console.log('Creating a new widget');
+        handleCloseAddModal();
+        break;
+        
+      default:
+        // For all other options, close the modal
+        handleCloseAddModal();
         // Here you could show a modal for widget creation or add a default widget
         break;
       case 'agent':
@@ -568,8 +603,58 @@ export default function Dashboard() {
     }
   };
   
+  // Add drag and drop event listeners when component mounts
+  useEffect(() => {
+    const dashboard = dashboardRef.current;
+    if (!dashboard) return;
+
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = 'copy';
+      }
+      dashboard.classList.add('drag-active');
+    };
+
+    const handleDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dashboard.classList.remove('drag-active');
+    };
+
+    const handleDrop = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dashboard.classList.remove('drag-active');
+      
+      if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+        const file = e.dataTransfer.files[0];
+        console.log(`Dropped file: ${file.name}`);
+        setSelectedFile(file);
+        // Add Files tab if it doesn't exist
+        const filesTabExists = openTabs.some(tab => tab.id === 'files');
+        if (!filesTabExists) {
+          setOpenTabs(prev => [...prev, { id: 'files', title: `File: ${file.name}` }]);
+        }
+        setActiveTabId('files');
+        setOpenTabKey('files');
+      }
+    };
+
+    dashboard.addEventListener('dragover', handleDragOver as EventListener);
+    dashboard.addEventListener('dragleave', handleDragLeave as EventListener);
+    dashboard.addEventListener('drop', handleDrop as EventListener);
+
+    return () => {
+      dashboard.removeEventListener('dragover', handleDragOver as EventListener);
+      dashboard.removeEventListener('dragleave', handleDragLeave as EventListener);
+      dashboard.removeEventListener('drop', handleDrop as EventListener);
+    };
+  }, []);
+
   return (
-    <div className={styles.dashboardWrapper}>
+    <div className={styles.dashboardWrapper} ref={dashboardRef}>
       {/* Top Bar */}
       <header className={styles.topBar}>
         <div className={styles.logoArea}>
@@ -659,7 +744,11 @@ export default function Dashboard() {
               <span className={styles.userRole}>Premium Account</span>
             </div>
             <div className={styles.profileImage}>
-              <Link href="/settings" title="Profile & Settings">
+              <Link 
+                href="/settings" 
+                title="Profile & Settings"
+                passHref
+              >
                 <span style={{fontSize: 32}}>👤</span>
               </Link>
             </div>
@@ -717,7 +806,15 @@ export default function Dashboard() {
                             cursor: activeTopicId ? 'pointer' : 'default',
                           }}
                         >
-                          <h3>Knowledgebase</h3>
+                          <h3 
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => {
+                              // Direct toggle for the topics folder
+                              toggleFolderExpansion('topics');
+                            }}
+                          >
+                            Knowledgebase {expandedFolders.includes('topics') ? '▼' : '►'}
+                          </h3>
                           <span className={styles.widgetIcon}>📚</span>
                         </div>
                         {/* File Explorer Component */}
@@ -727,6 +824,7 @@ export default function Dashboard() {
                             expandedFolders={expandedFolders}
                             activeTopicId={activeTopicId}
                             onBackToTopics={backToAllTopics}
+                            onToggleFolder={toggleFolderExpansion}
                             onSelect={(item) => {
                               console.log('Selected:', item.name);
                               // If it's a topic folder, set it as root
@@ -925,7 +1023,32 @@ export default function Dashboard() {
           </div>
           
           {/* Display different content based on active tab */}
-          {activeTabId !== 'work' ? (
+          {activeTabId === 'files' && selectedFile ? (
+            /* Show only file content when file tab is active */
+            <div className={styles.fileViewer}>
+              <div className={styles.fileViewerHeader}>
+                <h2 className={styles.fileViewerTitle}>{selectedFile.name}</h2>
+                <div className={styles.fileViewerControls}>
+                  <button 
+                    className={styles.fileViewerButton}
+                    onClick={() => {
+                      // Clear the selected file
+                      setSelectedFile(null);
+                      // Remove the Files tab
+                      setOpenTabs(prev => prev.filter(tab => tab.id !== 'files'));
+                      // Go back to Dashboard tab
+                      setActiveTabId('dashboard');
+                    }}
+                  >
+                    Close file
+                  </button>
+                </div>
+              </div>
+              <div className={styles.fileViewerContent}>
+                <FileContent file={selectedFile} />
+              </div>
+            </div>
+          ) : activeTabId !== 'work' ? (
             /* Show regular dashboard content for non-Work tabs */
             <>
               <h2 className={styles.pageTitle}>Dashboard Overview</h2>
@@ -1047,7 +1170,60 @@ export default function Dashboard() {
                   </div>
                   <div className={styles.cardContent}>
                     <div className={styles.actionButtons}>
-                      <button className={styles.actionButton}>
+                      <button 
+                        className={styles.actionButton}
+                        onClick={async () => {
+                          try {
+                            // Check if File System Access API is available
+                            if ('showOpenFilePicker' in window) {
+                              const fileHandle = await (window as any).showOpenFilePicker({
+                                types: [
+                                  {
+                                    description: 'All Files',
+                                    accept: {'*/*': []},
+                                  },
+                                ],
+                                multiple: false,
+                              });
+                              if (fileHandle && fileHandle[0]) {
+                                const file = await fileHandle[0].getFile();
+                                console.log(`Selected file: ${file.name}`);
+                                setSelectedFile(file);
+                                // Add Files tab if it doesn't exist
+                                const filesTabExists = openTabs.some(tab => tab.id === 'files');
+                                if (!filesTabExists) {
+                                  setOpenTabs(prev => [...prev, { id: 'files', title: `File: ${file.name}` }]);
+                                }
+                                setActiveTabId('files');
+                                setOpenTabKey('files');
+                              }
+                            } else {
+                              // Fallback for browsers without File System Access API
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.onchange = (e) => {
+                                const target = e.target as HTMLInputElement;
+                                const file = target.files?.[0];
+                                if (file) {
+                                  console.log(`Selected file: ${file.name}`);
+                                  setSelectedFile(file);
+                                  // Add Files tab if it doesn't exist
+                                  const filesTabExists = openTabs.some(tab => tab.id === 'files');
+                                  if (!filesTabExists) {
+                                    setOpenTabs(prev => [...prev, { id: 'files', title: `File: ${file.name}` }]);
+                                  }
+                                  setActiveTabId('files');
+                                  setOpenTabKey('files');
+                                }
+                              };
+                              input.click();
+                            }
+                          } catch (error) {
+                            console.error('Error accessing file system:', error);
+                            alert('Unable to access file system. Please try again.');
+                          }
+                        }}
+                      >
                         <span style={{fontSize: 20, marginRight: 5}}>📄</span>
                         New File
                       </button>
@@ -1490,6 +1666,7 @@ export default function Dashboard() {
                           </div>
                         ))}
                         
+                        {/* Always render the chat input */}
                         <input 
                           className={styles.chatInput} 
                           placeholder="Type a message..." 
@@ -1644,7 +1821,69 @@ export default function Dashboard() {
         onOptionSelect={handleOptionSelect} 
         onFolderCreate={(folderName, files) => {
           console.log(`Creating folder: ${folderName} with ${files.length} files`);
-          // Handle folder creation logic here
+          
+          // Create a new topic in the knowledgebase
+          const newTopicId = folderName.toLowerCase().replace(/\s+/g, '-');
+          
+          // Create a new topic folder structure with the proper type structure
+          const newTopic = {
+            id: newTopicId,
+            name: folderName,
+            icon: '📁', // Default folder icon
+            children: [] as any[] // Type assertion to avoid type errors with children
+          };
+          
+          // Add files to the new topic if any were provided
+          if (files.length > 0) {
+            files.forEach(file => {
+              // Determine file type based on extension
+              const fileExt = (file.name.split('.').pop() || '').toLowerCase();
+              let fileType: 'document' | 'spreadsheet' | 'presentation' | 'pdf' | 'image' | 'code' | 'other' = 'other';
+              
+              if (['doc', 'docx', 'txt', 'md'].includes(fileExt)) {
+                fileType = 'document';
+              } else if (['xls', 'xlsx', 'csv'].includes(fileExt)) {
+                fileType = 'spreadsheet';
+              } else if (['ppt', 'pptx'].includes(fileExt)) {
+                fileType = 'presentation';
+              } else if (fileExt === 'pdf') {
+                fileType = 'pdf';
+              } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
+                fileType = 'image';
+              } else if (['js', 'ts', 'py', 'java', 'c', 'cpp', 'html', 'css'].includes(fileExt)) {
+                fileType = 'code';
+              }
+              
+              // Add file to the topic's children
+              newTopic.children.push({
+                id: `${newTopicId}-${file.name.toLowerCase().replace(/\s+/g, '-')}`,
+                name: file.name,
+                type: fileType
+              } as any); // Type assertion to avoid type errors
+            });
+          }
+          
+          // Add the new topic to the knowledgebase data
+          knowledgebaseData[0].children.push(newTopic as any); // Type assertion to fix TypeScript error
+          
+          // Make sure the topics folder is expanded
+          if (!expandedFolders.includes('topics')) {
+            setExpandedFolders([...expandedFolders, 'topics']);
+          }
+          
+          // Show a success notification
+          addNotification({
+            id: generateUUID(),
+            title: 'Folder Created',
+            message: `New topic "${folderName}" has been added to your knowledgebase`, // Changed 'content' to 'message' to match type
+            type: 'success',
+            read: false,
+            timestamp: new Date()
+          });
+          
+          // Close the add modal
+          handleCloseAddModal();
+          
         }}
       />
     </div>

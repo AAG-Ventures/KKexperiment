@@ -98,6 +98,7 @@ interface FolderProps {
   selected: string | null;
   defaultExpanded?: boolean;
   expandedFolders?: string[];
+  onToggleFolder?: (folderId: string) => void;
 }
 
 const Folder: React.FC<FolderProps> = ({ 
@@ -105,7 +106,8 @@ const Folder: React.FC<FolderProps> = ({
   onSelect, 
   selected,
   defaultExpanded = false,
-  expandedFolders = []
+  expandedFolders = [],
+  onToggleFolder
 }) => {
   // Check if this folder should be expanded based on expandedFolders prop
   const shouldBeExpanded = expandedFolders.includes(folder.id) || defaultExpanded;
@@ -115,31 +117,63 @@ const Folder: React.FC<FolderProps> = ({
   
   // Use effect to respond to external expansion requests
   useEffect(() => {
-    if (shouldBeExpanded && !expanded) {
+    // For topics folder, always sync with external state
+    if (folder.id === 'topics') {
+      setExpanded(shouldBeExpanded);
+    } 
+    // For other folders, only expand if needed
+    else if (shouldBeExpanded && !expanded) {
       setExpanded(true);
     }
-  }, [shouldBeExpanded, expanded]);
+  }, [shouldBeExpanded, expanded, folder.id]);
   
   const isActive = selected === folder.id;
   const folderIcon = folder.icon || (expanded ? '📂' : '📁');
   
   const toggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setExpanded(!expanded);
+    
+    // If this is the topics folder or we have an external toggle handler,
+    // use the external state management
+    if (folder.id === 'topics' && onToggleFolder) {
+      onToggleFolder(folder.id);
+    } else {
+      // For other folders, use internal state
+      setExpanded(!expanded);
+    }
   };
   
   return (
     <div className={styles.folderItem}>
       <div 
-        className={`${styles.folderRow} ${isActive ? styles.active : ''}`}
-        onClick={() => onSelect(folder)}
+        className={`${styles.folderRow} ${isActive ? styles.active : ''} ${folder.id === 'topics' ? styles.topicsRow : ''}`}
+        onClick={(e) => {
+          // Select the folder in all cases
+          onSelect(folder);
+          
+          // Special handling for Topics folder
+          if (folder.id === 'topics' && onToggleFolder) {
+            e.stopPropagation();
+            onToggleFolder('topics');
+            return;
+          }
+        }}
       >
         {/* Only showing arrow, no bullet */}
         <span 
           className={`${styles.chevron} ${expanded ? styles.chevronExpanded : ''}`}
-          onClick={toggleExpand}
+          onClick={(e) => {
+            e.stopPropagation();
+            
+            // Direct implementation for Topics to guarantee it toggles
+            if (folder.id === 'topics' && onToggleFolder) {
+              onToggleFolder('topics');
+            } else {
+              toggleExpand(e);
+            }
+          }}
         >
-          {folder.id === 'topics' ? '↓' : '→'}
+          {folder.id === 'topics' && expandedFolders.includes('topics') ? '↓' : folder.id === 'topics' ? '→' : expanded ? '↓' : '→'}
         </span>
         <span className={styles.icon}>
           <span className={styles.folderIcon}>{folderIcon}</span>
@@ -181,6 +215,7 @@ interface FileExplorerProps {
   expandedFolders?: string[];
   activeTopicId?: string | null;
   onBackToTopics?: () => void;
+  onToggleFolder?: (folderId: string) => void;
 }
 
 const FileExplorer: React.FC<FileExplorerProps> = ({ 
@@ -188,7 +223,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   onSelect = () => {},
   expandedFolders = [],
   activeTopicId = null,
-  onBackToTopics = () => {}
+  onBackToTopics = () => {},
+  onToggleFolder = () => {}
 }) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   
@@ -229,6 +265,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                   onSelect={handleSelect} 
                   selected={selectedId}
                   expandedFolders={expandedFolders}
+                  onToggleFolder={onToggleFolder}
                   defaultExpanded={false}
                 />
               ) : (
@@ -252,6 +289,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                     selected={selectedId}
                     expandedFolders={expandedFolders}
                     defaultExpanded={item.id === 'topics' || item.id === 'shared'}
+                    onToggleFolder={onToggleFolder}
                   />
                 ) : (
                   <File 

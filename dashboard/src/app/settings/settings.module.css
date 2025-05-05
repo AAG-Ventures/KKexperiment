@@ -3,6 +3,8 @@
   margin: 0 auto;
   padding: 0 1rem;
   color: var(--foreground-primary);
+  background-color: var(--background-primary);
+  min-height: 100vh;
 }
 
 .header {
@@ -350,4 +352,278 @@
   height: auto;
   filter: drop-shadow(0px 0px 1px rgba(0,0,0,0.1));
   isolation: isolate;
+}
+
+.title {
+  font-size: 2rem;
+  margin: 1.5rem 0 2rem;
+  font-weight: 600;
+}
+
+.settingsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.settingsSection {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+}
+
+.settingsSection h2 {
+  font-size: 1.25rem;
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  font-weight: 600;
+  color: var(--foreground-primary);
+}
+
+.settingItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.settingItem:last-child {
+  margin-bottom: 1.5rem;
+}
+
+.settingItem label {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.settingItem input[type="text"],
+.settingItem input[type="email"],
+.settingItem select {
+  background: var(--input-bg);
+  border: 1px solid var(--border-light);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  color: var(--input-text);
+  font-size: 0.9rem;
+  width: 200px;
+}
+
+.actionButton {
+  background-color: var(--brand-primary);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--transition-normal);
+}
+
+.actionButton:hover {
+  background-color: var(--brand-primary-hover);
+}
+
+/* Connected Tools Styles */
+.connectedTools {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.toolItem {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0;
+  justify-content: space-between;
+}
+
+.toolIcon {
+  margin-right: 0.75rem;
+  font-size: 1.25rem;
+}
+
+.toolName {
+  flex: 1;
+  font-weight: 500;
+}
+
+.connectButton {
+  background-color: var(--background-tertiary);
+  color: var(--foreground-secondary);
+  border: 1px solid var(--border-light);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.connectButton:hover {
+  background-color: var(--background-secondary);
+  border-color: var(--border-medium);
+}
+
+.connected {
+  background-color: var(--success-light);
+  color: var(--success);
+  border-color: var(--success-light);
+}
+
+.connected:hover {
+  background-color: var(--success-lighter);
+  border-color: var(--success);
+}
+
+.moreButton {
+  margin-top: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--brand-primary);
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.moreButton:hover {
+  color: var(--brand-primary-hover);
+  text-decoration: underline;
+}
+
+/* Theme Selector Styles */
+.themeSelector {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.themeOption {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.themeOption input[type="radio"] {
+  margin-right: 0.5rem;
+}
+
+.themeOption label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.themeSample {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--radius-sm);
+  margin-right: 0.5rem;
+  border: 1px solid var(--border-light);
+}
+
+.lightTheme {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+}
+
+.darkTheme {
+  background-color: #1a1a1a;
+  border: 1px solid #444;
+}
+
+.systemTheme {
+  background: linear-gradient(to right, #ffffff 50%, #1a1a1a 50%);
+}
+
+.notification {
+  background-color: var(--success-light);
+  color: var(--success);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Toggle Switch Styles */
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle label {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--background-tertiary);
+  transition: .4s;
+  border-radius: 34px;
+  border: 1px solid var(--border-light);
+}
+
+.toggle label:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+.toggle input:checked + label {
+  background-color: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+
+.toggle input:checked + label:before {
+  transform: translateX(18px);
+}
+
+/* Quick Actions Styles */
+.quickActionsInfo {
+  font-size: 0.9rem;
+}
+
+.shortcutItem {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.shortcutItem:last-child {
+  border-bottom: none;
+}
+
+.shortcutItem kbd {
+  background-color: var(--background-tertiary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 0.1rem 0.4rem;
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
+  margin: 0 0.25rem;
 }

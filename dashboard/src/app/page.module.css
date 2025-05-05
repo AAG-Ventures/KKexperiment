@@ -1292,6 +1292,9 @@
   flex-direction: column;
   position: relative; /* For absolute positioning of chat input */
   padding: 16px 16px 0 16px; /* Add consistent padding like other widgets */
+  min-height: 400px; /* Ensure minimum height for content */
+  /* Ensure there's always room for the input */
+  padding-bottom: 60px;
 }
 
 /* Removed .chatHeader as we're using .widgetHeader for chat now */
@@ -1403,11 +1406,13 @@
 .chatBody {
   flex: 1;
   padding: 8px 0 60px 0; /* Extra padding to account for fixed input */
-  overflow-y: hidden;
+  overflow-y: auto; /* Changed from hidden to auto to allow scrolling */
   font-size: var(--font-size-sm);
   color: var(--foreground-primary);
-  height: 100%;
+  height: calc(100% - 60px); /* Adjusted height to account for input */
+  max-height: 300px; /* Maximum height to prevent overflow */
   box-sizing: border-box;
+  margin-bottom: 10px; /* Extra space at bottom */
 }
 
 .chatMsg {
@@ -1427,17 +1432,20 @@
   font-size: var(--font-size-sm);
   border-radius: 0 0 var(--radius-lg) var(--radius-lg); /* Match parent border radius */
   outline: none;
-  width: 100%;
+  width: calc(100% - 32px); /* Adjusted width to account for padding */
+  margin: 0 16px; /* Horizontal margin for spacing */
   background: var(--input-bg);
   color: var(--input-text);
   transition: background-color var(--transition-normal), color var(--transition-normal);
   position: absolute;
-  bottom: 0;
+  bottom: 10px; /* Small space from bottom */
   left: 0;
   right: 0;
   box-sizing: border-box;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-  z-index: 5; /* Ensure it's above other content */
+  z-index: 10; /* Increased z-index to ensure visibility */
+  display: block !important; /* Force display */
+  height: 45px; /* Fixed height for the input */
 }
 
 @media (max-width: 1200px) {
@@ -1463,6 +1471,21 @@
   .sidebar {
     height: auto;
     padding: 12px 8px;
+  }
+  /* Ensure chat input is visible on mobile */
+  .chatbox {
+    position: relative;
+    padding-bottom: 60px; /* Make room for input */
+    min-height: 300px;
+  }
+  .chatInput {
+    display: block !important;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: calc(100% - 32px);
+    z-index: 100;
   }
   .widgets {
     padding: 8px;
@@ -1622,4 +1645,63 @@ a.secondary {
   .logo {
     filter: invert();
   }
+}
+
+/* File Viewer Styles */
+.fileViewer {
+  width: 100%;
+  height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+  background: var(--background-primary);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  position: relative;
+}
+
+.fileViewerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.fileViewerTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--foreground-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 70%;
+}
+
+.fileViewerControls {
+  display: flex;
+  gap: 10px;
+}
+
+.fileViewerButton {
+  padding: 6px 12px;
+  background-color: var(--background-tertiary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  color: var(--foreground-primary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fileViewerButton:hover {
+  background-color: var(--background-secondary);
+  border-color: var(--brand-primary);
+}
+
+.fileViewerContent {
+  flex: 1;
+  overflow: auto;
+  padding: 0;
 }

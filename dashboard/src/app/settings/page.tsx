@@ -1,15 +1,31 @@
 "use client";
 
-import { useTheme } from "../context/ThemeContext";
 import styles from "./settings.module.css";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
 export default function SettingsPage() {
-  const { theme, setTheme } = useTheme();
+  const [theme, setTheme] = useState<"light" | "dark" | "system">("light");
   const [saveNotification, setSaveNotification] = useState<string | null>(null);
   
+  // Initialize theme from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedTheme = localStorage.getItem("theme") as "light" | "dark" | "system" || "light";
+      setTheme(storedTheme);
+      
+      // Apply theme to document
+      document.documentElement.classList.remove("light-theme", "dark-theme");
+      if (storedTheme === "system") {
+        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.classList.add(`${systemTheme}-theme`);
+      } else {
+        document.documentElement.classList.add(`${storedTheme}-theme`);
+      }
+    }
+  }, []);
+
   // Helper function to show and auto-hide the save notification
   const showSavedNotification = () => {
     setSaveNotification("Theme preference saved!");
@@ -17,6 +33,28 @@ export default function SettingsPage() {
       setSaveNotification(null);
     }, 3000);
   };
+  
+  // Handle theme change
+  const handleThemeChange = (newTheme: "light" | "dark" | "system") => {
+    setTheme(newTheme);
+    
+    if (typeof window !== 'undefined') {
+      // Save to localStorage
+      localStorage.setItem("theme", newTheme);
+      
+      // Apply theme to document
+      document.documentElement.classList.remove("light-theme", "dark-theme");
+      if (newTheme === "system") {
+        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.classList.add(`${systemTheme}-theme`);
+      } else {
+        document.documentElement.classList.add(`${newTheme}-theme`);
+      }
+    }
+    
+    showSavedNotification();
+  };
+
   return (
     <div className={styles.settingsWrapper}>
       <div className={styles.header}>
@@ -102,10 +140,7 @@ export default function SettingsPage() {
                 id="light" 
                 name="theme" 
                 checked={theme === "light"}
-                onChange={() => {
-                  setTheme("light");
-                  showSavedNotification();
-                }}
+                onChange={() => handleThemeChange("light")}
               />
               <label htmlFor="light">
                 <div className={styles.themeSample + " " + styles.lightTheme}></div>
@@ -118,10 +153,7 @@ export default function SettingsPage() {
                 id="dark" 
                 name="theme" 
                 checked={theme === "dark"}
-                onChange={() => {
-                  setTheme("dark");
-                  showSavedNotification();
-                }}
+                onChange={() => handleThemeChange("dark")}
               />
               <label htmlFor="dark">
                 <div className={styles.themeSample + " " + styles.darkTheme}></div>
@@ -134,10 +166,7 @@ export default function SettingsPage() {
                 id="system" 
                 name="theme" 
                 checked={theme === "system"}
-                onChange={() => {
-                  setTheme("system");
-                  showSavedNotification();
-                }}
+                onChange={() => handleThemeChange("system")}
               />
               <label htmlFor="system">
                 <div className={styles.themeSample + " " + styles.systemTheme}></div>
@@ -200,16 +229,9 @@ export default function SettingsPage() {
             </div>
             <div className={styles.shortcutItem}>
               <span>Search</span>
-              <kbd>Ctrl</kbd> + <kbd>/</kbd>
+              <kbd>Ctrl</kbd> + <kbd>F</kbd>
             </div>
           </div>
-        </section>
-
-        {/* Account Actions */}
-        <section className={styles.settingsSection + " " + styles.accountActions}>
-          <h2>Account</h2>
-          <button className={styles.actionButton}>Export All Data</button>
-          <button className={styles.actionButton + " " + styles.dangerButton}>Logout</button>
         </section>
       </div>
     </div>

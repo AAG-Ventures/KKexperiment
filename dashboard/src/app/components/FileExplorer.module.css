@@ -4,6 +4,12 @@
   width: 100%;
 }
 
+/* Special styling for Topics row to make it more clickable */
+.topicsRow {
+  font-weight: 600;
+  cursor: pointer !important;
+}
+
 .fileTree {
   padding: 0;
   margin: 0;
