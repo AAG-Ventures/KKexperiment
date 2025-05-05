@@ -1678,6 +1678,57 @@ a.secondary {
   max-width: 70%;
 }
 
+.taskContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-left: 10px;
+  flex: 1;
+  min-width: 0; /* Required for text-overflow to work */
+}
+
+.taskText {
+  font-size: 14px;
+  color: var(--text-primary);
+  /* Add ellipsis for long task names */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 8px; /* Space between task text and deadline */
+  flex: 1;
+}
+
+.taskDeadline {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+  padding: 1px 6px;
+  white-space: nowrap; /* Prevent wrapping */
+  background-color: var(--background-light);
+  margin-left: auto; /* Push to the right side */
+}
+
+.urgentDeadline {
+  color: #E53E3E;
+  background-color: rgba(229, 62, 62, 0.1);
+  font-weight: 600;
+}
+
+.soonDeadline {
+  color: #DD6B20;
+  background-color: rgba(221, 107, 32, 0.1);
+  font-weight: 500;
+}
+
+.normalDeadline {
+  color: #38A169;
+  background-color: rgba(56, 161, 105, 0.1);
+  font-weight: 500;
+}
+
 .fileViewerControls {
   display: flex;
   gap: 10px;

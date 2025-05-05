@@ -17,6 +17,7 @@ type Task = {
   id: string;
   text: string;
   completed: boolean;
+  deadline?: Date; // Add deadline field
 };
 
 type WidgetItem = {
@@ -429,13 +430,24 @@ export default function Dashboard() {
     if (savedTasks) {
       setTasks(JSON.parse(savedTasks));
     } else {
-      // Default tasks with the specific tasks requested by the user
+      // Default tasks with the specific dates requested
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      const inThreeDays = new Date();
+      inThreeDays.setDate(inThreeDays.getDate() + 3);
+      
+      // Create specific dates (May 12, May 19, and June 30)
+      const may12 = new Date(2025, 4, 12); // Note: months are 0-indexed
+      const may19 = new Date(2025, 4, 19);
+      const june30 = new Date(2025, 5, 30);
+      
       const defaultTasks = [
-        { id: '1', text: 'Design dashboard UI', completed: false },
-        { id: '2', text: 'Review agent history', completed: false },
-        { id: '3', text: 'Connect Slack', completed: false },
-        { id: '4', text: 'Review marketing plan', completed: false },
-        { id: '5', text: 'Connect calendar', completed: false },
+        { id: '1', text: 'Design dashboard UI', completed: false, deadline: tomorrow },
+        { id: '2', text: 'Review agent history', completed: false, deadline: inThreeDays },
+        { id: '3', text: 'Connect Slack', completed: false, deadline: may12 },
+        { id: '4', text: 'Review marketing plan', completed: false, deadline: may19 },
+        { id: '5', text: 'Connect calendar', completed: false, deadline: june30 },
       ];
       setTasks(defaultTasks);
     }
@@ -457,6 +469,80 @@ export default function Dashboard() {
       localStorage.setItem('dashboard_tasks', JSON.stringify(tasks));
     }
   }, [tasks]);
+  
+  // Helper function to format task deadlines
+  const formatDeadline = (date: Date): string => {
+    const now = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    // Clear time portion for date comparison
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const nowOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrowOnly = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate());
+    
+    // Check if the deadline is today or tomorrow
+    if (dateOnly.getTime() === nowOnly.getTime()) {
+      return 'Today';
+    } else if (dateOnly.getTime() === tomorrowOnly.getTime()) {
+      return 'Tomorrow';
+    } else {
+      // Format dates within the next week as day names
+      const daysDiff = Math.floor((dateOnly.getTime() - nowOnly.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysDiff < 7) {
+        const options: Intl.DateTimeFormatOptions = { weekday: 'long' };
+        return date.toLocaleDateString(undefined, options);
+      } else {
+        // Format with month and day for dates further away
+        const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+        return date.toLocaleDateString(undefined, options);
+      }
+    }
+  };
+  
+  // Helper functions for deadline urgency
+  const isDeadlineUrgent = (date: Date): boolean => {
+    const now = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    // Clear time portion for date comparison
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const nowOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrowOnly = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate());
+    
+    // Return true if deadline is today or tomorrow
+    return dateOnly.getTime() === nowOnly.getTime() || dateOnly.getTime() === tomorrowOnly.getTime();
+  };
+  
+  const isDeadlineSoon = (date: Date): boolean => {
+    const now = new Date();
+    
+    // Clear time portion for date comparison
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const nowOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    // Calculate difference in days
+    const daysDiff = Math.floor((dateOnly.getTime() - nowOnly.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Return true if deadline is within 2-4 days (not today/tomorrow, but still coming up soon)
+    return daysDiff > 1 && daysDiff <= 4;
+  };
+  
+  // Helper function to identify normal deadlines (more than 4 days away)
+  const isDeadlineNormal = (date: Date): boolean => {
+    const now = new Date();
+    
+    // Clear time portion for date comparison
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const nowOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    // Calculate difference in days
+    const daysDiff = Math.floor((dateOnly.getTime() - nowOnly.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Return true if deadline is more than 4 days away
+    return daysDiff > 4;
+  };
 
   // Function to toggle task completion status
   const toggleTaskCompletion = (id: string) => {
@@ -1460,6 +1546,16 @@ export default function Dashboard() {
                           <ul className={styles.taskList}>
                             {tasks
                               .filter(task => !task.completed)
+                              // Sort tasks by deadline (nearest at top)
+                              .sort((a, b) => {
+                                // Tasks without deadlines go to the bottom
+                                if (!a.deadline && !b.deadline) return 0;
+                                if (!a.deadline) return 1;
+                                if (!b.deadline) return -1;
+                                
+                                // Sort by date
+                                return a.deadline.getTime() - b.deadline.getTime();
+                              })
                               .map(task => (
                                 <li key={task.id} className={styles.taskItem}>
                                   <button 
@@ -1469,7 +1565,17 @@ export default function Dashboard() {
                                   >
                                     <span className={styles.checkboxInner}></span>
                                   </button>
-                                  <span className={styles.taskText}>{task.text}</span>
+                                  <div className={styles.taskContent}>
+                                    <span className={styles.taskText}>{task.text}</span>
+                                    {task.deadline && (
+                                      <span className={`${styles.taskDeadline} 
+                                        ${isDeadlineUrgent(task.deadline) ? styles.urgentDeadline : ''}
+                                        ${isDeadlineSoon(task.deadline) ? styles.soonDeadline : ''}
+                                        ${isDeadlineNormal(task.deadline) ? styles.normalDeadline : ''}`}>
+                                        {formatDeadline(task.deadline)}
+                                      </span>
+                                    )}
+                                  </div>
                                 </li>
                               ))}
                             
@@ -1531,7 +1637,17 @@ export default function Dashboard() {
                                         </svg>
                                       </span>
                                     </button>
-                                    <span className={styles.taskText}>{task.text}</span>
+                                    <div className={styles.taskContent}>
+                                      <span className={styles.taskText}>{task.text}</span>
+                                      {task.deadline && (
+                                        <span className={`${styles.taskDeadline} 
+                                          ${isDeadlineUrgent(task.deadline) ? styles.urgentDeadline : ''}
+                                          ${isDeadlineSoon(task.deadline) ? styles.soonDeadline : ''}
+                                          ${isDeadlineNormal(task.deadline) ? styles.normalDeadline : ''}`}>
+                                          {formatDeadline(task.deadline)}
+                                        </span>
+                                      )}
+                                    </div>
                                   </li>
                                 ))}
                             </ul>
