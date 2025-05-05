@@ -1,29 +1,54 @@
 .fileExplorer {
   font-family: var(--font-sans);
+  height: 100%;
   width: 100%;
 }
 
 .fileTree {
-  list-style-type: none;
   padding: 0;
   margin: 0;
+  font-size: 13px;
+  list-style-type: none;
+}
+
+.children {
+  padding: 0;
+  margin: 0;
+  padding-left: 10px;
+  margin-left: 4px;
+  font-size: 13px;
+  list-style-type: none;
 }
 
 .fileItem, .folderItem {
   padding: 0;
-  margin: 0;
+  margin: 1px 0;
   position: relative;
+  list-style-type: none;
 }
 
 .fileRow, .folderRow {
   display: flex;
   align-items: center;
-  padding: 8px 10px;
-  border-radius: 6px;
+  padding: 2px 3px;
+  border-radius: 2px;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.2s;
   user-select: none;
-  margin: 3px 0;
+}
+
+.breadcrumbNav {
+  display: flex;
+  align-items: center;
+  padding: 2px 0;
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 11px;
+  color: var(--foreground-secondary);
+}
+
+.topicAsRoot .topicsSection {
+  display: none;
 }
 
 .fileRow:hover, .folderRow:hover {
@@ -62,24 +87,28 @@
 }
 
 .chevron {
-  width: 16px;
-  height: 16px;
-  transition: transform 0.2s ease;
+  width: 14px;
+  height: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--foreground-secondary);
-  margin-right: 4px;
+  margin-right: 2px;
+  color: var(--foreground-tertiary);
+  transform: rotate(0deg); /* Point right when collapsed */
+  transition: transform 0.2s;
+  user-select: none;
+  font-size: 9px;
 }
 
 .chevronExpanded {
-  transform: rotate(90deg);
+  transform: rotate(90deg); /* Point down when expanded */
 }
 
 .children {
-  margin-left: 16px;
-  padding-left: 14px;
-  border-left: 1px dashed var(--border-light);
+  padding-left: 10px;
+  margin-left: 4px;
+  /* Remove dotted line, only use indentation */
+  border-left: none;
 }
 
 /* File type indicators */
@@ -104,15 +133,9 @@
 }
 
 /* Tree connection lines */
-.fileItem::before,
-.folderItem::before {
-  content: "";
-  position: absolute;
-  left: -12px;
-  top: 15px;
-  width: 12px;
-  height: 1px;
-  background-color: var(--border-light);
+/* Remove bullets */
+.fileItem::before, .folderItem::before {
+  display: none;
 }
 
 /* Context menu indicator */

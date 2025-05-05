@@ -597,11 +597,45 @@
 }
 
 /* Card Grid Styles */
+.topicShortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+  margin-top: 10px;
+}
+
+.topicShortcutButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--background-tertiary);
+  border: 1px solid var(--border-medium);
+  padding: 8px 16px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--foreground-default);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-xs);
+}
+
+.topicShortcutButton:hover {
+  background: var(--background-secondary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.topicIcon {
+  font-size: 18px;
+}
+
 .cardGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
   width: 100%;
 }
 

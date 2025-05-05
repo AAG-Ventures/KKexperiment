@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import styles from "./page.module.css";
 import AddModal from "./components/AddModal";
 import { DraggableWidgetContainer } from "./components/DraggableWidgetContainer";
-import FileExplorer from './components/FileExplorer';
+import FileExplorer, { isFolder } from './components/FileExplorer';
 import { knowledgebaseData } from './components/KnowledgebaseSampleData';
 // Import explicitly for client component
 import { useRouter } from 'next/navigation';
@@ -85,6 +85,12 @@ export default function Dashboard() {
   // Initialize with empty states to prevent server/client hydration mismatch
   const [chatTabs, setChatTabs] = useState<ChatTab[]>([]);
   const [processes, setProcesses] = useState<Process[]>([]);
+  
+  // Track expanded folders in knowledgebase
+  const [expandedFolders, setExpandedFolders] = useState<string[]>(['topics']);
+  
+  // Track active topic in knowledgebase
+  const [activeTopicId, setActiveTopicId] = useState<string | null>(null);
   
   // Chat tab input reference
   const renameInputRef = useRef<HTMLInputElement>(null);
@@ -501,6 +507,24 @@ export default function Dashboard() {
     setIsAddingTask(false);
     setNewTaskText('');
   };
+  
+  // Function to set a topic as the active root in knowledgebase
+  const setTopicAsRoot = (topicId: string) => {
+    // Set this topic as the active topic
+    setActiveTopicId(topicId);
+    
+    // Clear previous expanded folders except the active topic
+    setExpandedFolders([topicId]);
+    
+    // Also switch to the corresponding tab
+    setActiveTabId(topicId);
+  };
+  
+  // Function to return to main Topics view in knowledgebase
+  const backToAllTopics = () => {
+    setActiveTopicId(null);
+    setExpandedFolders(['topics']);
+  };
 
   // Handle opening the add modal
   const handleOpenAddModal = () => {
@@ -688,10 +712,18 @@ export default function Dashboard() {
                         <div className={styles.fileExplorerContainer}>
                           <FileExplorer 
                             data={knowledgebaseData}
+                            expandedFolders={expandedFolders}
+                            activeTopicId={activeTopicId}
+                            onBackToTopics={backToAllTopics}
                             onSelect={(item) => {
                               console.log('Selected:', item.name);
-                              // Open Work tab when the Work topic is clicked
-                              if (item.id === 'work') {
+                              // If it's a topic folder, set it as root
+                              if (isFolder(item) && item.id.includes('work') || item.id.includes('health') || 
+                                  item.id.includes('finance') || item.id.includes('travel') || item.id.includes('hobbies')) {
+                                setTopicAsRoot(item.id);
+                              }
+                              // For Work topic specifically (legacy code)
+                              else if (item.id === 'work') {
                                 // Check if Work tab already exists
                                 const workTabExists = openTabs.some(tab => tab.id === 'work');
                                 if (!workTabExists) {
@@ -885,6 +917,81 @@ export default function Dashboard() {
             /* Show regular dashboard content for non-Work tabs */
             <>
               <h2 className={styles.pageTitle}>Dashboard Overview</h2>
+              
+              {/* Topic Shortcuts */}
+              <div className={styles.topicShortcuts}>
+                <button 
+                  className={styles.topicShortcutButton}
+                  onClick={() => {
+                    setTopicAsRoot('work'); // Set Work as root in knowledgebase
+                    // No need to call setActiveTabId as setTopicAsRoot already does this
+                  }}
+                >
+                  <span className={styles.topicIcon}>💼</span>
+                  Work
+                </button>
+                <button 
+                  className={styles.topicShortcutButton}
+                  onClick={() => {
+                    setTopicAsRoot('health'); // Set Health as root in knowledgebase
+                    // No need to call setActiveTabId as setTopicAsRoot already does this
+                  }}
+                >
+                  <span className={styles.topicIcon}>❤️</span>
+                  Health
+                </button>
+                <button 
+                  className={styles.topicShortcutButton}
+                  onClick={() => {
+                    // Check if Finance tab exists, if not create it
+                    const financeTab = openTabs.find(tab => tab.id === 'finance');
+                    if (!financeTab) {
+                      setOpenTabs(prevTabs => [
+                        ...prevTabs,
+                        { id: 'finance', title: 'Finance' }
+                      ]);
+                    }
+                    setTopicAsRoot('finance');
+                  }}
+                >
+                  <span className={styles.topicIcon}>💰</span>
+                  Finance
+                </button>
+                <button 
+                  className={styles.topicShortcutButton}
+                  onClick={() => {
+                    // Check if Travel tab exists, if not create it
+                    const travelTab = openTabs.find(tab => tab.id === 'travel');
+                    if (!travelTab) {
+                      setOpenTabs(prevTabs => [
+                        ...prevTabs,
+                        { id: 'travel', title: 'Travel' }
+                      ]);
+                    }
+                    setTopicAsRoot('travel');
+                  }}
+                >
+                  <span className={styles.topicIcon}>✈️</span>
+                  Travel
+                </button>
+                <button 
+                  className={styles.topicShortcutButton}
+                  onClick={() => {
+                    // Check if Hobbies tab exists, if not create it
+                    const hobbiesTab = openTabs.find(tab => tab.id === 'hobbies');
+                    if (!hobbiesTab) {
+                      setOpenTabs(prevTabs => [
+                        ...prevTabs,
+                        { id: 'hobbies', title: 'Hobbies' }
+                      ]);
+                    }
+                    setTopicAsRoot('hobbies');
+                  }}
+                >
+                  <span className={styles.topicIcon}>🎮</span>
+                  Hobbies
+                </button>
+              </div>
               
               <div className={styles.cardGrid}>
                 {/* Recent Activity Card */}
