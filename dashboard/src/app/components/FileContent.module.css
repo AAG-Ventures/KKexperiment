@@ -1,0 +1,119 @@
+.fileContentContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+  background-color: var(--background-secondary);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  min-height: 300px;
+  color: var(--foreground-secondary);
+}
+
+.imageContainer {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow: auto;
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+}
+
+.imagePreview {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.pdfContainer {
+  width: 100%;
+  height: 100%;
+  min-height: 600px;
+}
+
+.pdfPreview {
+  width: 100%;
+  height: 100%;
+  min-height: 600px;
+  border: none;
+  border-radius: var(--radius-md);
+}
+
+.codeContainer {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  border-radius: var(--radius-md);
+  background-color: var(--background-tertiary);
+}
+
+.textPreview {
+  padding: 16px;
+  margin: 0;
+  width: 100%;
+  white-space: pre-wrap;
+  font-family: monospace;
+  font-size: 14px;
+  color: var(--foreground-primary);
+  background-color: var(--background-tertiary);
+  border-radius: var(--radius-md);
+  overflow: auto;
+}
+
+.noPreview {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  min-height: 300px;
+  color: var(--foreground-secondary);
+  text-align: center;
+  padding: 24px;
+}
+
+.fileIcon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.fileInfoTable {
+  margin-top: 24px;
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 500px;
+}
+
+.fileInfoTable td {
+  padding: 8px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.fileInfoTable td:first-child {
+  font-weight: 500;
+  width: 140px;
+  color: var(--foreground-primary);
+}
+
+.emptyState {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  min-height: 300px;
+  color: var(--foreground-secondary);
+  font-size: 16px;
+  font-style: italic;
+}

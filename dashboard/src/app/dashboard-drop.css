@@ -1,0 +1,4 @@
+.drag-active {
+  border: 2px dashed var(--brand-primary) !important;
+  background-color: rgba(103, 58, 183, 0.05) !important;
+}

@@ -704,7 +704,19 @@ export default function Dashboard() {
                     id: 'knowledgebase',
                     content: (
                       <aside className={styles.knowledgeWidget}>
-                        <div className={styles.widgetHeader}>
+                        <div 
+                          className={`${styles.widgetHeader} ${activeTopicId ? styles.clickableHeader : ''}`}
+                          onClick={() => {
+                            if (activeTopicId) {
+                              // If we're viewing a specific topic, go back to main view
+                              backToAllTopics();
+                            }
+                          }}
+                          title={activeTopicId ? "Return to main view" : ""}
+                          style={{
+                            cursor: activeTopicId ? 'pointer' : 'default',
+                          }}
+                        >
                           <h3>Knowledgebase</h3>
                           <span className={styles.widgetIcon}>📚</span>
                         </div>
