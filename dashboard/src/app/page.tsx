@@ -14,11 +14,18 @@ import { knowledgebaseData } from './components/KnowledgebaseSampleData';
 import { useRouter } from 'next/navigation';
 
 // Type definitions
+type TaskPriority = 'low' | 'medium' | 'high';
+
 type Task = {
   id: string;
   text: string;
   completed: boolean;
   deadline?: Date; // Add deadline field
+  description?: string;
+  assignee?: string;
+  priority?: TaskPriority;
+  attachments?: string[];
+  comments?: { id: string; author: string; text: string; timestamp: Date }[];
 };
 
 type WidgetItem = {
@@ -70,6 +77,11 @@ export default function Dashboard() {
   // File handling state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const dashboardRef = useRef<HTMLDivElement>(null);
+  
+  // Task detail panel state
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [newComment, setNewComment] = useState('');
+  const [newAttachment, setNewAttachment] = useState('');
   
   // Refs
   const newTaskInputRef = useRef<HTMLInputElement>(null);
@@ -444,13 +456,76 @@ export default function Dashboard() {
       const june30 = new Date(2025, 5, 30);
       
       const defaultTasks = [
-        { id: '1', text: 'Design dashboard UI', completed: false, deadline: tomorrow },
-        { id: '2', text: 'Review agent history', completed: false, deadline: inThreeDays },
-        { id: '3', text: 'Connect Slack', completed: false, deadline: may12 },
-        { id: '4', text: 'Review marketing plan', completed: false, deadline: may19 },
-        { id: '5', text: 'Connect calendar', completed: false, deadline: june30 },
+        { 
+          id: '1', 
+          text: 'Design dashboard UI', 
+          completed: false, 
+          deadline: tomorrow,
+          description: 'Create wireframes and design mockups for the main dashboard interface. Focus on widget layout, color scheme, and responsive design. Include considerations for dark mode and accessibility.',
+          assignee: 'Karina',
+          priority: 'high' as TaskPriority,
+          attachments: ['dashboard_wireframe.fig', 'color_palette.pdf'],
+          comments: [
+            { 
+              id: '101', 
+              author: 'Kotryna', 
+              text: 'I like the current direction. Can we add more emphasis on the data visualization widgets?', 
+              timestamp: new Date(2025, 4, 3) 
+            },
+            { 
+              id: '102', 
+              author: 'Karina', 
+              text: 'Will incorporate more visualization options in the next iteration.', 
+              timestamp: new Date(2025, 4, 4) 
+            }
+          ]
+        },
+        { 
+          id: '2', 
+          text: 'Review agent history', 
+          completed: false, 
+          deadline: inThreeDays,
+          description: '',
+          assignee: 'Alex',
+          priority: 'medium' as TaskPriority,
+          attachments: [],
+          comments: []
+        },
+        { 
+          id: '3', 
+          text: 'Connect Slack', 
+          completed: false, 
+          deadline: may12,
+          description: '',
+          assignee: 'Tomas',
+          priority: 'low' as TaskPriority,
+          attachments: [],
+          comments: []
+        },
+        { 
+          id: '4', 
+          text: 'Review marketing plan', 
+          completed: false, 
+          deadline: may19,
+          description: '',
+          assignee: 'Karina',
+          priority: 'medium' as TaskPriority,
+          attachments: [],
+          comments: []
+        },
+        { 
+          id: '5', 
+          text: 'Connect calendar', 
+          completed: false, 
+          deadline: june30,
+          description: '',
+          assignee: 'Marius',
+          priority: 'low' as TaskPriority,
+          attachments: [],
+          comments: []
+        },
       ];
-      setTasks(defaultTasks);
+      setTasks(defaultTasks as Task[]);
     }
     
     // Initialize Active Processes with current chat tabs
@@ -547,9 +622,67 @@ export default function Dashboard() {
 
   // Function to toggle task completion status
   const toggleTaskCompletion = (id: string) => {
-    setTasks(prevTasks => prevTasks.map(task => 
+    const updatedTasks = tasks.map(task => 
       task.id === id ? { ...task, completed: !task.completed } : task
-    ));
+    );
+    setTasks(updatedTasks);
+    localStorage.setItem('dashboard_tasks', JSON.stringify(updatedTasks));
+  };
+  
+  // Function to update task description
+  const updateTaskDescription = (taskId: string, description: string) => {
+    if (!description.trim()) return;
+    
+    const updatedTasks = tasks.map(task => 
+      task.id === taskId ? { ...task, description } : task
+    );
+    setTasks(updatedTasks);
+    localStorage.setItem('dashboard_tasks', JSON.stringify(updatedTasks));
+  };
+  
+  // Function to add a comment to a task
+  const addTaskComment = (taskId: string) => {
+    if (!newComment.trim()) return;
+    
+    const updatedTasks = tasks.map(task => {
+      if (task.id === taskId) {
+        const comment = {
+          id: `comment-${Date.now()}`,
+          author: 'You', // In a real app, get the current user
+          text: newComment,
+          timestamp: new Date()
+        };
+        
+        return {
+          ...task,
+          comments: task.comments ? [...task.comments, comment] : [comment]
+        };
+      }
+      return task;
+    });
+    
+    setTasks(updatedTasks);
+    localStorage.setItem('dashboard_tasks', JSON.stringify(updatedTasks));
+    setNewComment('');
+  };
+  
+  // Function to add an attachment to a task
+  const addTaskAttachment = (taskId: string) => {
+    if (!newAttachment.trim()) return;
+    
+    const updatedTasks = tasks.map(task => {
+      if (task.id === taskId) {
+        return {
+          ...task,
+          attachments: task.attachments ? [...task.attachments, newAttachment] : [newAttachment]
+        };
+      }
+      return task;
+    });
+    
+    setTasks(updatedTasks);
+    localStorage.setItem('dashboard_tasks', JSON.stringify(updatedTasks));
+    setNewAttachment('');
   };
   
   // Handle marking a notification as read
@@ -1251,7 +1384,14 @@ export default function Dashboard() {
                           try {
                             // Check if File System Access API is available
                             if ('showOpenFilePicker' in window) {
-                              const fileHandle = await (window as any).showOpenFilePicker({
+                              // Define proper type for FileSystemFileHandle
+                              interface FileSystemFileHandle {
+                                getFile(): Promise<File>;
+                              }
+                              
+                              const fileHandle = await (window as unknown as {
+                                showOpenFilePicker(options: object): Promise<FileSystemFileHandle[]>;
+                              }).showOpenFilePicker({
                                 types: [
                                   {
                                     description: 'All Files',
@@ -1519,7 +1659,7 @@ export default function Dashboard() {
                         {tasks.filter(task => !task.completed).length === 0 && !isAddingTask ? (
                           <div className={styles.emptyTasksMessage}>
                             <div className={styles.emptyTasksIcon}>✓</div>
-                            <p>You've completed everything in your plan!</p>
+                            <p>You&apos;ve completed everything in your plan!</p>
                             <button 
                               className={styles.addTaskButton}
                               onClick={startAddingTask}
@@ -1542,15 +1682,21 @@ export default function Dashboard() {
                                 return a.deadline.getTime() - b.deadline.getTime();
                               })
                               .map(task => (
-                                <li key={task.id} className={styles.taskItem}>
+                                <li key={task.id} className={`${styles.taskItem} ${styles.taskItemClickable}`}>
                                   <button 
                                     className={styles.taskCheckbox} 
-                                    onClick={() => toggleTaskCompletion(task.id)}
+                                    onClick={(e) => {
+                                      e.stopPropagation(); // Prevent task selection when clicking checkbox
+                                      toggleTaskCompletion(task.id);
+                                    }}
                                     aria-label={`Mark ${task.text} as complete`}
                                   >
                                     <span className={styles.checkboxInner}></span>
                                   </button>
-                                  <div className={styles.taskContent}>
+                                  <div 
+                                    className={styles.taskContent}
+                                    onClick={() => setSelectedTaskId(task.id)}
+                                  >
                                     <span className={styles.taskText}>{task.text}</span>
                                     {task.deadline && (
                                       <span className={`${styles.taskDeadline} 
@@ -1610,10 +1756,13 @@ export default function Dashboard() {
                               {tasks
                                 .filter(task => task.completed)
                                 .map(task => (
-                                  <li key={task.id} className={`${styles.taskItem} ${styles.completedTask}`}>
+                                  <li key={task.id} className={`${styles.taskItem} ${styles.completedTask} ${styles.taskItemClickable}`}>
                                     <button 
                                       className={`${styles.taskCheckbox} ${styles.checked}`}
-                                      onClick={() => toggleTaskCompletion(task.id)}
+                                      onClick={(e) => {
+                                        e.stopPropagation(); // Prevent task selection when clicking checkbox
+                                        toggleTaskCompletion(task.id);
+                                      }}
                                       aria-label={`Mark ${task.text} as incomplete`}
                                     >
                                       <span className={`${styles.checkboxInner} ${styles.checked}`}>
@@ -1622,7 +1771,10 @@ export default function Dashboard() {
                                         </svg>
                                       </span>
                                     </button>
-                                    <div className={styles.taskContent}>
+                                    <div 
+                                      className={styles.taskContent}
+                                      onClick={() => setSelectedTaskId(task.id)}
+                                    >
                                       <span className={styles.taskText}>{task.text}</span>
                                       {task.deadline && (
                                         <span className={`${styles.taskDeadline} 
@@ -1914,7 +2066,171 @@ export default function Dashboard() {
           />
         </section>
       </div>
-      
+
+      {/* Task Detail Panel */}
+      <div className={`${styles.taskDetailPanel} ${selectedTaskId ? styles.taskDetailPanelOpen : ''}`}>
+        {selectedTaskId && (() => {
+          const task = tasks.find(t => t.id === selectedTaskId);
+          if (!task) return null;
+          
+          return (
+            <>
+              <div className={styles.taskDetailHeader}>
+                <h2 className={styles.taskDetailTitle}>{task.text}</h2>
+                <button 
+                  className={styles.taskDetailClose}
+                  onClick={() => setSelectedTaskId(null)}
+                  aria-label="Close task details"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className={styles.taskMeta}>
+                {task.deadline && (
+                  <div className={styles.taskMetaItem}>
+                    <span className={styles.taskMetaLabel}>Due Date</span>
+                    <span className={`${styles.taskMetaValue} 
+                      ${isDeadlineUrgent(task.deadline) ? styles.urgentDeadline : ''}
+                      ${isDeadlineSoon(task.deadline) ? styles.soonDeadline : ''}
+                      ${isDeadlineNormal(task.deadline) ? styles.normalDeadline : ''}`
+                    }>
+                      {formatDeadline(task.deadline)}
+                    </span>
+                  </div>
+                )}
+                
+                {task.assignee && (
+                  <div className={styles.taskMetaItem}>
+                    <span className={styles.taskMetaLabel}>Assignee</span>
+                    <span className={styles.taskMetaValue}>{task.assignee}</span>
+                  </div>
+                )}
+                
+                {task.priority && (
+                  <div className={styles.taskMetaItem}>
+                    <span className={styles.taskMetaLabel}>Priority</span>
+                    <span className={`${styles.taskMetaValue} ${styles[`priority${task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}`]}`}>
+                      {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                    </span>
+                  </div>
+                )}
+              </div>
+              
+              <div className={styles.taskDetailSection}>
+                <h3 className={styles.taskDetailSectionTitle}>Description</h3>
+                {task.description ? (
+                  <div className={styles.taskDescription}>
+                    {task.description}
+                  </div>
+                ) : (
+                  <p className={styles.taskDescription} style={{ fontStyle: 'italic', opacity: 0.7 }}>
+                    No description provided yet.
+                  </p>
+                )}
+                <textarea
+                  className={styles.taskDescriptionInput}
+                  placeholder="Add or update description..."
+                  defaultValue={task.description || ''}
+                  onChange={(e) => updateTaskDescription(task.id, e.target.value)}
+                />
+              </div>
+              
+              <div className={styles.taskDetailSection}>
+                <h3 className={styles.taskDetailSectionTitle}>Attachments</h3>
+                
+                {task.attachments && task.attachments.length > 0 ? (
+                  <div className={styles.taskAttachments}>
+                    {task.attachments.map((attachment, index) => (
+                      <div key={index} className={styles.taskAttachment}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <span>{attachment}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className={styles.taskDescription} style={{ fontStyle: 'italic', opacity: 0.7 }}>
+                    No attachments yet.
+                  </p>
+                )}
+                
+                <div className={styles.taskInputGroup}>
+                  <input
+                    type="text"
+                    className={styles.taskInput}
+                    placeholder="Add attachment filename..."
+                    value={newAttachment}
+                    onChange={(e) => setNewAttachment(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newAttachment.trim()) {
+                        addTaskAttachment(task.id);
+                      }
+                    }}
+                  />
+                  <button
+                    className={styles.taskButton}
+                    onClick={() => addTaskAttachment(task.id)}
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+              
+              <div className={styles.taskDetailSection}>
+                <h3 className={styles.taskDetailSectionTitle}>Comments</h3>
+                
+                {task.comments && task.comments.length > 0 ? (
+                  <div className={styles.taskComments}>
+                    {task.comments.map(comment => (
+                      <div key={comment.id} className={styles.taskComment}>
+                        <div className={styles.taskCommentHeader}>
+                          <span className={styles.taskCommentAuthor}>{comment.author}</span>
+                          <span className={styles.taskCommentDate}>
+                            {new Date(comment.timestamp).toLocaleDateString(undefined, {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric'
+                            })}
+                          </span>
+                        </div>
+                        <p className={styles.taskCommentText}>{comment.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className={styles.taskDescription} style={{ fontStyle: 'italic', opacity: 0.7 }}>
+                    No comments yet.
+                  </p>
+                )}
+                
+                <div className={styles.taskInputGroup}>
+                  <input
+                    type="text"
+                    className={styles.taskInput}
+                    placeholder="Add a comment..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newComment.trim()) {
+                        addTaskComment(task.id);
+                      }
+                    }}
+                  />
+                  <button
+                    className={styles.taskButton}
+                    onClick={() => addTaskComment(task.id)}
+                  >
+                    Post
+                  </button>
+                </div>
+              </div>
+            </>
+          );
+        })()}
+      </div>
+
       {/* Add Modal */}
       <AddModal 
         isOpen={isAddModalOpen} 
@@ -1931,7 +2247,7 @@ export default function Dashboard() {
             id: newTopicId,
             name: folderName,
             icon: '📁', // Default folder icon
-            children: [] as any[] // Type assertion to avoid type errors with children
+            children: [] as any[] // Using any[] to avoid type issues with children
           };
           
           // Add files to the new topic if any were provided
@@ -1960,12 +2276,12 @@ export default function Dashboard() {
                 id: `${newTopicId}-${file.name.toLowerCase().replace(/\s+/g, '-')}`,
                 name: file.name,
                 type: fileType
-              } as any); // Type assertion to avoid type errors
+              });
             });
           }
           
           // Add the new topic to the knowledgebase data
-          knowledgebaseData[0].children.push(newTopic as any); // Type assertion to fix TypeScript error
+          knowledgebaseData[0].children.push(newTopic);
           
           // Make sure the topics folder is expanded
           if (!expandedFolders.includes('topics')) {
