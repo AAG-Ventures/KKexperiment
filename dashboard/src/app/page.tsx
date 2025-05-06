@@ -9,6 +9,7 @@ import AddModal from "./components/AddModal";
 import { DraggableWidgetContainer } from "./components/DraggableWidgetContainer";
 import FileExplorer, { isFolder, FileExplorerProps } from './components/FileExplorer';
 import { UploadIcon, FileIcon, SearchIcon, ShareIcon, FolderIcon, ChevronRightIcon, ChevronDownIcon, EditIcon, MessageIcon, ClockIcon, BellIcon, UserIcon, PlusIcon, SendIcon, HomeIcon, CheckIcon } from './components/Icons';
+import DatePicker from './components/DatePicker';
 import { knowledgebaseData } from './components/KnowledgebaseSampleData';
 // Import explicitly for client component
 import { useRouter } from 'next/navigation';
@@ -86,6 +87,8 @@ export default function Dashboard() {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
   const [newAttachment, setNewAttachment] = useState('');
+  const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const [datePickerTaskId, setDatePickerTaskId] = useState<string | null>(null);
   
   // Refs
   const newTaskInputRef = useRef<HTMLInputElement>(null);
@@ -702,48 +705,83 @@ export default function Dashboard() {
     setNewComment('');
   };
   
+  // Function to update a task's deadline
+  const updateTaskDeadline = (taskId: string, newDeadline: Date) => {
+    const updatedTasks = tasks.map(task => {
+      if (task.id === taskId) {
+        return {
+          ...task,
+          deadline: newDeadline
+        };
+      }
+      return task;
+    });
+    
+    setTasks(updatedTasks);
+    localStorage.setItem('dashboard_tasks', JSON.stringify(updatedTasks));
+    setDatePickerVisible(false);
+    setDatePickerTaskId(null);
+  };
+  
   // Function to add an attachment to a task
   const addTaskAttachment = async (taskId: string) => {
     try {
       // Use the File System Access API to let user select a file
       if ('showOpenFilePicker' in window) {
-        // @ts-ignore - TypeScript doesn't have built-in types for the File System Access API
-        const [fileHandle] = await window.showOpenFilePicker({
+        // Define proper type for FileSystemFileHandle
+        interface FileSystemFileHandle {
+          getFile(): Promise<File>;
+        }
+        
+        const fileHandle = await (window as unknown as {
+          showOpenFilePicker(options: object): Promise<FileSystemFileHandle[]>;
+        }).showOpenFilePicker({
           multiple: false,
           types: [
             {
               description: 'All Files',
-              accept: {
-                'application/*': ['*'],
-                'image/*': ['*'],
-                'text/*': ['*']
-              }
-            }
-          ]
-        });
-
-        const file = await fileHandle.getFile();
-        const fileName = file.name;
-        
-        const updatedTasks = tasks.map(task => {
-          if (task.id === taskId) {
-            return {
-              ...task,
-              attachments: task.attachments ? [...task.attachments, fileName] : [fileName]
-            };
-          }
-          return task;
+              accept: {'*/*': []},
+            },
+          ],
         });
         
-        setTasks(updatedTasks);
-        localStorage.setItem('dashboard_tasks', JSON.stringify(updatedTasks));
+        if (fileHandle && fileHandle[0]) {
+          const file = await fileHandle[0].getFile();
+          updateTaskWithAttachment(taskId, file.name);
+        }
       } else {
-        alert('Your browser does not support the File System Access API. Please try a modern browser like Chrome, Edge, or Opera.');
+        // Fallback for browsers without File System Access API
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.onchange = (e) => {
+          const target = e.target as HTMLInputElement;
+          const file = target.files?.[0];
+          if (file) {
+            updateTaskWithAttachment(taskId, file.name);
+          }
+        };
+        input.click();
       }
     } catch (error) {
       // User cancelled the file picker or another error occurred
       console.error('Error selecting file:', error);
     }
+  };
+  
+  // Helper function to update task with a new attachment
+  const updateTaskWithAttachment = (taskId: string, fileName: string) => {
+    const updatedTasks = tasks.map(task => {
+      if (task.id === taskId) {
+        return {
+          ...task,
+          attachments: task.attachments ? [...task.attachments, fileName] : [fileName]
+        };
+      }
+      return task;
+    });
+    
+    setTasks(updatedTasks);
+    localStorage.setItem('dashboard_tasks', JSON.stringify(updatedTasks));
   };
   
   // Handle marking a notification as read
@@ -2121,12 +2159,43 @@ export default function Dashboard() {
                 {task.deadline && (
                   <div className={styles.taskMetaItem}>
                     <span className={styles.taskMetaLabel}>Due Date</span>
-                    <span className={`${styles.taskMetaValue} 
-                      ${isDeadlineUrgent(task.deadline) ? styles.urgentDeadline : ''}
-                      ${isDeadlineSoon(task.deadline) ? styles.soonDeadline : ''}
-                      ${isDeadlineNormal(task.deadline) ? styles.normalDeadline : ''}`
-                    }>
+                    <span 
+                      className={`${styles.taskMetaValue} 
+                        ${isDeadlineUrgent(task.deadline) ? styles.urgentDeadline : ''}
+                        ${isDeadlineSoon(task.deadline) ? styles.soonDeadline : ''}
+                        ${isDeadlineNormal(task.deadline) ? styles.normalDeadline : ''}`
+                      }
+                      onClick={() => {
+                        setDatePickerTaskId(task.id);
+                        setDatePickerVisible(true);
+                      }}
+                      style={{ 
+                        cursor: 'pointer',
+                        position: 'relative',
+                        textDecoration: 'underline',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
                       {formatDeadline(task.deadline)}
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M16 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M8 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M3 10H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      
+                      {datePickerVisible && datePickerTaskId === task.id && (
+                        <DatePicker
+                          selectedDate={task.deadline instanceof Date ? task.deadline : new Date(task.deadline)}
+                          onDateChange={(date) => updateTaskDeadline(task.id, date)}
+                          onClose={() => {
+                            setDatePickerVisible(false);
+                            setDatePickerTaskId(null);
+                          }}
+                        />
+                      )}
                     </span>
                   </div>
                 )}
@@ -2173,11 +2242,21 @@ export default function Dashboard() {
                 {task.attachments && task.attachments.length > 0 ? (
                   <div className={styles.taskAttachments}>
                     {task.attachments.map((attachment, index) => (
-                      <div key={index} className={styles.taskAttachment}>
+                      <div 
+                        key={index} 
+                        className={styles.taskAttachment}
+                        onClick={() => {
+                          // When clicked, simulate file click action
+                          // This is just for demonstration - in a real app this would open the actual file
+                          alert(`Opening attachment: ${attachment}`);
+                          // You could implement proper file preview functionality here
+                        }}
+                        style={{ cursor: 'pointer' }}
+                      >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
-                        <span>{attachment}</span>
+                        <span style={{ textDecoration: 'underline' }}>{attachment}</span>
                       </div>
                     ))}
                   </div>
