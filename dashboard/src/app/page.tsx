@@ -910,9 +910,8 @@ export default function Dashboard() {
         return; // Return early to prevent closing the modal
         
       case 'file':
-        // Logic for creating a file
-        handleCloseAddModal();
-        break;
+        // Don't close the modal for file - the AddModal component will show FileUploadModal
+        return; // Return early to prevent closing the modal
         
       case 'widget':
         // Logic for creating a new dashboard widget
@@ -920,19 +919,27 @@ export default function Dashboard() {
         handleCloseAddModal();
         break;
         
+      case 'agent':
+        // Logic for creating an agent
+        console.log('Creating a new agent');
+        handleCloseAddModal();
+        break;
+        
+      case 'workflow':
+        // Logic for creating a workflow
+        console.log('Creating a new workflow');
+        handleCloseAddModal();
+        break;
+        
+      case 'custom':
+        // Logic for custom/other
+        console.log('Creating a custom item');
+        handleCloseAddModal();
+        break;
+        
       default:
         // For all other options, close the modal
         handleCloseAddModal();
-        // Here you could show a modal for widget creation or add a default widget
-        break;
-      case 'agent':
-        // Logic for creating an agent
-        break;
-      case 'workflow':
-        // Logic for creating a workflow
-        break;
-      case 'custom':
-        // Logic for custom/other
         break;
     }
   };
@@ -1506,69 +1513,79 @@ export default function Dashboard() {
                     <div className={styles.actionButtons}>
                       <button 
                         className={styles.actionButton}
-                        onClick={async () => {
-                          try {
-                            // Check if File System Access API is available
-                            if ('showOpenFilePicker' in window) {
-                              // Define proper type for FileSystemFileHandle
-                              interface FileSystemFileHandle {
-                                getFile(): Promise<File>;
+                        onClick={() => {
+                          // Use simple file input approach to avoid browser compatibility issues
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = '*/*'; // Accept all file types
+                          
+                          input.onchange = (e) => {
+                            const target = e.target as HTMLInputElement;
+                            const file = target.files?.[0];
+                            if (file) {
+                              console.log(`Selected file: ${file.name}`);
+                              setSelectedFile(file);
+                              
+                              // Add Files tab if it doesn't exist
+                              const filesTabExists = openTabs.some(tab => tab.id === 'files');
+                              if (!filesTabExists) {
+                                setOpenTabs(prev => [...prev, { id: 'files', title: `File: ${file.name}` }]);
+                              } else {
+                                // Update existing tab title
+                                setOpenTabs(prev => prev.map(tab => 
+                                  tab.id === 'files' ? { ...tab, title: `File: ${file.name}` } : tab
+                                ));
                               }
                               
-                              const fileHandle = await (window as unknown as {
-                                showOpenFilePicker(options: object): Promise<FileSystemFileHandle[]>;
-                              }).showOpenFilePicker({
-                                types: [
-                                  {
-                                    description: 'All Files',
-                                    accept: {'*/*': []},
-                                  },
-                                ],
-                                multiple: false,
-                              });
-                              if (fileHandle && fileHandle[0]) {
-                                const file = await fileHandle[0].getFile();
-                                console.log(`Selected file: ${file.name}`);
-                                setSelectedFile(file);
-                                // Add Files tab if it doesn't exist
-                                const filesTabExists = openTabs.some(tab => tab.id === 'files');
-                                if (!filesTabExists) {
-                                  setOpenTabs(prev => [...prev, { id: 'files', title: `File: ${file.name}` }]);
-                                }
-                                setActiveTabId('files');
-                                setOpenTabKey('files');
-                              }
-                            } else {
-                              // Fallback for browsers without File System Access API
-                              const input = document.createElement('input');
-                              input.type = 'file';
-                              input.onchange = (e) => {
-                                const target = e.target as HTMLInputElement;
-                                const file = target.files?.[0];
-                                if (file) {
-                                  console.log(`Selected file: ${file.name}`);
-                                  setSelectedFile(file);
-                                  // Add Files tab if it doesn't exist
-                                  const filesTabExists = openTabs.some(tab => tab.id === 'files');
-                                  if (!filesTabExists) {
-                                    setOpenTabs(prev => [...prev, { id: 'files', title: `File: ${file.name}` }]);
-                                  }
-                                  setActiveTabId('files');
-                                  setOpenTabKey('files');
-                                }
-                              };
-                              input.click();
+                              // Switch to files tab
+                              setActiveTabId('files');
+                              setOpenTabKey('files');
                             }
-                          } catch (error) {
-                            console.error('Error accessing file system:', error);
-                            alert('Unable to access file system. Please try again.');
-                          }
+                          };
+                          
+                          // Trigger file dialog
+                          input.click();
                         }}
                       >
                         <FileIcon size={20} className={styles.actionIcon} />
                         New File
                       </button>
-                      <button className={styles.actionButton}>
+                      <button 
+                        className={styles.actionButton}
+                        onClick={() => {
+                          // Use simple file input approach to avoid browser compatibility issues
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = '*/*'; // Accept all file types
+                          
+                          input.onchange = (e) => {
+                            const target = e.target as HTMLInputElement;
+                            const file = target.files?.[0];
+                            if (file) {
+                              console.log(`Uploaded file: ${file.name}`);
+                              setSelectedFile(file);
+                              
+                              // Add Files tab if it doesn't exist
+                              const filesTabExists = openTabs.some(tab => tab.id === 'files');
+                              if (!filesTabExists) {
+                                setOpenTabs(prev => [...prev, { id: 'files', title: `File: ${file.name}` }]);
+                              } else {
+                                // Update existing tab title
+                                setOpenTabs(prev => prev.map(tab => 
+                                  tab.id === 'files' ? { ...tab, title: `File: ${file.name}` } : tab
+                                ));
+                              }
+                              
+                              // Switch to files tab
+                              setActiveTabId('files');
+                              setOpenTabKey('files');
+                            }
+                          };
+                          
+                          // Trigger file dialog
+                          input.click();
+                        }}
+                      >
                         <UploadIcon size={20} className={styles.actionIcon} />
                         Upload
                       </button>
@@ -2358,7 +2375,98 @@ export default function Dashboard() {
       <AddModal 
         isOpen={isAddModalOpen} 
         onClose={handleCloseAddModal} 
-        onOptionSelect={handleOptionSelect} 
+        onOptionSelect={handleOptionSelect}
+        availableFolders={[
+          { id: 'root', name: 'Root' },
+          { id: 'topics', name: 'Topics' },
+          ...(knowledgebaseData[0]?.children?.filter(item => item.children)
+              .map(folder => ({ id: folder.id, name: folder.name })) || [])
+        ]}
+        onFileUpload={(destinationFolder, files) => {
+          console.log(`Uploading ${files.length} files to folder: ${destinationFolder}`);
+          
+          // Process and add files directly to the knowledgebase
+          console.log(`Processing ${files.length} files for upload to ${destinationFolder}`);
+          
+          // Handle each file individually to avoid type issues
+          for (const file of files) {
+            // Determine file type based on extension
+            const fileExt = (file.name.split('.').pop() || '').toLowerCase();
+            let fileType = 'other';
+            
+            if (['doc', 'docx', 'txt', 'md'].includes(fileExt)) {
+              fileType = 'document';
+            } else if (['xls', 'xlsx', 'csv'].includes(fileExt)) {
+              fileType = 'spreadsheet';
+            } else if (['ppt', 'pptx'].includes(fileExt)) {
+              fileType = 'presentation';
+            } else if (fileExt === 'pdf') {
+              fileType = 'pdf';
+            } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
+              fileType = 'image';
+            } else if (['js', 'ts', 'py', 'java', 'c', 'cpp', 'html', 'css'].includes(fileExt)) {
+              fileType = 'code';
+            }
+            
+            // Create a unique ID for the file
+            const fileId = `file-${file.name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
+            
+            // Create the file object
+            const fileObj = {
+              id: fileId,
+              name: file.name,
+              type: fileType
+            };
+            
+            // Add the file to the appropriate location in the knowledgebase
+            if (destinationFolder === 'root') {
+              // Add to root level
+              knowledgebaseData.push(fileObj as any);
+            } else if (destinationFolder === 'topics') {
+              // Add to topics folder
+              const topicsFolder = knowledgebaseData.find(item => item.id === 'topics');
+              if (topicsFolder && Array.isArray(topicsFolder.children)) {
+                topicsFolder.children.push(fileObj as any);
+              }
+            } else {
+              // Add to specific folder
+              const topicsFolder = knowledgebaseData.find(item => item.id === 'topics');
+              if (topicsFolder && Array.isArray(topicsFolder.children)) {
+                const targetFolder = topicsFolder.children.find(item => item.id === destinationFolder);
+                if (targetFolder && Array.isArray(targetFolder.children)) {
+                  targetFolder.children.push(fileObj as any);
+                } else if (targetFolder) {
+                  targetFolder.children = [fileObj as any];
+                }
+              }
+            }
+          }
+          
+          // Force a re-render by creating a new reference to knowledgebaseData
+          const knowledgebaseDataCopy = [...knowledgebaseData];
+          // This is a hack to force a re-render in this demo
+          knowledgebaseData.length = 0;
+          knowledgebaseData.push(...knowledgebaseDataCopy);
+          
+          // Show notification
+          addNotification({
+            id: generateUUID(),
+            title: 'Files Uploaded',
+            message: `${files.length} file${files.length !== 1 ? 's' : ''} uploaded successfully`,
+            type: 'success',
+            read: false,
+            timestamp: new Date()
+          });
+          
+          // If there's at least one file, open it in the file viewer
+          if (files.length > 0) {
+            // In a real app, this would open the file in a viewer
+            console.log(`Opening file: ${files[0].name}`);
+          }
+          
+          // Close modal
+          handleCloseAddModal();
+        }}
         onFolderCreate={(folderName, files) => {
           console.log(`Creating folder: ${folderName} with ${files.length} files`);
           

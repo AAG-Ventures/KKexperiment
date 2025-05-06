@@ -3,15 +3,18 @@
 import React, { useState } from 'react';
 import styles from './AddModal.module.css';
 import FolderCreateModal from './FolderCreateModal';
+import FileUploadModal from './FileUploadModal';
 
 type AddModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onOptionSelect: (option: string) => void;
   onFolderCreate: (folderName: string, files: File[]) => void;
+  onFileUpload: (destinationFolder: string, files: File[]) => void;
+  availableFolders: Array<{id: string, name: string}>;
 };
 
-const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose, onOptionSelect, onFolderCreate }) => {
+const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose, onOptionSelect, onFolderCreate, onFileUpload, availableFolders = [] }) => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   
   const handleOptionSelect = (option: string) => {
@@ -32,6 +35,18 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose, onOptionSelect, on
         isOpen={true}
         onClose={handleClose}
         onSubmit={onFolderCreate}
+      />
+    );
+  }
+  
+  // Show file upload modal if file option is selected
+  if (selectedOption === 'file') {
+    return (
+      <FileUploadModal 
+        isOpen={true}
+        onClose={handleClose}
+        onSubmit={onFileUpload}
+        availableFolders={availableFolders}
       />
     );
   }
