@@ -129,8 +129,7 @@ export default function Dashboard() {
   // Tab system state
   const [openTabs, setOpenTabs] = useState([
     { id: 'dashboard', title: 'Dashboard', isPermanent: true },
-    { id: 'marketing-plan', title: 'MarketingPlan.md' },
-    { id: 'health', title: 'Health' }
+    { id: 'marketing-plan', title: 'MarketingPlan.md' }
   ]);
   const [activeTabId, setActiveTabId] = useState('dashboard');
   
@@ -1133,8 +1132,13 @@ Formulating response based on available information...`
     // Clear previous expanded folders except the active topic
     setExpandedFolders([topicId]);
     
-    // Also switch to the corresponding tab
-    setActiveTabId(topicId);
+    // Also switch to the corresponding tab if it exists
+    if (openTabs.some(tab => tab.id === topicId)) {
+      setActiveTabId(topicId);
+    } else {
+      // If tab doesn't exist (like removed 'health' tab), use dashboard as fallback
+      setActiveTabId('dashboard');
+    }
   };
   
   // Function to return to main Topics view in knowledgebase
