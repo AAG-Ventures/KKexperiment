@@ -32,6 +32,7 @@ type Task = {
 type WidgetItem = {
   id: string;
   content: React.ReactNode;
+  column?: string;
 };
 
 type ChatTab = {
@@ -72,6 +73,13 @@ export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [openTabKey, setOpenTabKey] = useState('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  
+  // Dashboard widgets state
+  const [dashboardItems, setDashboardItems] = useState<Record<string, WidgetItem[]>>({
+    column1: [],
+    column2: [],
+    column3: []
+  });
   
   // Notification panel state
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
@@ -960,10 +968,8 @@ export default function Dashboard() {
         return; // Return early to prevent closing the modal
         
       case 'widget':
-        // Logic for creating a new dashboard widget
-        console.log('Creating a new widget');
-        handleCloseAddModal();
-        break;
+        // Don't close the modal for widget - the AddModal component will show WidgetSelectModal
+        return; // Return early to prevent closing the modal
         
       case 'agent':
         // Logic for creating an agent
@@ -990,10 +996,187 @@ export default function Dashboard() {
     }
   };
   
+  // Handle widget selection 
+  const handleWidgetSelect = (widgetType: 'calendar' | 'quickActions' | 'myTasks' | 'activeProcesses' | 'myAgents') => {
+    console.log(`Selected widget type: ${widgetType}`);
+    
+    // Create widget content based on the selected type
+    let widgetContent: React.ReactNode;
+    
+    switch (widgetType) {
+      case 'calendar':
+        widgetContent = (
+          <CalendarWidget 
+            tasks={tasks.filter(task => task.deadline).map(task => ({
+              id: task.id,
+              text: task.text,
+              deadline: task.deadline || new Date(),
+              priority: task.priority || 'medium',
+              completed: task.completed
+            }))}
+            onSelectDate={(date) => {
+              console.log('Calendar date selected:', date);
+            }}
+            onSelectTask={(taskId) => {
+              setSelectedTaskId(taskId);
+            }}
+          />
+        );
+        break;
+        
+      case 'quickActions':
+        widgetContent = (
+          <div className={styles.quickActionsWidget}>
+            <h3>Quick Actions</h3>
+            <div className={styles.quickActionButtons}>
+              <button className={styles.quickActionButton}>
+                <FileIcon size={16} /> New Document
+              </button>
+              <button className={styles.quickActionButton}>
+                <MessageIcon size={16} /> New Chat
+              </button>
+              <button className={styles.quickActionButton}>
+                <UploadIcon size={16} /> Upload File
+              </button>
+              <button className={styles.quickActionButton}>
+                <SearchIcon size={16} /> Search
+              </button>
+            </div>
+          </div>
+        );
+        break;
+        
+      case 'myTasks':
+        widgetContent = (
+          <div className={styles.tasksWidget}>
+            <h3>My Tasks</h3>
+            <div className={styles.tasksList}>
+              {tasks.slice(0, 3).map(task => (
+                <div key={task.id} className={styles.taskItem}>
+                  <input 
+                    type="checkbox" 
+                    checked={task.completed} 
+                    onChange={() => toggleTaskCompletion(task.id)}
+                  />
+                  <span className={task.completed ? styles.completedTask : ''}>
+                    {task.text}
+                  </span>
+                </div>
+              ))}
+              {tasks.length === 0 && (
+                <p>No tasks yet</p>
+              )}
+            </div>
+            <button className={styles.viewAllButton}>
+              View All Tasks
+            </button>
+          </div>
+        );
+        break;
+        
+      case 'activeProcesses':
+        widgetContent = (
+          <div className={styles.processesWidget}>
+            <h3>Active Processes</h3>
+            <div className={styles.processesList}>
+              {processes.filter(p => p.status === 'inProgress').slice(0, 3).map(process => (
+                <div key={process.id} className={styles.processItem}>
+                  <span>{process.name}</span>
+                  <div className={styles.processStatus}>
+                    <div className={styles.processingIndicator}></div>
+                    Processing
+                  </div>
+                </div>
+              ))}
+              {processes.filter(p => p.status === 'inProgress').length === 0 && (
+                <p>No active processes</p>
+              )}
+            </div>
+          </div>
+        );
+        break;
+        
+      case 'myAgents':
+        widgetContent = (
+          <div className={styles.agentsWidget}>
+            <h3>My Agents</h3>
+            <div className={styles.agentsList}>
+              {chatTabs.slice(0, 3).map(chatTab => (
+                <div key={chatTab.id} className={styles.agentItem}>
+                  <div className={styles.agentIcon}>
+                    <UserIcon size={20} />
+                  </div>
+                  <div className={styles.agentInfo}>
+                    <div className={styles.agentName}>{chatTab.title}</div>
+                    <div className={styles.agentStatus}>
+                      {chatTab.isProcessing ? 'Processing...' : 'Ready'}
+                    </div>
+                  </div>
+                  <button className={styles.agentActionButton}>
+                    <MessageIcon size={16} />
+                  </button>
+                </div>
+              ))}
+              {chatTabs.length === 0 && (
+                <p>No agents available</p>
+              )}
+            </div>
+            <button className={styles.viewAllButton}>
+              Manage Agents
+            </button>
+          </div>
+        );
+        break;
+    }
+    
+    // Add the new widget to the dashboard
+    const newWidgetId = `widget-${Date.now()}`;
+    const newWidget = { id: newWidgetId, content: widgetContent };
+    
+    // Add to first column for simplicity
+    const columnId = 'column1';
+    const columnWidgets = dashboardItems[columnId] || [];
+    
+    // Create the widget with drag-and-drop enabled
+    const draggableWidget = {
+      ...newWidget,
+      column: columnId,
+      isDraggable: true
+    };
+    
+    setDashboardItems(prev => ({
+      ...prev,
+      [columnId]: [...columnWidgets, draggableWidget]
+    }));
+    
+    // Show confirmation notification
+    addNotification({
+      id: generateUUID(),
+      title: 'Widget Added',
+      message: `New ${widgetType} widget has been added to your dashboard`,
+      type: 'success',
+      read: false,
+      timestamp: new Date()
+    });
+    
+    handleCloseAddModal();
+  };
+  
   // Add drag and drop event listeners when component mounts
   useEffect(() => {
     const dashboard = dashboardRef.current;
     if (!dashboard) return;
+    
+    // Handler for dragging widgets from the selection modal
+    const handleWidgetDragStart = (e: DragEvent) => {
+      if (e.target && (e.target as HTMLElement).classList.contains(styles.widgetCard)) {
+        const widgetId = (e.target as HTMLElement).dataset.widgetId;
+        if (widgetId) {
+          e.dataTransfer?.setData('text/plain', `widget:${widgetId}`);
+          e.dataTransfer?.setDragImage(e.target as Element, 50, 50);
+        }
+      }
+    };
 
     const handleDragOver = (e: DragEvent) => {
       e.preventDefault();
@@ -2597,6 +2780,7 @@ export default function Dashboard() {
         isOpen={isAddModalOpen} 
         onClose={handleCloseAddModal} 
         onOptionSelect={handleOptionSelect}
+        onWidgetSelect={handleWidgetSelect}
         availableFolders={[
           { id: 'root', name: 'Root' },
           { id: 'topics', name: 'Topics' },

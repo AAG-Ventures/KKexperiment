@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import styles from './AddModal.module.css';
 import FolderCreateModal from './FolderCreateModal';
 import FileUploadModal from './FileUploadModal';
+import WidgetSelectModal from './WidgetSelectModal';
 
 type AddModalProps = {
   isOpen: boolean;
@@ -11,10 +12,11 @@ type AddModalProps = {
   onOptionSelect: (option: string) => void;
   onFolderCreate: (folderName: string, files: File[]) => void;
   onFileUpload: (destinationFolder: string, files: File[]) => void;
+  onWidgetSelect?: (widgetType: 'calendar' | 'quickActions' | 'myTasks' | 'activeProcesses') => void;
   availableFolders: Array<{id: string, name: string}>;
 };
 
-const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose, onOptionSelect, onFolderCreate, onFileUpload, availableFolders = [] }) => {
+const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose, onOptionSelect, onFolderCreate, onFileUpload, onWidgetSelect = () => {}, availableFolders = [] }) => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   
   const handleOptionSelect = (option: string) => {
@@ -47,6 +49,17 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose, onOptionSelect, on
         onClose={handleClose}
         onSubmit={onFileUpload}
         availableFolders={availableFolders}
+      />
+    );
+  }
+  
+  // Show widget selection modal if widget option is selected
+  if (selectedOption === 'widget') {
+    return (
+      <WidgetSelectModal
+        isOpen={true}
+        onClose={handleClose}
+        onWidgetSelect={onWidgetSelect}
       />
     );
   }
