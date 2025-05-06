@@ -2104,7 +2104,7 @@ This marketing plan provides a comprehensive framework for achieving our busines
               
               <div className={styles.cardGrid}>
                 {/* Recent Activity Card */}
-                <div className={styles.card}>
+                <div className={`${styles.card} ${styles.cardActivity}`}>
                   <div className={styles.widgetHeader}>
                     <h3>Recent Activity</h3>
                     <span className={styles.widgetIcon}>
@@ -2138,6 +2138,24 @@ This marketing plan provides a comprehensive framework for achieving our busines
                         <div className={styles.activityText}>
                           <div>New message in <strong>Team Chat</strong></div>
                           <div className={styles.activityTime}>Yesterday</div>
+                        </div>
+                      </li>
+                      <li className={styles.activityItem}>
+                        <span className={styles.activityIcon}>
+                          <FileIcon size={20} />
+                        </span>
+                        <div className={styles.activityText}>
+                          <div>Uploaded <strong>Presentation.pdf</strong></div>
+                          <div className={styles.activityTime}>2 days ago</div>
+                        </div>
+                      </li>
+                      <li className={styles.activityItem}>
+                        <span className={styles.activityIcon}>
+                          <CheckIcon size={20} />
+                        </span>
+                        <div className={styles.activityText}>
+                          <div>Completed <strong>Project Review</strong></div>
+                          <div className={styles.activityTime}>3 days ago</div>
                         </div>
                       </li>
                     </ul>
@@ -2183,103 +2201,7 @@ This marketing plan provides a comprehensive framework for achieving our busines
                   </div>
                 </div>
 
-                {/* Quick Actions Card */}
-                <div className={styles.card}>
-                  <div className={styles.widgetHeader}>
-                    <h3>Quick Actions</h3>
-                    <span className={styles.widgetIcon}>✦</span>
-                  </div>
-                  <div className={styles.cardContent}>
-                    <div className={styles.actionButtons}>
-                      <button 
-                        className={styles.actionButton}
-                        onClick={() => {
-                          // Use simple file input approach to avoid browser compatibility issues
-                          const input = document.createElement('input');
-                          input.type = 'file';
-                          input.accept = '*/*'; // Accept all file types
-                          
-                          input.onchange = (e) => {
-                            const target = e.target as HTMLInputElement;
-                            const file = target.files?.[0];
-                            if (file) {
-                              console.log(`Selected file: ${file.name}`);
-                              setSelectedFile(file);
-                              
-                              // Add Files tab if it doesn't exist
-                              const filesTabExists = openTabs.some(tab => tab.id === 'files');
-                              if (!filesTabExists) {
-                                setOpenTabs(prev => [...prev, { id: 'files', title: `File: ${file.name}` }]);
-                              } else {
-                                // Update existing tab title
-                                setOpenTabs(prev => prev.map(tab => 
-                                  tab.id === 'files' ? { ...tab, title: `File: ${file.name}` } : tab
-                                ));
-                              }
-                              
-                              // Switch to files tab
-                              setActiveTabId('files');
-                              setOpenTabKey('files');
-                            }
-                          };
-                          
-                          // Trigger file dialog
-                          input.click();
-                        }}
-                      >
-                        <FileIcon size={20} className={styles.actionIcon} />
-                        New File
-                      </button>
-                      <button 
-                        className={styles.actionButton}
-                        onClick={() => {
-                          // Use simple file input approach to avoid browser compatibility issues
-                          const input = document.createElement('input');
-                          input.type = 'file';
-                          input.accept = '*/*'; // Accept all file types
-                          
-                          input.onchange = (e) => {
-                            const target = e.target as HTMLInputElement;
-                            const file = target.files?.[0];
-                            if (file) {
-                              console.log(`Uploaded file: ${file.name}`);
-                              setSelectedFile(file);
-                              
-                              // Add Files tab if it doesn't exist
-                              const filesTabExists = openTabs.some(tab => tab.id === 'files');
-                              if (!filesTabExists) {
-                                setOpenTabs(prev => [...prev, { id: 'files', title: `File: ${file.name}` }]);
-                              } else {
-                                // Update existing tab title
-                                setOpenTabs(prev => prev.map(tab => 
-                                  tab.id === 'files' ? { ...tab, title: `File: ${file.name}` } : tab
-                                ));
-                              }
-                              
-                              // Switch to files tab
-                              setActiveTabId('files');
-                              setOpenTabKey('files');
-                            }
-                          };
-                          
-                          // Trigger file dialog
-                          input.click();
-                        }}
-                      >
-                        <UploadIcon size={20} className={styles.actionIcon} />
-                        Upload
-                      </button>
-                      <button className={styles.actionButton}>
-                        <ShareIcon size={20} className={styles.actionIcon} />
-                        Share
-                      </button>
-                      <button className={styles.actionButton}>
-                        <SearchIcon size={20} className={styles.actionIcon} />
-                        Search
-                      </button>
-                    </div>
-                  </div>
-                </div>
+
               </div>
             </>
           ) : (
@@ -2830,26 +2752,6 @@ This marketing plan provides a comprehensive framework for achieving our busines
                                 }
                               }}
                             />
-                            <button 
-                              className={styles.sendButton}
-                              onClick={() => {
-                                const inputElement = document.querySelector(`.${styles.chatInput}`) as HTMLInputElement;
-                                if (inputElement && inputElement.value.trim()) {
-                                  const activeTab = chatTabs.find(tab => tab.active);
-                                  if (activeTab) {
-                                    const userMsg = inputElement.value.trim();
-                                    handleSendMessage(userMsg, activeTab);
-                                    // Clear input
-                                    inputElement.value = '';
-                                  }
-                                }
-                              }}
-                            >
-                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
-                            </button>
                           </div>
                         </div>
                       </>
