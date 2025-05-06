@@ -121,19 +121,22 @@ const Folder: React.FC<FolderProps> = ({
   const shouldBeExpanded = expandedFolders.includes(folder.id) || defaultExpanded;
   
   // Use state for internal tracking of expanded status
+  // Always use external state for expansion status
   const [expanded, setExpanded] = useState(shouldBeExpanded);
   
   // Use effect to respond to external expansion requests
   useEffect(() => {
-    // For topics folder, always sync with external state
-    if (folder.id === 'topics') {
+    // For special folders (Topics and Shared Space), always use the external state
+    if (folder.id === 'topics' || folder.id === 'shared') {
+      const isExpanded = folder.id === 'topics' ? 
+        expandedFolders.includes('topics') : 
+        expandedFolders.includes('shared');
+      setExpanded(isExpanded);
+    } else {
+      // For other folders, use the provided expanded state
       setExpanded(shouldBeExpanded);
-    } 
-    // For other folders, only expand if needed
-    else if (shouldBeExpanded && !expanded) {
-      setExpanded(true);
     }
-  }, [shouldBeExpanded, expanded, folder.id]);
+  }, [expandedFolders, folder.id, shouldBeExpanded]);
   
   const isActive = selected === folder.id;
   
@@ -179,10 +182,10 @@ const Folder: React.FC<FolderProps> = ({
           // Select the folder in all cases
           onSelect(folder);
           
-          // Special handling for Topics folder
-          if (folder.id === 'topics' && onToggleFolder) {
+          // Special handling for Topics and Shared Space folders
+          if ((folder.id === 'topics' || folder.id === 'shared') && onToggleFolder) {
             e.stopPropagation();
-            onToggleFolder('topics');
+            onToggleFolder(folder.id);
             return;
           }
         }}
@@ -193,9 +196,9 @@ const Folder: React.FC<FolderProps> = ({
           onClick={(e) => {
             e.stopPropagation();
             
-            // Direct implementation for Topics folder open/close functionality
-            if (folder.id === 'topics' && onToggleFolder) {
-              onToggleFolder('topics');
+            // Direct implementation for Topics and Shared Space folder open/close functionality
+            if ((folder.id === 'topics' || folder.id === 'shared') && onToggleFolder) {
+              onToggleFolder(folder.id);
             } else {
               toggleExpand(e);
             }
@@ -204,7 +207,11 @@ const Folder: React.FC<FolderProps> = ({
           {folder.id === 'topics' && expandedFolders.includes('topics') ? 
             <ChevronDownIcon size={14} /> : 
             folder.id === 'topics' ? 
-            <ChevronRightIcon size={14} /> : 
+            <ChevronRightIcon size={14} /> :
+            folder.id === 'shared' && expandedFolders.includes('shared') ? 
+            <ChevronDownIcon size={14} /> : 
+            folder.id === 'shared' ? 
+            <ChevronRightIcon size={14} /> :
             expanded ? 
             <ChevronDownIcon size={14} /> : 
             <ChevronRightIcon size={14} />}
@@ -218,27 +225,32 @@ const Folder: React.FC<FolderProps> = ({
       
       {expanded && (
         <div className={styles.children}>
-          {folder.children.map((item) => (
-            <div key={item.id}>
-              {isFolder(item) ? (
-                <Folder 
-                  folder={item} 
-                  onSelect={onSelect} 
-                  selected={selected}
-                  expandedFolders={expandedFolders}
-                  defaultExpanded={false} // Let expandedFolders control expansion
-                  onFileDrop={onFileDrop}
+          {/* Only show children if folder is expanded according to external state */}
+          {(folder.id === 'topics' ? expandedFolders.includes('topics') : 
+            folder.id === 'shared' ? expandedFolders.includes('shared') : expanded) && 
+            folder.children.map((item) => (
+              <div key={item.id}>
+                {isFolder(item) ? (
+                  <Folder 
+                    folder={item} 
+                    onSelect={onSelect} 
+                    selected={selected}
+                    expandedFolders={expandedFolders}
+                    defaultExpanded={false} // Let expandedFolders control expansion
+                    onToggleFolder={onToggleFolder}
+                    onFileDrop={onFileDrop}
                 />
-              ) : (
-                <File 
-                  file={item} 
-                  onSelect={onSelect} 
-                  selected={selected}
-                  onFileDrop={onFileDrop}
+                ) : (
+                  <File 
+                    file={item} 
+                    onSelect={onSelect} 
+                    selected={selected}
+                    onFileDrop={onFileDrop}
                 />
-              )}
-            </div>
-          ))}
+                )}
+              </div>
+            ))
+          }
         </div>
       )}
     </div>

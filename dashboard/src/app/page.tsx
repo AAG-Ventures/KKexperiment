@@ -165,9 +165,9 @@ export default function Dashboard() {
   ]);
   
   // Track expanded folders in knowledgebase
-  const [expandedFolders, setExpandedFolders] = useState<string[]>(['topics']);
+  const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
   
-  // Function to toggle folder expansion (including Topics)
+  // Function to toggle folder expansion (for special folders like Topics and Shared Space)
   const toggleFolderExpansion = (folderId: string) => {
     console.log(`Toggling folder: ${folderId}`);
     
@@ -176,11 +176,25 @@ export default function Dashboard() {
       if (expandedFolders.includes('topics')) {
         // If Topics is currently expanded, collapse it (remove it from expanded folders)
         console.log('Closing Topics folder');
-        setExpandedFolders([]);
+        setExpandedFolders(expandedFolders.filter(id => id !== 'topics'));
       } else {
         // If Topics is currently collapsed, expand it (add it to expanded folders)
         console.log('Opening Topics folder');
-        setExpandedFolders(['topics']);
+        setExpandedFolders([...expandedFolders, 'topics']);
+      }
+      return;
+    }
+    
+    // Special case for the Shared Space folder - either show it with all subtopics or hide all
+    if (folderId === 'shared') {
+      if (expandedFolders.includes('shared')) {
+        // If Shared Space is currently expanded, collapse it (remove it from expanded folders)
+        console.log('Closing Shared Space folder');
+        setExpandedFolders(expandedFolders.filter(id => id !== 'shared'));
+      } else {
+        // If Shared Space is currently collapsed, expand it (add it to expanded folders)
+        console.log('Opening Shared Space folder');
+        setExpandedFolders([...expandedFolders, 'shared']);
       }
       return;
     }
@@ -1522,20 +1536,33 @@ Formulating response based on available information...`
         </div>
         <div className={styles.spacer}></div>
         <div className={styles.topBarRight}>
-          <button 
-            className={styles.iconButton} 
-            title="Notifications"
-            onClick={() => setIsNotificationPanelOpen(!isNotificationPanelOpen)}
-          >
-            <BellIcon size={20} />
-            {unreadCount > 0 && (
-              <span className={styles.notificationBadge}>{unreadCount}</span>
-            )}
-          </button>
+          <div className={styles.iconGroup}>
+            <button 
+              className={styles.iconButton} 
+              title="Notifications"
+              onClick={() => setIsNotificationPanelOpen(!isNotificationPanelOpen)}
+            >
+              <BellIcon size={20} />
+              {unreadCount > 0 && (
+                <span className={styles.notificationBadge}>{unreadCount}</span>
+              )}
+            </button>
+            
+            {/* Profile Icon - Without text */}
+            <div className={styles.profileIconOnly}>
+              <Link 
+                href="/settings" 
+                title="Profile & Settings"
+                passHref
+              >
+                <UserIcon size={22} />
+              </Link>
+            </div>
+          </div>
           
           {/* Notification Panel Popup */}
           {isNotificationPanelOpen && (
-            <div ref={notificationPanelRef} className={styles.notificationPanel}>
+            <div ref={notificationPanelRef} className={styles.notificationPanel} style={{zIndex: 2000}}>
               <div className={styles.notificationPanelHeader}>
                 <h3>Notifications</h3>
                 <button 
@@ -1591,29 +1618,14 @@ Formulating response based on available information...`
               )}
             </div>
           )}
-          <div className={styles.profileBar}>
-            <div className={styles.userInfo}>
-              <span className={styles.userName}>User Name</span>
-              <span className={styles.userRole}>Premium Account</span>
-            </div>
-            <div className={styles.profileImage}>
-              <Link 
-                href="/settings" 
-                title="Profile & Settings"
-                passHref
-              >
-                <UserIcon size={22} />
-              </Link>
-            </div>
-          </div>
         </div>
       </header>
 
       {/* Main Layout */}
       <div className={`${styles.layout} ${isSidebarCollapsed ? styles.layoutCollapsed : ''}`}>
-        {/* Sticky Create Button */}
+        {/* Sticky Create Button - Apply hideWhenNotifications class when notification panel is open */}
         <button 
-          className={styles.stickyCreateButton}
+          className={`${styles.stickyCreateButton} ${isNotificationPanelOpen ? styles.hideWhenNotifications : ''}`}
           onClick={handleOpenAddModal}
           aria-label="Create new item"
         >
@@ -1660,13 +1672,19 @@ Formulating response based on available information...`
                           }}
                         >
                           <h3 
-                            style={{ cursor: 'pointer' }}
+                            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
                             onClick={() => {
                               // Direct toggle for the topics folder
                               toggleFolderExpansion('topics');
                             }}
                           >
-                            Knowledgebase {expandedFolders.includes('topics') ? '▼' : '►'}
+                            <span style={{ display: 'flex', alignItems: 'center' }}>
+                              {expandedFolders.includes('topics') ? 
+                                <ChevronDownIcon size={18} /> : 
+                                <ChevronRightIcon size={18} />
+                              }
+                            </span>
+                            Knowledgebase
                           </h3>
                         </div>
                         {/* File Explorer Component */}
@@ -2325,14 +2343,16 @@ This marketing plan provides a comprehensive framework for achieving our busines
                   <div className={styles.widgetBox}>
                     <div className={styles.widgetHeader}>
                       <h3>My Tasks</h3>
-                      <button 
-                        className={styles.newTabButton} 
-                        title="Add New Task"
-                        type="button"
-                        onClick={startAddingTask}
-                      >
-                        <PlusIcon size={20} />
-                      </button>
+                      {!isNotificationPanelOpen && (
+                        <button 
+                          className={styles.newTabButton} 
+                          title="Add New Task"
+                          type="button"
+                          onClick={startAddingTask}
+                        >
+                          <PlusIcon size={20} />
+                        </button>
+                      )}
                     </div>
                     <div className={styles.tasksContainer}>
                       {/* Active Tasks */}
@@ -2702,13 +2722,9 @@ This marketing plan provides a comprehensive framework for achieving our busines
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   
-                                  // Update the status of this chat in the processes list to 'completed'
+                                  // Remove this chat from the processes list completely
                                   setProcesses(prevProcesses => 
-                                    prevProcesses.map(p => 
-                                      p.id === tab.id 
-                                        ? { ...p, status: 'completed' as const } 
-                                        : p
-                                    )
+                                    prevProcesses.filter(p => p.id !== tab.id)
                                   );
                                   
                                   // Remove from chat tabs
