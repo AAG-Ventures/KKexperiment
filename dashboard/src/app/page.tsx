@@ -2482,13 +2482,9 @@ This marketing plan provides a comprehensive framework for achieving our busines
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   
-                                  // Update the status of this chat in the processes list to 'completed'
+                                  // Remove this chat from the processes list completely
                                   setProcesses(prevProcesses => 
-                                    prevProcesses.map(p => 
-                                      p.id === tab.id 
-                                        ? { ...p, status: 'completed' as const } 
-                                        : p
-                                    )
+                                    prevProcesses.filter(p => p.id !== tab.id)
                                   );
                                   
                                   // Remove from chat tabs
