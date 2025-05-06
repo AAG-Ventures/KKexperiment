@@ -262,6 +262,12 @@
   gap: 0.75rem;
 }
 
+.shortcutControls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .shortcutItem {
   display: flex;
   justify-content: space-between;
@@ -289,6 +295,291 @@
   padding: 0.25rem 0.4rem;
   white-space: nowrap;
   font-family: var(--font-mono);
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+/* Finances & Subscription Styles */
+.financeInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.subscriptionStatus h3,
+.billingSection h3 {
+  font-size: var(--font-size-md);
+  margin-bottom: 1rem;
+  color: var(--foreground-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.subscriptionOptions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.subscriptionOption {
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.subscriptionOption input[type="radio"] {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  margin: 0;
+}
+
+.activeSubscription {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 1px var(--brand-primary);
+  background-color: rgba(10, 246, 187, 0.05);
+}
+
+.subscriptionDetails {
+  padding-right: 1.5rem;
+}
+
+.subscriptionDetails h4 {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: 0.5rem;
+  color: var(--foreground-primary);
+}
+
+.price {
+  font-size: var(--font-size-md);
+  margin-bottom: 0.5rem;
+  color: var(--foreground-primary);
+}
+
+.price span {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg);
+  color: var(--brand-primary);
+}
+
+.subscriptionFeatures {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0 0;
+}
+
+.subscriptionFeatures li {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-xs);
+  margin-bottom: 0.5rem;
+  color: var(--foreground-secondary);
+}
+
+.subscriptionFeatures li svg {
+  margin-right: 0.5rem;
+  color: var(--brand-primary);
+}
+
+/* Billing styles */
+.paymentMethods {
+  margin-bottom: 2rem;
+}
+
+.paymentMethod {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+  background-color: var(--background-tertiary);
+}
+
+.paymentMethod svg {
+  color: var(--foreground-secondary);
+  margin-right: 1rem;
+}
+
+.paymentDetails {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.cardName {
+  font-weight: var(--font-weight-medium);
+  color: var(--foreground-primary);
+  font-size: var(--font-size-sm);
+}
+
+.cardExpiry {
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-xs);
+}
+
+.defaultBadge {
+  background-color: var(--brand-primary);
+  color: var(--background-primary);
+  font-size: var(--font-size-xs);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-pill);
+  font-weight: var(--font-weight-medium);
+}
+
+.addPaymentButton {
+  background: none;
+  border: 1px dashed var(--border-light);
+  color: var(--brand-primary);
+  padding: 0.75rem;
+  width: 100%;
+  text-align: center;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+}
+
+.addPaymentButton:hover {
+  background-color: rgba(10, 246, 187, 0.05);
+  border-color: var(--brand-primary);
+}
+
+.paymentForm {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background-color: var(--background-tertiary);
+}
+
+.formRow {
+  margin-bottom: 1rem;
+}
+
+.formRow label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: var(--font-size-xs);
+  color: var(--foreground-secondary);
+}
+
+.formRow input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+}
+
+.formRowSplit {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.formRowSplit label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: var(--font-size-xs);
+  color: var(--foreground-secondary);
+}
+
+.formRowSplit input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+}
+
+.saveButton {
+  background-color: var(--brand-primary);
+  color: var(--background-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1rem;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  width: 100%;
+}
+
+.saveButton:hover {
+  background-color: var(--brand-primary-hover);
+}
+
+.successMessage {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: rgba(0, 200, 83, 0.1);
+  color: rgb(0, 200, 83);
+  border-radius: var(--radius-md);
+  margin-top: 1rem;
+  font-size: var(--font-size-sm);
+}
+
+.billingTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  font-size: var(--font-size-sm);
+}
+
+.billingTable th,
+.billingTable td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.billingTable th {
+  font-weight: var(--font-weight-medium);
+  color: var(--foreground-secondary);
+}
+
+.paidStatus {
+  background-color: rgba(0, 200, 83, 0.1);
+  color: rgb(0, 200, 83);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+}
+
+.viewAllLink {
+  color: var(--brand-primary);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.viewAllLink:hover {
+  text-decoration: underline;
+}
+
+.nextBilling {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: var(--background-tertiary);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--foreground-secondary);
+}
+
+.nextBilling svg {
+  color: var(--brand-primary);
+}
+
+.nextBilling strong {
+  color: var(--foreground-primary);
 }
 
 /* Action buttons */
