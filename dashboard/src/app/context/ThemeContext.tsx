@@ -12,7 +12,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>("dark");
   const [mounted, setMounted] = useState(false);
 
   // Initialize theme from localStorage or default to system
@@ -21,9 +21,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     if (storedTheme) {
       setTheme(storedTheme);
     } else {
-      // Check for system preference
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      setTheme(prefersDark ? "dark" : "light");
+      // Default to dark theme instead of checking system preference
+      setTheme("dark");
     }
     setMounted(true);
   }, []);
@@ -67,7 +66,7 @@ export function useTheme() {
   if (context === undefined) {
     // Return a default implementation instead of throwing an error
     return {
-      theme: "light" as Theme,
+      theme: "dark" as Theme,
       setTheme: (theme: Theme) => {
         console.warn("ThemeProvider not found, setting theme to", theme);
         if (typeof window !== 'undefined') {

@@ -70,16 +70,24 @@ interface FileItemProps {
   file: FileItem;
   onSelect: (item: ExplorerItem) => void;
   selected: string | null;
+  onFileDrop?: (fileId: string, targetFolderId: string) => void;
 }
 
-const File: React.FC<FileItemProps> = ({ file, onSelect, selected }) => {
+const File: React.FC<FileItemProps> = ({ file, onSelect, selected, onFileDrop }) => {
   const isActive = selected === file.id;
   const fileClass = getFileClass(file.type);
+  
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData('fileId', file.id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
   
   return (
     <div 
       className={`${styles.fileRow} ${fileClass} ${isActive ? styles.active : ''}`}
       onClick={() => onSelect(file)}
+      draggable
+      onDragStart={handleDragStart}
     >
       <div className={styles.fileIconWrapper}>
         <FileIcon size={16} />
@@ -97,6 +105,7 @@ interface FolderProps {
   defaultExpanded?: boolean;
   expandedFolders?: string[];
   onToggleFolder?: (folderId: string) => void;
+  onFileDrop?: (fileId: string, targetFolderId: string) => void;
 }
 
 const Folder: React.FC<FolderProps> = ({ 
@@ -105,7 +114,8 @@ const Folder: React.FC<FolderProps> = ({
   selected,
   defaultExpanded = false,
   expandedFolders = [],
-  onToggleFolder
+  onToggleFolder,
+  onFileDrop
 }) => {
   // Check if this folder should be expanded based on expandedFolders prop
   const shouldBeExpanded = expandedFolders.includes(folder.id) || defaultExpanded;
@@ -140,8 +150,29 @@ const Folder: React.FC<FolderProps> = ({
     }
   };
   
+  // Drag & drop handlers for folders
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const fileId = e.dataTransfer.getData('fileId');
+    if (fileId && onFileDrop) {
+      onFileDrop(fileId, folder.id);
+    }
+  };
+
   return (
-    <div className={styles.folderItem}>
+    <div 
+      className={styles.folderItem}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       <div 
         className={`${styles.folderRow} ${isActive ? styles.active : ''} ${folder.id === 'topics' ? styles.topicsRow : ''}`}
         onClick={(e) => {
@@ -196,12 +227,14 @@ const Folder: React.FC<FolderProps> = ({
                   selected={selected}
                   expandedFolders={expandedFolders}
                   defaultExpanded={false} // Let expandedFolders control expansion
+                  onFileDrop={onFileDrop}
                 />
               ) : (
                 <File 
                   file={item} 
                   onSelect={onSelect} 
-                  selected={selected} 
+                  selected={selected}
+                  onFileDrop={onFileDrop}
                 />
               )}
             </div>
@@ -220,6 +253,7 @@ export interface FileExplorerProps {
   activeTopicId?: string | null;
   onBackToTopics?: () => void;
   onToggleFolder?: (folderId: string) => void;
+  onFileDrop?: (fileId: string, targetFolderId: string) => void;
 }
 
 const FileExplorer: React.FC<FileExplorerProps> = ({ 
@@ -228,7 +262,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   expandedFolders = [],
   activeTopicId = null,
   onBackToTopics = () => {},
-  onToggleFolder = () => {}
+  onToggleFolder = () => {},
+  onFileDrop = () => {}
 }) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   
@@ -271,12 +306,14 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                   expandedFolders={expandedFolders}
                   onToggleFolder={onToggleFolder}
                   defaultExpanded={false}
+                  onFileDrop={onFileDrop}
                 />
               ) : (
                 <File 
                   file={item} 
                   onSelect={handleSelect} 
-                  selected={selectedId} 
+                  selected={selectedId}
+                  onFileDrop={onFileDrop} 
                 />
               )}
             </div>
@@ -294,12 +331,14 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                     expandedFolders={expandedFolders}
                     defaultExpanded={item.id === 'topics' || item.id === 'shared'}
                     onToggleFolder={onToggleFolder}
+                    onFileDrop={onFileDrop}
                   />
                 ) : (
                   <File 
                     file={item} 
                     onSelect={handleSelect} 
-                    selected={selectedId} 
+                    selected={selectedId}
+                    onFileDrop={onFileDrop} 
                   />
                 )}
               </div>

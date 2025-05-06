@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import styles from './AddModal.module.css';
 import FolderCreateModal from './FolderCreateModal';
 import FileUploadModal from './FileUploadModal';
+import AgentBrowserModal from './AgentBrowserModal';
 import WidgetSelectModal from './WidgetSelectModal';
 
 type AddModalProps = {
@@ -12,11 +13,12 @@ type AddModalProps = {
   onOptionSelect: (option: string) => void;
   onFolderCreate: (folderName: string, files: File[]) => void;
   onFileUpload: (destinationFolder: string, files: File[]) => void;
+  onCreateAgent?: (name: string, description: string, avatar: string, capabilities: string[]) => void;
   onWidgetSelect?: (widgetType: 'calendar' | 'quickActions' | 'myTasks' | 'activeProcesses') => void;
   availableFolders: Array<{id: string, name: string}>;
 };
 
-const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose, onOptionSelect, onFolderCreate, onFileUpload, onWidgetSelect = () => {}, availableFolders = [] }) => {
+const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose, onOptionSelect, onFolderCreate, onFileUpload, onCreateAgent, onWidgetSelect = () => {}, availableFolders = [] }) => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   
   const handleOptionSelect = (option: string) => {
@@ -49,6 +51,26 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose, onOptionSelect, on
         onClose={handleClose}
         onSubmit={onFileUpload}
         availableFolders={availableFolders}
+      />
+    );
+  }
+  
+  // Show agent browser modal if agent option is selected
+  if (selectedOption === 'agent' && onCreateAgent) {
+    return (
+      <AgentBrowserModal 
+        onClose={handleClose}
+        onCreateAgent={onCreateAgent}
+        onSelectAgent={(agent) => {
+          console.log(`Selected agent: ${agent.name}`);
+          // We'll use the agent's data to create an agent in the dashboard
+          onCreateAgent(
+            agent.name, 
+            agent.description, 
+            agent.avatar, 
+            agent.capabilities
+          );
+        }}
       />
     );
   }
