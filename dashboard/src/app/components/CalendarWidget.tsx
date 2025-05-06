@@ -136,19 +136,49 @@ const CalendarWidget: React.FC<CalendarProps> = ({ tasks, onSelectDate, onSelect
     }
   };
 
-  // Calculate upcoming tasks for today and tomorrow
-  const getTodayAndUpcomingTasks = () => {
+  // Calculate tasks for display in the tasks section
+  const getTasksForDisplay = () => {
     const today = new Date();
+    
+    // If user selected a date, show tasks for that date
+    if (selectedDate) {
+      const selectedDateTasks = getTasksForDate(selectedDate);
+      // Get formatted date string for the header
+      const formatDateHeader = (date: Date): string => {
+        const isToday = date.getDate() === today.getDate() && 
+                        date.getMonth() === today.getMonth() && 
+                        date.getFullYear() === today.getFullYear();
+
+        const isTomorrow = date.getDate() === new Date(today.setDate(today.getDate() + 1)).getDate() && 
+                           date.getMonth() === today.getMonth() && 
+                           date.getFullYear() === today.getFullYear();
+        
+        // Reset today after using it for calculation
+        today.setDate(today.getDate() - 1);
+        
+        if (isToday) return 'Today';
+        if (isTomorrow) return 'Tomorrow';
+        
+        return `${monthNames[date.getMonth()]} ${date.getDate()}`;
+      };
+      
+      return { 
+        selectedDateTasks,
+        selectedDateHeader: formatDateHeader(selectedDate),
+        todayTasks: isToday(selectedDate) ? [] : getTasksForDate(today)
+      };
+    } 
+    
+    // Default if no date selected - show today's tasks
+    const todayTasks = getTasksForDate(today);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    const todayTasks = getTasksForDate(today);
     const tomorrowTasks = getTasksForDate(tomorrow);
     
-    return { todayTasks, tomorrowTasks };
+    return { todayTasks, tomorrowTasks, selectedDateTasks: [] };
   };
 
-  const { todayTasks, tomorrowTasks } = getTodayAndUpcomingTasks();
+  const { todayTasks, tomorrowTasks, selectedDateTasks, selectedDateHeader } = getTasksForDisplay();
 
   return (
     <div className={styles.calendarWidget}>
@@ -195,15 +225,36 @@ const CalendarWidget: React.FC<CalendarProps> = ({ tasks, onSelectDate, onSelect
         ))}
       </div>
       
-      {/* Upcoming tasks section */}
+      {/* Tasks section */}
       <div className={styles.calendarUpcomingTasks}>
+        {/* Selected date tasks */}
+        {selectedDateTasks && selectedDateTasks.length > 0 && (
+          <div className={styles.calendarTaskGroup}>
+            <div className={styles.calendarTaskGroupHeader}>{selectedDateHeader}</div>
+            {selectedDateTasks.slice(0, 3).map(task => (
+              <div 
+                key={task.id} 
+                className={`${styles.calendarUpcomingTask} ${getPriorityClass(task.priority)} ${task.completed ? styles.calendarTaskCompleted : ''}`}
+                onClick={() => onSelectTask(task.id)}
+              >
+                <div className={styles.calendarTaskDot}></div>
+                <div className={styles.calendarTaskText}>{task.text}</div>
+              </div>
+            ))}
+            {selectedDateTasks.length > 3 && (
+              <div className={styles.calendarTaskMore}>+{selectedDateTasks.length - 3} more</div>
+            )}
+          </div>
+        )}
+        
+        {/* Today's tasks (if today isn't the selected date) */}
         {todayTasks.length > 0 && (
           <div className={styles.calendarTaskGroup}>
             <div className={styles.calendarTaskGroupHeader}>Today</div>
             {todayTasks.slice(0, 2).map(task => (
               <div 
                 key={task.id} 
-                className={`${styles.calendarUpcomingTask} ${getPriorityClass(task.priority)}`}
+                className={`${styles.calendarUpcomingTask} ${getPriorityClass(task.priority)} ${task.completed ? styles.calendarTaskCompleted : ''}`}
                 onClick={() => onSelectTask(task.id)}
               >
                 <div className={styles.calendarTaskDot}></div>
@@ -216,13 +267,14 @@ const CalendarWidget: React.FC<CalendarProps> = ({ tasks, onSelectDate, onSelect
           </div>
         )}
         
-        {tomorrowTasks.length > 0 && (
+        {/* Tomorrow's tasks (only show if no date is selected) */}
+        {!selectedDateTasks.length && tomorrowTasks.length > 0 && (
           <div className={styles.calendarTaskGroup}>
             <div className={styles.calendarTaskGroupHeader}>Tomorrow</div>
             {tomorrowTasks.slice(0, 2).map(task => (
               <div 
                 key={task.id} 
-                className={`${styles.calendarUpcomingTask} ${getPriorityClass(task.priority)}`}
+                className={`${styles.calendarUpcomingTask} ${getPriorityClass(task.priority)} ${task.completed ? styles.calendarTaskCompleted : ''}`}
                 onClick={() => onSelectTask(task.id)}
               >
                 <div className={styles.calendarTaskDot}></div>
@@ -235,8 +287,11 @@ const CalendarWidget: React.FC<CalendarProps> = ({ tasks, onSelectDate, onSelect
           </div>
         )}
         
-        {todayTasks.length === 0 && tomorrowTasks.length === 0 && (
-          <div className={styles.calendarNoTasks}>No upcoming tasks</div>
+        {/* No tasks message */}
+        {selectedDateTasks.length === 0 && todayTasks.length === 0 && (!selectedDate || tomorrowTasks.length === 0) && (
+          <div className={styles.calendarNoTasks}>
+            {selectedDate ? `No tasks for ${selectedDateHeader}` : 'No upcoming tasks'}
+          </div>
         )}
       </div>
     </div>

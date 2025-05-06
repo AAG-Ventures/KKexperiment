@@ -764,6 +764,11 @@
   background-color: var(--background-hover);
 }
 
+.calendarTaskCompleted {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
 .calendarTaskDot {
   width: 6px;
   height: 6px;
