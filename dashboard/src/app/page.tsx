@@ -703,22 +703,47 @@ export default function Dashboard() {
   };
   
   // Function to add an attachment to a task
-  const addTaskAttachment = (taskId: string) => {
-    if (!newAttachment.trim()) return;
-    
-    const updatedTasks = tasks.map(task => {
-      if (task.id === taskId) {
-        return {
-          ...task,
-          attachments: task.attachments ? [...task.attachments, newAttachment] : [newAttachment]
-        };
+  const addTaskAttachment = async (taskId: string) => {
+    try {
+      // Use the File System Access API to let user select a file
+      if ('showOpenFilePicker' in window) {
+        // @ts-ignore - TypeScript doesn't have built-in types for the File System Access API
+        const [fileHandle] = await window.showOpenFilePicker({
+          multiple: false,
+          types: [
+            {
+              description: 'All Files',
+              accept: {
+                'application/*': ['*'],
+                'image/*': ['*'],
+                'text/*': ['*']
+              }
+            }
+          ]
+        });
+
+        const file = await fileHandle.getFile();
+        const fileName = file.name;
+        
+        const updatedTasks = tasks.map(task => {
+          if (task.id === taskId) {
+            return {
+              ...task,
+              attachments: task.attachments ? [...task.attachments, fileName] : [fileName]
+            };
+          }
+          return task;
+        });
+        
+        setTasks(updatedTasks);
+        localStorage.setItem('dashboard_tasks', JSON.stringify(updatedTasks));
+      } else {
+        alert('Your browser does not support the File System Access API. Please try a modern browser like Chrome, Edge, or Opera.');
       }
-      return task;
-    });
-    
-    setTasks(updatedTasks);
-    localStorage.setItem('dashboard_tasks', JSON.stringify(updatedTasks));
-    setNewAttachment('');
+    } catch (error) {
+      // User cancelled the file picker or another error occurred
+      console.error('Error selecting file:', error);
+    }
   };
   
   // Handle marking a notification as read
@@ -2163,23 +2188,29 @@ export default function Dashboard() {
                 )}
                 
                 <div className={styles.taskInputGroup}>
-                  <input
-                    type="text"
-                    className={styles.taskInput}
-                    placeholder="Add attachment filename..."
-                    value={newAttachment}
-                    onChange={(e) => setNewAttachment(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && newAttachment.trim()) {
-                        addTaskAttachment(task.id);
-                      }
-                    }}
-                  />
                   <button
-                    className={styles.taskButton}
+                    className={styles.taskAttachButton}
                     onClick={() => addTaskAttachment(task.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      width: '100%',
+                      padding: '10px',
+                      backgroundColor: 'var(--action-primary)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontWeight: 500,
+                      transition: 'background-color 0.2s'
+                    }}
                   >
-                    Add
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    Attach File
                   </button>
                 </div>
               </div>
