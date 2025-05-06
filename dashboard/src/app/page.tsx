@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import FileContent from './components/FileContent';
+import MarkdownViewer from './components/MarkdownViewer';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import styles from "./page.module.css";
 import AddModal from "./components/AddModal";
@@ -116,7 +117,7 @@ export default function Dashboard() {
   // Tab system state
   const [openTabs, setOpenTabs] = useState([
     { id: 'dashboard', title: 'Dashboard', isPermanent: true },
-    { id: 'marketing-plan', title: 'Marketing Plan' },
+    { id: 'marketing-plan', title: 'MarketingPlan.md' },
     { id: 'health', title: 'Health' }
   ]);
   const [activeTabId, setActiveTabId] = useState('dashboard');
@@ -131,18 +132,29 @@ export default function Dashboard() {
   // Function to toggle folder expansion (including Topics)
   const toggleFolderExpansion = (folderId: string) => {
     console.log(`Toggling folder: ${folderId}`);
-    setExpandedFolders(prev => {
-      // Log current expanded folders
-      console.log('Current expanded folders:', prev);
-      
-      if (prev.includes(folderId)) {
-        const result = prev.filter(id => id !== folderId);
-        console.log('Removing from expanded folders, new state:', result);
-        return result;
+    
+    // Special case for the Topics folder - either show it with all subtopics or hide all
+    if (folderId === 'topics') {
+      if (expandedFolders.includes('topics')) {
+        // If Topics is currently expanded, collapse it (remove it from expanded folders)
+        console.log('Closing Topics folder');
+        setExpandedFolders([]);
       } else {
-        const result = [...prev, folderId];
-        console.log('Adding to expanded folders, new state:', result);
-        return result;
+        // If Topics is currently collapsed, expand it (add it to expanded folders)
+        console.log('Opening Topics folder');
+        setExpandedFolders(['topics']);
+      }
+      return;
+    }
+    
+    // For all other folders, use the standard logic
+    setExpandedFolders(prev => {
+      if (prev.includes(folderId)) {
+        // Remove folder from expanded list to collapse it
+        return prev.filter(id => id !== folderId);
+      } else {
+        // Add folder to expanded list to expand it
+        return [...prev, folderId];
       }
     });
   };
@@ -361,6 +373,142 @@ export default function Dashboard() {
       console.error('Error communicating with AI agent:', error);
       return `Sorry, I couldn't connect to the AI agent at this moment. Technical details: ${errorMessage}`;
     }
+  };
+
+  // Function to handle sending a message
+  const handleSendMessage = (userMsg: string, activeTab: ChatTab) => {
+    // Add user message
+    const newMessages = [
+      ...activeTab.messages,
+      { sender: 'user' as const, content: userMsg }
+    ];
+
+    // Update the active tab with user message and set as processing
+    setChatTabs(prevTabs => 
+      prevTabs.map(tab => {
+        if (tab.id === activeTab.id) {
+          return { ...tab, messages: newMessages, isProcessing: true };
+        }
+        return tab;
+      })
+    );
+    
+    // Scroll to bottom after user sends a message
+    setTimeout(() => {
+      const chatContainer = document.getElementById('chatBodyContainer');
+      if (chatContainer) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+    }, 50);
+    
+    // Ensure the processing state is visible
+    setTimeout(() => {
+      // Double-check that the tab is still in processing state
+      setChatTabs(tabs => {
+        return tabs.map(tab => tab.id === activeTab.id && !tab.isProcessing ? 
+          { ...tab, isProcessing: true } : tab);
+      });
+    }, 100);
+    
+    // Get or create a session ID for this chat
+    const chatSessionId = activeTab.sessionId || generateUUID();
+    
+    // Call the AI agent API
+    sendMessageToAIAgent(userMsg, chatSessionId)
+      .then(response => {
+        console.log('AI agent response:', response);
+        
+        // Add bot message with response from the AI agent
+        setChatTabs(prevTabs => {
+          return prevTabs.map(tab => {
+            if (tab.id === activeTab.id) {
+              const botReply = {
+                sender: 'bot' as const, 
+                content: response,
+                thinking: `Processing user input: "${userMsg}"
+
+Analyzing context...
+
+Identifying key points:
+1. User is asking about: ${userMsg}
+2. Relevant context: Dashboard environment
+
+Formulating response based on available information...`
+              };
+              return { 
+                ...tab, 
+                sessionId: chatSessionId, // Store sessionId for conversation continuity
+                messages: [...tab.messages, botReply],
+                isProcessing: false 
+              };
+            }
+            return tab;
+          });
+        });
+        
+        // Scroll to the bottom after message is added
+        setTimeout(() => {
+          const chatContainer = document.getElementById('chatBodyContainer');
+          if (chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+          }
+        }, 100);
+        
+        // Update process status to completed
+        setProcesses(prevProcesses => 
+          prevProcesses.map(process => 
+            process.id === activeTab.id ? 
+              { ...process, status: 'completed' as const } : 
+              process
+          )
+        );
+      })
+      .catch(error => {
+        console.error('Error calling AI agent:', error);
+        
+        // Update chat with error message
+        setChatTabs(prevTabs => 
+          prevTabs.map(tab => {
+            if (tab.id === activeTab.id) {
+              return { 
+                ...tab, 
+                isProcessing: false,
+                messages: [
+                  ...tab.messages,
+                  { sender: 'bot' as const, content: 'Sorry, there was an error connecting to the AI agent.' }
+                ]
+              };
+            }
+            return tab;
+          })
+        );
+        
+        // Scroll to bottom even on error response
+        setTimeout(() => {
+          const chatContainer = document.getElementById('chatBodyContainer');
+          if (chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+          }
+        }, 100);
+        
+        // Update status to failed
+        setProcesses(prevProcesses => 
+          prevProcesses.map(process => 
+            process.id === activeTab.id ? 
+              { ...process, status: 'failed' as const } : 
+              process
+          )
+        );
+      });
+    
+    // Update status in Active Processes to in progress
+    setProcesses(prevProcesses => 
+      prevProcesses.map(process => 
+        process.id === activeTab.id 
+          ? { ...process, status: 'inProgress' as const } 
+          : process
+      )
+    );
   };
 
   // Function to create a new chat tab
@@ -1610,85 +1758,103 @@ export default function Dashboard() {
                 <FileContent file={selectedFile} />
               </div>
             </div>
+          ) : activeTabId === 'marketing-plan' ? (
+            /* Show Marketing Plan content in markdown format */
+            <MarkdownViewer content={`# Marketing Plan 2025
+
+## Executive Summary
+
+This marketing plan outlines our strategy for increasing market share and brand awareness over the next fiscal year. We aim to leverage digital channels, strategic partnerships, and innovative product features to achieve our growth targets.
+
+## Target Market
+
+### Primary Audience
+- Mid-sized enterprises (100-500 employees)
+- Tech-focused startups in growth phase
+- Educational institutions
+
+### Secondary Audience
+- Individual professionals
+- Small businesses (< 100 employees)
+
+## Competitive Analysis
+
+| Competitor | Market Share | Key Strengths | Weaknesses |
+|------------|--------------|---------------|------------|
+| CompX | 34% | Brand recognition, Wide feature set | High pricing, Complex UI |
+| TechY | 28% | Modern interface, Good mobile support | Limited integrations |
+| SystemZ | 15% | Enterprise focus, Security features | Dated design, Poor customer support |
+
+## Marketing Strategy
+
+### Digital Marketing
+- **Content Marketing**: Weekly blog posts, monthly whitepapers
+- **SEO**: Target 5 high-value keywords per quarter
+- **Email Campaigns**: Bi-weekly newsletter, automated onboarding sequence
+- **Social Media**: Daily posts across platforms with focus on LinkedIn and Twitter
+
+### Event Marketing
+- Attendance at 3 major industry conferences
+- Host quarterly webinars on industry topics
+- Annual user conference in Q3
+
+### Partnerships
+- Co-marketing with 5 strategic technology partners
+- Educational institution discount program
+- Referral program for existing customers
+
+## Budget Allocation
+
+- Digital Marketing: 40%
+- Content Production: 25%
+- Events: 20%
+- Partnerships: 10%
+- Miscellaneous: 5%
+
+## Key Performance Indicators
+
+- Increase website traffic by 35%
+- Achieve 15% conversion rate from free trial to paid
+- Grow customer base by 25%
+- Improve customer retention to 90%
+- Increase social media engagement by 50%
+
+## Timeline
+
+### Q1 (Jan-Mar)
+- Launch redesigned website
+- Implement marketing automation platform
+- Develop Q1 content calendar
+
+### Q2 (Apr-Jun)
+- Begin partnership program
+- Launch spring promotional campaign
+- Attend industry conference A
+
+### Q3 (Jul-Sep)
+- Host annual user conference
+- Review and adjust digital strategy
+- Launch referral program
+
+### Q4 (Oct-Dec)
+- Holiday promotional campaign
+- Annual strategy review
+- Planning for next year
+
+## Risk Assessment
+
+- Increased competition may require additional budget allocation
+- Market trends shift may necessitate pivot in messaging
+- Economic factors could impact B2B spending
+
+## Conclusion
+
+This marketing plan provides a comprehensive framework for achieving our business objectives through strategic marketing initiatives. Regular monitoring and adjustments will ensure we stay agile in response to market changes.`} />
+            
           ) : activeTabId !== 'work' ? (
             /* Show regular dashboard content for non-Work tabs */
             <>
               <h2 className={styles.pageTitle}>Dashboard Overview</h2>
-              
-              {/* Topic Shortcuts */}
-              <div className={styles.topicShortcuts}>
-                <button 
-                  className={styles.topicShortcutButton}
-                  onClick={() => {
-                    setTopicAsRoot('work'); // Set Work as root in knowledgebase
-                    // No need to call setActiveTabId as setTopicAsRoot already does this
-                  }}
-                >
-                  <span className={styles.topicIcon}>💼</span>
-                  Work
-                </button>
-                <button 
-                  className={styles.topicShortcutButton}
-                  onClick={() => {
-                    setTopicAsRoot('health'); // Set Health as root in knowledgebase
-                    // No need to call setActiveTabId as setTopicAsRoot already does this
-                  }}
-                >
-                  <span className={styles.topicIcon}>❤️</span>
-                  Health
-                </button>
-                <button 
-                  className={styles.topicShortcutButton}
-                  onClick={() => {
-                    // Check if Finance tab exists, if not create it
-                    const financeTab = openTabs.find(tab => tab.id === 'finance');
-                    if (!financeTab) {
-                      setOpenTabs(prevTabs => [
-                        ...prevTabs,
-                        { id: 'finance', title: 'Finance' }
-                      ]);
-                    }
-                    setTopicAsRoot('finance');
-                  }}
-                >
-                  <span className={styles.topicIcon}>💰</span>
-                  Finance
-                </button>
-                <button 
-                  className={styles.topicShortcutButton}
-                  onClick={() => {
-                    // Check if Travel tab exists, if not create it
-                    const travelTab = openTabs.find(tab => tab.id === 'travel');
-                    if (!travelTab) {
-                      setOpenTabs(prevTabs => [
-                        ...prevTabs,
-                        { id: 'travel', title: 'Travel' }
-                      ]);
-                    }
-                    setTopicAsRoot('travel');
-                  }}
-                >
-                  <span className={styles.topicIcon}>✈️</span>
-                  Travel
-                </button>
-                <button 
-                  className={styles.topicShortcutButton}
-                  onClick={() => {
-                    // Check if Hobbies tab exists, if not create it
-                    const hobbiesTab = openTabs.find(tab => tab.id === 'hobbies');
-                    if (!hobbiesTab) {
-                      setOpenTabs(prevTabs => [
-                        ...prevTabs,
-                        { id: 'hobbies', title: 'Hobbies' }
-                      ]);
-                    }
-                    setTopicAsRoot('hobbies');
-                  }}
-                >
-                  <span className={styles.topicIcon}>🎮</span>
-                  Hobbies
-                </button>
-              </div>
               
               <div className={styles.cardGrid}>
                 {/* Recent Activity Card */}
@@ -2412,138 +2578,34 @@ export default function Dashboard() {
                                 if (e.key === 'Enter' && e.currentTarget.value.trim()) {
                                   const activeTab = chatTabs.find(tab => tab.active);
                                   if (activeTab) {
-                                    // Add user message
                                     const userMsg = e.currentTarget.value.trim();
-                                    const newMessages = [
-                                      ...activeTab.messages,
-                                      { sender: 'user' as const, content: userMsg }
-                                    ];
-
-                                    // Update the active tab with user message and set as processing
-                                    setChatTabs(prevTabs => 
-                                      prevTabs.map(tab => {
-                                        if (tab.id === activeTab.id) {
-                                          return { ...tab, messages: newMessages, isProcessing: true };
-                                        }
-                                        return tab;
-                                      })
-                                    );
-                                    
-                                    // Scroll to bottom after user sends a message
-                                    setTimeout(() => {
-                                      const chatContainer = document.getElementById('chatBodyContainer');
-                                      if (chatContainer) {
-                                        chatContainer.scrollTop = chatContainer.scrollHeight;
-                                      }
-                                    }, 50);
-                                    
-                                    // Send message to AI agent
-                                    const chatSessionId = activeTab.sessionId || generateUUID();
-                                    
-                                    // Ensure the processing state is visible
-                                    setTimeout(() => {
-                                      // Double-check that the tab is still in processing state
-                                      setChatTabs(tabs => {
-                                        return tabs.map(tab => tab.id === activeTab.id && !tab.isProcessing ? 
-                                          { ...tab, isProcessing: true } : tab);
-                                      });
-                                    }, 100);
-                                    
-                                    // Call the AI agent API
-                                    sendMessageToAIAgent(userMsg, chatSessionId)
-                                      .then(response => {
-                                        console.log('AI agent response:', response);
-                                        
-                                        // Add bot message with response from the AI agent
-                                        setChatTabs(prevTabs => {
-                                          return prevTabs.map(tab => {
-                                            if (tab.id === activeTab.id) {
-                                              const botReply = {
-                                                sender: 'bot' as const, 
-                                                content: response,
-                                                thinking: `Processing user input: "${userMsg}"\n\nAnalyzing context...\n\nIdentifying key points:\n1. User is asking about: ${userMsg}\n2. Relevant context: Dashboard environment\n\nFormulating response based on available information...`
-                                              };
-                                              return { 
-                                                ...tab, 
-                                                sessionId: chatSessionId, // Store sessionId for conversation continuity
-                                                messages: [...tab.messages, botReply],
-                                                isProcessing: false 
-                                              };
-                                            }
-                                            return tab;
-                                          });
-                                        });
-                                        
-                                        // Scroll to the bottom after message is added
-                                        setTimeout(() => {
-                                          const chatContainer = document.getElementById('chatBodyContainer');
-                                          if (chatContainer) {
-                                            chatContainer.scrollTop = chatContainer.scrollHeight;
-                                          }
-                                        }, 100);
-                                        
-                                        // Update process status to completed
-                                        setProcesses(prevProcesses => 
-                                          prevProcesses.map(process => 
-                                            process.id === activeTab.id ? 
-                                              { ...process, status: 'completed' as const } : 
-                                              process
-                                          )
-                                        );
-                                      })
-                                      .catch(error => {
-                                        console.error('Error calling AI agent:', error);
-                                        
-                                        // Update chat with error message
-                                        setChatTabs(prevTabs => 
-                                          prevTabs.map(tab => {
-                                            if (tab.id === activeTab.id) {
-                                              return { 
-                                                ...tab, 
-                                                isProcessing: false,
-                                                messages: [
-                                                  ...tab.messages,
-                                                  { sender: 'bot' as const, content: 'Sorry, there was an error connecting to the AI agent.' }
-                                                ]
-                                              };
-                                            }
-                                            return tab;
-                                          })
-                                        );
-                                        
-                                        // Scroll to bottom even on error response
-                                        setTimeout(() => {
-                                          const chatContainer = document.getElementById('chatBodyContainer');
-                                          if (chatContainer) {
-                                            chatContainer.scrollTop = chatContainer.scrollHeight;
-                                          }
-                                        }, 100);
-                                        
-                                        // Update status to failed
-                                        setProcesses(prevProcesses => 
-                                          prevProcesses.map(process => 
-                                            process.id === activeTab.id ? 
-                                              { ...process, status: 'failed' as const } : 
-                                              process
-                                          )
-                                        );
-                                      });
-                                    
+                                    handleSendMessage(userMsg, activeTab);
                                     // Clear input
                                     e.currentTarget.value = '';
-                                    
-                                    // Update status in Active Processes to in progress
-                                    setProcesses(prevProcesses => 
-                                      prevProcesses.map(process => 
-                                        process.id === activeTab.id 
-                                          ? { ...process, status: 'inProgress' as const } 
-                                          : process
-                                      )
-                                    );
                                   }
                                 }
                               }}
                             />
+                            <button 
+                              className={styles.sendButton}
+                              onClick={() => {
+                                const inputElement = document.querySelector(`.${styles.chatInput}`) as HTMLInputElement;
+                                if (inputElement && inputElement.value.trim()) {
+                                  const activeTab = chatTabs.find(tab => tab.active);
+                                  if (activeTab) {
+                                    const userMsg = inputElement.value.trim();
+                                    handleSendMessage(userMsg, activeTab);
+                                    // Clear input
+                                    inputElement.value = '';
+                                  }
+                                }
+                              }}
+                            >
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </button>
                           </div>
                         </div>
                       </>

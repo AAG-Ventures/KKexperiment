@@ -1,0 +1,89 @@
+.markdownContainer {
+  padding: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  color: var(--foreground-primary);
+  background-color: var(--background-secondary);
+  height: 100%;
+  overflow-y: auto;
+  line-height: 1.6;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.markdownContainer h1 {
+  font-size: 2.2em;
+  margin-bottom: 1em;
+  padding-bottom: 0.5em;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.markdownContainer h2 {
+  font-size: 1.8em;
+  margin-top: 1.5em;
+  margin-bottom: 0.8em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.markdownContainer h3 {
+  font-size: 1.4em;
+  margin-top: 1.2em;
+  margin-bottom: 0.6em;
+}
+
+.markdownContainer p {
+  margin-bottom: 1.2em;
+}
+
+.markdownContainer ul, .markdownContainer ol {
+  margin-bottom: 1.2em;
+  padding-left: 2em;
+}
+
+.markdownContainer li {
+  margin-bottom: 0.4em;
+}
+
+.markdownContainer code {
+  background-color: var(--background-tertiary);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.markdownContainer a {
+  color: var(--brand-primary);
+  text-decoration: none;
+}
+
+.markdownContainer a:hover {
+  text-decoration: underline;
+}
+
+.markdownContainer blockquote {
+  border-left: 4px solid var(--brand-primary-light);
+  padding-left: 1em;
+  margin-left: 0;
+  font-style: italic;
+  color: var(--foreground-secondary);
+}
+
+.markdownContainer table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 1.2em;
+}
+
+.markdownContainer th, .markdownContainer td {
+  border: 1px solid var(--border-light);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.markdownContainer th {
+  background-color: var(--background-tertiary);
+}
+
+.markdownContainer tr:nth-child(even) {
+  background-color: var(--background-tertiary);
+}

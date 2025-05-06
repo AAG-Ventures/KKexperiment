@@ -1753,17 +1753,17 @@
   position: relative; /* For absolute positioning of chat input */
   padding: 16px 16px 0 16px; /* Add consistent padding like other widgets */
   /* Ensure there's always room for the input */
-  padding-bottom: 60px;
+  padding-bottom: 70px;
   /* Appropriate minimum height */
   min-height: 250px;
   /* When added to DraggableWidgetContainer, make it grow but not too much */
   flex-grow: 1;
   /* Allow it to shrink when space is limited */
   flex-shrink: 1;
-  /* Dynamically adjust to available space - use max-height dependent on viewport */
-  max-height: calc(100vh - 240px);
-  /* Use percentage-based height for better responsiveness */
-  height: 60vh;
+  /* Dynamically adjust to available space with smaller max-height */
+  max-height: calc(100vh - 300px);
+  /* Use percentage-based height for better responsiveness - reduced */
+  height: 50vh;
   /* Only push to bottom when there's room */
   margin-top: 16px; 
   /* Ensure scrolling works inside the chat if content overflows */
@@ -1882,12 +1882,12 @@
   padding: 16px;
   display: flex;
   flex-direction: column;
-  /* Allow it to use the full container height */
-  height: calc(100% - 90px);
+  /* Allow it to use the full container height but leave more room for input */
+  height: calc(100% - 110px);
   /* Don't restrict with a max-height */
   max-height: none;
   box-sizing: border-box;
-  margin-bottom: 10px; /* Space before input */
+  margin-bottom: 16px; /* More space before input */
   /* Show a scrollbar when needed */
   scrollbar-width: thin;
   /* Add smooth scrolling behavior */
@@ -2015,27 +2015,53 @@ details[open] .thinkingSummary::before {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 8px;
-  background: var(--background-primary);
+  padding: 12px;
+  background: var(--background-secondary);
   border-top: 1px solid var(--border-light);
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  margin-top: auto;
+  z-index: 10;
+  height: 64px; /* Fixed height to ensure consistency */
+  box-sizing: border-box;
 }
 
 .chatInputWrapper {
   display: flex;
   position: relative;
   width: 100%;
+  align-items: center;
 }
 
 .chatInput {
   flex: 1;
   border: 1px solid var(--border-light);
   background: var(--background-primary);
-  padding: 8px 12px;
-  font-size: var(--font-size-sm);
+  color: var(--foreground-primary);
+  padding: 10px 16px;
+  font-size: var(--font-size-md);
   border-radius: 20px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  height: 40px;
+  margin-right: 8px;
+}
+
+.sendButton {
+  background-color: var(--brand-primary);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.sendButton:hover {
+  background-color: var(--brand-primary-dark);
 }
 
 .chatInput:focus {

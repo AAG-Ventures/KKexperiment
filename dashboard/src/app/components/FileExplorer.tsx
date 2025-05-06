@@ -162,7 +162,7 @@ const Folder: React.FC<FolderProps> = ({
           onClick={(e) => {
             e.stopPropagation();
             
-            // Direct implementation for Topics to guarantee it toggles
+            // Direct implementation for Topics folder open/close functionality
             if (folder.id === 'topics' && onToggleFolder) {
               onToggleFolder('topics');
             } else {

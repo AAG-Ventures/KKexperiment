@@ -1,0 +1,35 @@
+/* 
+   Special override CSS to fix Topics folder collapsing
+   This file will be imported directly in the FileExplorer component
+*/
+
+/* Hide folder children when not expanded */
+.topicsContainer.collapsed .topicsChildren {
+  display: none !important;
+}
+
+/* Ensure children are visible when expanded */
+.topicsContainer.expanded .topicsChildren {
+  display: block !important;
+}
+
+/* Topics folder with proper styling */
+.topicsRow {
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  user-select: none;
+}
+
+/* Force proper height for collapsed sections */
+.topicsContainer.collapsed .topicsChildren {
+  height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Make sure expanded children take appropriate space */
+.topicsContainer.expanded .topicsChildren {
+  display: block !important;
+  height: auto !important;
+}
