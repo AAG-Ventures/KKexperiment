@@ -34,8 +34,8 @@
 
 .topBar {
   height: 60px;
-  background: rgba(10, 10, 18, 0.8);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.45); /* Much more transparent background */
+  border-bottom: 1px solid rgba(10, 246, 187, 0.1); /* Subtle cyan-tinted border */
   display: flex;
   align-items: center;
   padding: 0 16px;
@@ -43,8 +43,8 @@
   top: 0;
   z-index: 10;
   transition: all var(--transition-normal);
-  box-shadow: var(--shadow-md);
-  backdrop-filter: blur(16px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03); /* Very subtle shadow */
+  backdrop-filter: blur(16px); /* Keep the blur for depth */
   -webkit-backdrop-filter: blur(16px);
 }
 
@@ -510,6 +510,8 @@
   overflow-y: auto;
 }
 
+/* Removed duplicate definition */
+
 /* Remove specific width and margin adjustments - rely on grid layout instead */
 .mainContentExpanded {
   flex-direction: column;
@@ -746,7 +748,9 @@
 }
 
 .cardContent {
-  padding: 20px;
+  padding: 8px 16px 16px;
+  height: calc(100% - 60px);
+  overflow-y: auto;
 }
 
 /* Analytics Card Styles */
@@ -824,6 +828,7 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  margin-top: -6px;
 }
 
 .processList {
@@ -836,33 +841,31 @@
 
 .activityItem {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
-  padding: 12px 0;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--border-light);
 }
 
 .activityItem:last-child {
   border-bottom: none;
-  padding-bottom: 0;
 }
 
 .activityIcon {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(102, 103, 171, 0.15);
-  border-radius: 50%;
+  background-color: rgba(var(--brand-rgb), 0.15);
+  border-radius: 8px;
   width: 36px;
   height: 36px;
   flex-shrink: 0;
-  margin-top: 2px;
+  margin-right: 10px;
+  color: var(--brand-primary);
 }
 
-.activityIcon span {
+.activityIcon svg {
   color: var(--brand-primary);
-  font-size: 24px;
-  line-height: 1;
 }
 
 .activityText {
@@ -1085,25 +1088,26 @@
 .actionButtons {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 16px;
+  padding: 4px 0;
+  margin-top: -6px;
 }
 
 .actionButton {
-  background-color: rgba(10, 10, 18, 0.3);
-  color: var(--foreground-secondary);
+  background-color: rgba(255, 255, 255, 0.3); /* Much more transparent background */
+  color: #0a1020; /* Darker text for contrast */
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 12px 16px; /* Increased vertical padding */
   border-radius: var(--radius-md);
   font-weight: var(--font-weight-medium);
   font-size: var(--font-size-sm);
   transition: all var(--transition-fast);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(10, 246, 187, 0.2); /* Cyan-tinted border */
   cursor: pointer;
-  backdrop-filter: blur(10px);
-  background: rgba(18, 18, 30, 0.6);
+  backdrop-filter: blur(10px); /* Keep the blur for depth */
   -webkit-backdrop-filter: blur(10px);
 }
 
@@ -1112,16 +1116,17 @@
 }
 
 .actionButton:hover {
-  background-color: rgba(10, 10, 18, 0.5);
+  background-color: rgba(10, 246, 187, 0.1); /* Cyan tint on hover */
   transform: translateY(-1px);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(10, 246, 187, 0.3); /* Stronger cyan border on hover */
+  box-shadow: 0 2px 8px rgba(10, 246, 187, 0.15); /* Subtle cyan glow */
 }
 
 .actionButton span.material-icons,
 .actionButton svg {
   font-size: 20px;
   margin-right: 8px;
-  color: var(--brand-primary);
+  color: var(--brand-primary); /* Keep the cyan color for icons */
 }
 
 .primaryButton {
@@ -1481,11 +1486,11 @@
 
 .chatBody {
   flex: 1;
-  padding: 8px 0 60px 0; /* Extra padding to account for fixed input */
-  overflow-y: auto; /* Allow scrolling for messages */
-  font-size: var(--font-size-sm);
-  color: var(--foreground-primary);
-  /* Make it take all available space in the chatbox minus the input height */
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  /* Allow it to use the full container height */
   height: calc(100% - 90px);
   /* Don't restrict with a max-height */
   max-height: none;
@@ -1493,39 +1498,238 @@
   margin-bottom: 10px; /* Space before input */
   /* Show a scrollbar when needed */
   scrollbar-width: thin;
+  /* Add smooth scrolling behavior */
+  scroll-behavior: smooth;
 }
 
-.chatMsg {
-  background: var(--background-tertiary);
-  border-radius: 18px;
-  padding: 10px 16px;
+/* Chat messages styling */
+.userMsg {
+  padding: 4px 0;
   margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  position: relative;
+  max-width: 80%;
+  align-self: flex-end;
+  margin-left: auto;
+}
+
+.userMsg .messageContent {
+  background: var(--primary-color);
+  color: white;
+  border-radius: 18px 4px 18px 18px;
+  padding: 10px 16px;
   display: inline-block;
-  border: 1px solid var(--border-light);
   box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  font-size: 13px; /* Smaller than task items (14px) */
+}
+
+.botMsg {
+  padding: 4px 0;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: flex-start;
+  max-width: 85%;
+}
+
+.botHeader {
+  font-size: var(--font-size-xs);
+  color: var(--foreground-secondary);
+  margin-bottom: 4px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.botMsg .messageContent {
+  color: var(--foreground-primary);
+  padding: 2px 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  line-height: 1.5;
+  font-size: 13px; /* Smaller than task items (14px) */
+}
+
+/* Thinking section */
+.thinkingContainer {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.thinkingDetails {
+  width: 100%;
+}
+
+/* Hide default browser disclosure triangle */
+.thinkingDetails summary::-webkit-details-marker,
+.thinkingDetails summary::marker {
+  display: none;
+}
+
+.thinkingSummary {
+  cursor: pointer;
+  color: var(--primary-color);
+  font-size: var(--font-size-xs);
+  padding: 2px 0;
+  display: inline-flex;
+  align-items: center;
+  user-select: none;
+  list-style: none;
+}
+
+/* Add custom arrow indicator */
+.thinkingSummary::before {
+  content: '▶';
+  display: inline-block;
+  margin-right: 5px;
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+
+/* Rotate arrow when details are open */
+details[open] .thinkingSummary::before {
+  transform: rotate(90deg);
+}
+
+/* Text styling for thinking process label */
+.thinkingText {
+  position: relative;
+  top: 1px;
+}
+
+.thinkingContent {
+  background: var(--background-tertiary);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 13px; /* Match message content size */
+  color: var(--foreground-secondary);
+  white-space: pre-wrap;
+  overflow-x: auto;
+  border: 1px solid var(--border-light);
+}
+
+/* Chat input styling */
+.chatInputContainer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 8px;
+  background: var(--background-primary);
+  border-top: 1px solid var(--border-light);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.chatInputWrapper {
+  display: flex;
+  position: relative;
+  width: 100%;
 }
 
 .chatInput {
-  border: none;
-  border-top: 1px solid var(--border-light);
-  padding: 12px 16px;
+  flex: 1;
+  border: 1px solid var(--border-light);
+  background: var(--background-primary);
+  padding: 8px 12px;
   font-size: var(--font-size-sm);
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg); /* Match parent border radius */
+  border-radius: 20px;
   outline: none;
-  width: calc(100% - 32px); /* Adjusted width to account for padding */
-  margin: 0;
+  transition: border-color 0.2s;
+}
+
+.chatInput:focus {
+  border-color: var(--primary-color-light);
+  box-shadow: 0 0 0 2px rgba(131, 61, 255, 0.1);
+}
+
+/* Processing indicator - Messenger style */
+.processingIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background-color: rgba(0, 0, 0, 0.03);
+  border-radius: 12px;
+  margin-top: 4px;
+  width: fit-content;
+}
+
+.typingMsg {
+  margin-bottom: 16px;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.botHeader .processingIndicator {
+  margin-bottom: 0;
+  margin-left: 12px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.typingDot {
+  width: 10px;
+  height: 10px;
+  margin: 0 4px;
+  background-color: #ff5722; /* Bright orange for maximum visibility */
+  border-radius: 50%;
+  display: inline-block;
+  opacity: 1;
+  box-shadow: 0 0 4px rgba(0,0,0,0.3);
+}
+
+/* Messenger-style sequential animation */
+.typingDot:nth-child(1) {
+  animation: typingBounce 1.3s infinite ease-in-out 0s;
+}
+
+.typingDot:nth-child(2) {
+  animation: typingBounce 1.3s infinite ease-in-out 0.2s;
+}
+
+.typingDot:nth-child(3) {
+  animation: typingBounce 1.3s infinite ease-in-out 0.4s;
+}
+
+@keyframes typingBounce {
+  0%, 70%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes typingAnimation {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Chat input dark mode overrides */
+.chatInput {
   background: var(--input-bg);
   color: var(--input-text);
   transition: background-color var(--transition-normal), color var(--transition-normal);
-  position: absolute;
-  bottom: 0; /* Stick to the bottom */
-  left: 0;
-  right: 0;
-  box-sizing: border-box;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-  z-index: 10; /* Ensure it's above other content */
-  display: block !important; /* Always show */
-  height: 45px; /* Fixed height */
 }
 
 .chatInputBox {
@@ -1833,8 +2037,28 @@ a.secondary {
 }
 
 @media (prefers-color-scheme: dark) {
+  /* Removed filter:invert() to keep the MindExtension logo in its original cyan color */
   .logo {
-    filter: invert();
+    filter: none;
+  }
+  
+  /* Dark mode styles for top bar */
+  .topBar {
+    background: rgba(18, 18, 30, 0.8);
+    border-bottom: 1px solid rgba(10, 246, 187, 0.1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* Dark mode styles for action buttons */
+  .actionButton {
+    background-color: rgba(18, 18, 30, 0.7);
+    color: var(--foreground-primary);
+    border-color: rgba(10, 246, 187, 0.2);
+  }
+  
+  .actionButton:hover {
+    background-color: rgba(10, 246, 187, 0.15);
+    border-color: rgba(10, 246, 187, 0.4);
   }
 }
 

@@ -74,18 +74,16 @@ interface FileItemProps {
 
 const File: React.FC<FileItemProps> = ({ file, onSelect, selected }) => {
   const isActive = selected === file.id;
-  const fileIcon = file.icon || getFileIcon(file.type);
   const fileClass = getFileClass(file.type);
   
   return (
     <div 
-      className={`${styles.fileItem} ${fileClass} ${isActive ? styles.active : ''}`}
+      className={`${styles.fileRow} ${fileClass} ${isActive ? styles.active : ''}`}
       onClick={() => onSelect(file)}
     >
-      <span className={styles.fileDot}></span>
-      <span className={styles.icon}>
-        <span className={styles.fileIcon}><FileIcon size={16} /></span>
-      </span>
+      <div className={styles.fileIconWrapper}>
+        <FileIcon size={16} />
+      </div>
       <span className={styles.name}>{file.name}</span>
       <span className={styles.contextMenuTrigger}>⋮</span>
     </div>

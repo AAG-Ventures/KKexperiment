@@ -8,7 +8,7 @@ import styles from "./page.module.css";
 import AddModal from "./components/AddModal";
 import { DraggableWidgetContainer } from "./components/DraggableWidgetContainer";
 import FileExplorer, { isFolder, FileExplorerProps } from './components/FileExplorer';
-import { FileIcon, UploadIcon, ShareIcon, SearchIcon, BellIcon, UserIcon, PlusIcon, SendIcon, HomeIcon, CheckIcon } from './components/Icons';
+import { UploadIcon, FileIcon, SearchIcon, ShareIcon, FolderIcon, ChevronRightIcon, ChevronDownIcon, EditIcon, MessageIcon, ClockIcon, BellIcon, UserIcon, PlusIcon, SendIcon, HomeIcon, CheckIcon } from './components/Icons';
 import { knowledgebaseData } from './components/KnowledgebaseSampleData';
 // Import explicitly for client component
 import { useRouter } from 'next/navigation';
@@ -29,7 +29,11 @@ type WidgetItem = {
 type ChatTab = {
   id: string;
   title: string;
-  messages: { sender: 'user' | 'bot', content: string }[];
+  messages: { 
+    sender: 'user' | 'bot', 
+    content: string,
+    thinking?: string // Optional thinking content for agent messages
+  }[];
   active: boolean;
   isRenaming?: boolean;
   isProcessing?: boolean;
@@ -472,7 +476,15 @@ export default function Dashboard() {
   }, [tasks]);
   
   // Helper function to format task deadlines
-  const formatDeadline = (date: Date): string => {
+  const formatDeadline = (dateInput: Date | string | number): string => {
+    // Ensure the input is converted to a proper Date object
+    const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+    
+    // Handle invalid dates
+    if (isNaN(date.getTime())) {
+      return 'Invalid date';
+    }
+    
     const now = new Date();
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -502,7 +514,15 @@ export default function Dashboard() {
   };
   
   // Helper functions for deadline urgency
-  const isDeadlineUrgent = (date: Date): boolean => {
+  const isDeadlineUrgent = (dateInput: Date | string | number): boolean => {
+    // Ensure the input is converted to a proper Date object
+    const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+    
+    // Handle invalid dates
+    if (isNaN(date.getTime())) {
+      return false;
+    }
+    
     const now = new Date();
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -516,7 +536,15 @@ export default function Dashboard() {
     return dateOnly.getTime() === nowOnly.getTime() || dateOnly.getTime() === tomorrowOnly.getTime();
   };
   
-  const isDeadlineSoon = (date: Date): boolean => {
+  const isDeadlineSoon = (dateInput: Date | string | number): boolean => {
+    // Ensure the input is converted to a proper Date object
+    const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+    
+    // Handle invalid dates
+    if (isNaN(date.getTime())) {
+      return false;
+    }
+    
     const now = new Date();
     
     // Clear time portion for date comparison
@@ -531,7 +559,15 @@ export default function Dashboard() {
   };
   
   // Helper function to identify normal deadlines (more than 4 days away)
-  const isDeadlineNormal = (date: Date): boolean => {
+  const isDeadlineNormal = (dateInput: Date | string | number): boolean => {
+    // Ensure the input is converted to a proper Date object
+    const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+    
+    // Handle invalid dates
+    if (isNaN(date.getTime())) {
+      return false;
+    }
+    
     const now = new Date();
     
     // Clear time portion for date comparison
@@ -564,11 +600,19 @@ export default function Dashboard() {
     setNotifications(prev => [notification, ...prev]);
   };
   
-  // Function to format notification timestamp - safe for SSR
-  const formatNotificationTime = (timestamp: Date): string => {
+  // Function to format notification timestamp as relative time
+  const formatNotificationTime = (timestampInput: Date | string | number): string => {
     // Return empty string during server-side rendering
     if (typeof window === 'undefined') {
       return '';
+    }
+    
+    // Ensure timestamp is a valid Date object
+    const timestamp = timestampInput instanceof Date ? timestampInput : new Date(timestampInput);
+    
+    // Check if the date is valid
+    if (isNaN(timestamp.getTime())) {
+      return 'Invalid date';
     }
     
     // Only run time calculations on client
@@ -791,7 +835,12 @@ export default function Dashboard() {
                   // Show unread notifications or the 3 most recent
                   (unreadCount > 0 ? 
                     notifications.filter(n => !n.read) : 
-                    [...notifications].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 3)
+                    [...notifications].sort((a, b) => {
+                      // Ensure timestamps are proper Date objects
+                      const aTime = a.timestamp instanceof Date ? a.timestamp.getTime() : new Date(a.timestamp).getTime();
+                      const bTime = b.timestamp instanceof Date ? b.timestamp.getTime() : new Date(b.timestamp).getTime();
+                      return bTime - aTime;
+                    }).slice(0, 3)
                   ).map(notification => (
                     <div 
                       key={notification.id}
@@ -902,7 +951,6 @@ export default function Dashboard() {
                           >
                             Knowledgebase {expandedFolders.includes('topics') ? '▼' : '►'}
                           </h3>
-                          <span className={styles.widgetIcon}>📚</span>
                         </div>
                         {/* File Explorer Component */}
                         <div className={styles.fileExplorerContainer}>
@@ -1208,26 +1256,34 @@ export default function Dashboard() {
                 <div className={styles.card}>
                   <div className={styles.widgetHeader}>
                     <h3>Recent Activity</h3>
-                    <span className={styles.widgetIcon}>🕒</span>
+                    <span className={styles.widgetIcon}>
+                      <ClockIcon size={20} />
+                    </span>
                   </div>
                   <div className={styles.cardContent}>
                     <ul className={styles.activityList}>
                       <li className={styles.activityItem}>
-                        <span style={{fontSize: 24, marginRight: 10}}>✏️</span>
+                        <span className={styles.activityIcon}>
+                          <EditIcon size={20} />
+                        </span>
                         <div className={styles.activityText}>
                           <div>Updated <strong>Marketing Plan</strong></div>
                           <div className={styles.activityTime}>10 minutes ago</div>
                         </div>
                       </li>
                       <li className={styles.activityItem}>
-                        <span style={{fontSize: 24, marginRight: 10}}>📁</span>
+                        <span className={styles.activityIcon}>
+                          <FolderIcon size={20} />
+                        </span>
                         <div className={styles.activityText}>
                           <div>Created <strong>Q2 Reports</strong> folder</div>
                           <div className={styles.activityTime}>Yesterday</div>
                         </div>
                       </li>
                       <li className={styles.activityItem}>
-                        <span style={{fontSize: 24, marginRight: 10}}>💬</span>
+                        <span className={styles.activityIcon}>
+                          <MessageIcon size={20} />
+                        </span>
                         <div className={styles.activityText}>
                           <div>New message in <strong>Team Chat</strong></div>
                           <div className={styles.activityTime}>Yesterday</div>
@@ -1538,8 +1594,40 @@ export default function Dashboard() {
                                 if (!a.deadline) return 1;
                                 if (!b.deadline) return -1;
                                 
-                                // Sort by date
-                                return a.deadline.getTime() - b.deadline.getTime();
+                                // Safer approach: use try-catch to prevent any runtime errors
+                                try {
+                                  // Convert to timestamps with error handling
+                                  let aTime, bTime;
+                                  
+                                  try {
+                                    aTime = a.deadline instanceof Date ? 
+                                      a.deadline.getTime() : 
+                                      new Date(a.deadline).getTime();
+                                  } catch (e) {
+                                    // If there's an error, put this task at the bottom
+                                    return 1;
+                                  }
+                                  
+                                  try {
+                                    bTime = b.deadline instanceof Date ? 
+                                      b.deadline.getTime() : 
+                                      new Date(b.deadline).getTime();
+                                  } catch (e) {
+                                    // If there's an error, put this task at the bottom
+                                    return -1;
+                                  }
+                                  
+                                  // Additional validation
+                                  if (isNaN(aTime)) return 1;
+                                  if (isNaN(bTime)) return -1;
+                                  
+                                  // Sort by date
+                                  return aTime - bTime;
+                                } catch (e) {
+                                  // Last resort fallback if anything goes wrong
+                                  console.error('Error sorting tasks:', e);
+                                  return 0;
+                                }
                               })
                               .map(task => (
                                 <li key={task.id} className={styles.taskItem}>
@@ -1722,14 +1810,16 @@ export default function Dashboard() {
                                   const newTabs = chatTabs.filter(t => t.id !== tab.id);
                                   
                                   if (newTabs.length === 0) {
-                                    // If no tabs left, create a new one
-                                    const newId = `chat-${Date.now()}`;
+                                    // Close all tabs and create a new one
+                                    const newId = generateUUID();
+                                    const newSessionId = generateUUID(); // Create a unique session ID for this chat
                                     setChatTabs([{
                                       id: newId,
                                       title: `Chat ${1}`,
                                       messages: [{ sender: 'bot' as const, content: 'Hi! How can I help you today?' }],
                                       active: true,
-                                      isProcessing: false
+                                      isProcessing: false,
+                                      sessionId: newSessionId // Store the session ID for conversation continuity
                                     }]);
                                     
                                     // Add new tab to Active Processes
@@ -1758,153 +1848,193 @@ export default function Dashboard() {
                         </div>
                         
                         {chatTabs.map((tab) => tab.active && (
-                          <div key={tab.id} className={styles.chatBody}>
+                          <div key={tab.id} className={styles.chatBody} id="chatBodyContainer">
                             {tab.messages.map((msg, i) => (
-                              <div key={i} className={styles.chatMsg}>
-                                {msg.sender === 'bot' && '🤖 '}{msg.content}
+                              <div key={i} className={msg.sender === 'user' ? styles.userMsg : styles.botMsg}>
+                                {msg.sender === 'bot' && (
+                                  <div className={styles.botHeader}>
+                                    🤖 MindExtension AI
+                                  </div>
+                                )}
+                                {/* Show thinking section for bot messages if available */}
+                                {msg.sender === 'bot' && msg.thinking && (
+                                  <div className={styles.thinkingContainer}>
+                                    <details className={styles.thinkingDetails}>
+                                      <summary className={styles.thinkingSummary}>
+                                        <span className={styles.thinkingText}>Thought process</span>
+                                      </summary>
+                                      <div className={styles.thinkingContent}>
+                                        {msg.thinking}
+                                      </div>
+                                    </details>
+                                  </div>
+                                )}
+                                
+                                <div className={styles.messageContent}>{msg.content}</div>
                               </div>
                             ))}
+                            
+                            {/* Messenger-style typing indicator */}
+                            {tab.isProcessing && (
+                              <div className={`${styles.botMsg} ${styles.typingMsg}`}>
+                                <div className={styles.botHeader}>
+                                  🤖 MindExtension AI
+                                </div>
+                                {/* Separate typing indicators for maximum visibility */}
+                                <div className={styles.processingIndicator}>
+                                  <span className={styles.typingDot}></span>
+                                  <span className={styles.typingDot}></span>
+                                  <span className={styles.typingDot}></span>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ))}
                         
-                        {/* Always render the chat input */}
-                        <input 
-                          className={styles.chatInput} 
-                          placeholder="Type a message..." 
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                              const activeTab = chatTabs.find(tab => tab.active);
-                              if (activeTab) {
-                                // Add user message
-                                const userMsg = e.currentTarget.value.trim();
-                                const newMessages = [
-                                  ...activeTab.messages,
-                                  { sender: 'user' as const, content: userMsg }
-                                ];
-                                
-                                // Update the active tab
-                                setChatTabs(prevTabs => 
-                                  prevTabs.map(tab => {
-                                    if (tab.id === activeTab.id) {
-                                      return { ...tab, messages: newMessages };
-                                    }
-                                    return tab;
-                                  })
-                                );
-                                
-                                // Clear input
-                                e.currentTarget.value = '';
-                                
-                                // Set the chat as processing
-                                setChatTabs(prevTabs => 
-                                  prevTabs.map(tab => ({
-                                    ...tab,
-                                    isProcessing: tab.id === activeTab.id
-                                  }))
-                                );
-                                
-                                // Update status in Active Processes to in progress
-                                setProcesses(prevProcesses => 
-                                  prevProcesses.map(process => 
-                                    process.id === activeTab.id 
-                                      ? { ...process, status: 'inProgress' as const } 
-                                      : process
-                                  )
-                                );
-                                
-                                // Send message to AI agent
-                                const sessionId = activeTab.sessionId || generateUUID();
-                                
-                                // If no sessionId exists yet, add it to the tab
-                                if (!activeTab.sessionId) {
-                                  setChatTabs(prevTabs => 
-                                    prevTabs.map(tab => {
-                                      if (tab.id === activeTab.id) {
-                                        return { ...tab, sessionId };
+                        {/* Chat input container */}
+                        <div className={styles.chatInputContainer}>
+                          <div className={styles.chatInputWrapper}>
+                            <input 
+                              className={styles.chatInput} 
+                              placeholder="Type a message..." 
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                                  const activeTab = chatTabs.find(tab => tab.active);
+                                  if (activeTab) {
+                                    // Add user message
+                                    const userMsg = e.currentTarget.value.trim();
+                                    const newMessages = [
+                                      ...activeTab.messages,
+                                      { sender: 'user' as const, content: userMsg }
+                                    ];
+
+                                    // Update the active tab with user message and set as processing
+                                    setChatTabs(prevTabs => 
+                                      prevTabs.map(tab => {
+                                        if (tab.id === activeTab.id) {
+                                          return { ...tab, messages: newMessages, isProcessing: true };
+                                        }
+                                        return tab;
+                                      })
+                                    );
+                                    
+                                    // Scroll to bottom after user sends a message
+                                    setTimeout(() => {
+                                      const chatContainer = document.getElementById('chatBodyContainer');
+                                      if (chatContainer) {
+                                        chatContainer.scrollTop = chatContainer.scrollHeight;
                                       }
-                                      return tab;
-                                    })
-                                  );
+                                    }, 50);
+                                    
+                                    // Send message to AI agent
+                                    const chatSessionId = activeTab.sessionId || generateUUID();
+                                    
+                                    // Ensure the processing state is visible
+                                    setTimeout(() => {
+                                      // Double-check that the tab is still in processing state
+                                      setChatTabs(tabs => {
+                                        return tabs.map(tab => tab.id === activeTab.id && !tab.isProcessing ? 
+                                          { ...tab, isProcessing: true } : tab);
+                                      });
+                                    }, 100);
+                                    
+                                    // Call the AI agent API
+                                    sendMessageToAIAgent(userMsg, chatSessionId)
+                                      .then(response => {
+                                        console.log('AI agent response:', response);
+                                        
+                                        // Add bot message with response from the AI agent
+                                        setChatTabs(prevTabs => {
+                                          return prevTabs.map(tab => {
+                                            if (tab.id === activeTab.id) {
+                                              const botReply = {
+                                                sender: 'bot' as const, 
+                                                content: response,
+                                                thinking: `Processing user input: "${userMsg}"\n\nAnalyzing context...\n\nIdentifying key points:\n1. User is asking about: ${userMsg}\n2. Relevant context: Dashboard environment\n\nFormulating response based on available information...`
+                                              };
+                                              return { 
+                                                ...tab, 
+                                                sessionId: chatSessionId, // Store sessionId for conversation continuity
+                                                messages: [...tab.messages, botReply],
+                                                isProcessing: false 
+                                              };
+                                            }
+                                            return tab;
+                                          });
+                                        });
+                                        
+                                        // Scroll to the bottom after message is added
+                                        setTimeout(() => {
+                                          const chatContainer = document.getElementById('chatBodyContainer');
+                                          if (chatContainer) {
+                                            chatContainer.scrollTop = chatContainer.scrollHeight;
+                                          }
+                                        }, 100);
+                                        
+                                        // Update process status to completed
+                                        setProcesses(prevProcesses => 
+                                          prevProcesses.map(process => 
+                                            process.id === activeTab.id ? 
+                                              { ...process, status: 'completed' as const } : 
+                                              process
+                                          )
+                                        );
+                                      })
+                                      .catch(error => {
+                                        console.error('Error calling AI agent:', error);
+                                        
+                                        // Update chat with error message
+                                        setChatTabs(prevTabs => 
+                                          prevTabs.map(tab => {
+                                            if (tab.id === activeTab.id) {
+                                              return { 
+                                                ...tab, 
+                                                isProcessing: false,
+                                                messages: [
+                                                  ...tab.messages,
+                                                  { sender: 'bot' as const, content: 'Sorry, there was an error connecting to the AI agent.' }
+                                                ]
+                                              };
+                                            }
+                                            return tab;
+                                          })
+                                        );
+                                        
+                                        // Scroll to bottom even on error response
+                                        setTimeout(() => {
+                                          const chatContainer = document.getElementById('chatBodyContainer');
+                                          if (chatContainer) {
+                                            chatContainer.scrollTop = chatContainer.scrollHeight;
+                                          }
+                                        }, 100);
+                                        
+                                        // Update status to failed
+                                        setProcesses(prevProcesses => 
+                                          prevProcesses.map(process => 
+                                            process.id === activeTab.id ? 
+                                              { ...process, status: 'failed' as const } : 
+                                              process
+                                          )
+                                        );
+                                      });
+                                    
+                                    // Clear input
+                                    e.currentTarget.value = '';
+                                    
+                                    // Update status in Active Processes to in progress
+                                    setProcesses(prevProcesses => 
+                                      prevProcesses.map(process => 
+                                        process.id === activeTab.id 
+                                          ? { ...process, status: 'inProgress' as const } 
+                                          : process
+                                      )
+                                    );
+                                  }
                                 }
-                                
-                                // Call the AI agent API
-                                sendMessageToAIAgent(userMsg, sessionId)
-                                  .then(response => {
-                                    // Check if the response indicates an actual error (not just conversational phrases)
-                                    const isErrorResponse = (
-                                      // Only flag as error when these appear as specific error phrases, not as part of normal conversation
-                                      (response.toLowerCase().includes("could not process your request") && response.length < 60) ||
-                                      (response.toLowerCase().includes("error:") && !response.toLowerCase().includes("interesting")) ||
-                                      response.toLowerCase().includes("api error:") ||
-                                      response.toLowerCase().includes("failed to process") ||
-                                      response.toLowerCase().includes("system error")
-                                    );
-                                    
-                                    console.log("AI response:", response);
-                                    console.log("Is error response?", isErrorResponse);
-                                    
-                                    // Update chat with the AI response
-                                    setChatTabs(prevTabs => 
-                                      prevTabs.map(tab => {
-                                        if (tab.id === activeTab.id) {
-                                          return { 
-                                            ...tab, 
-                                            isProcessing: false,
-                                            messages: [
-                                              ...tab.messages,
-                                              { sender: 'bot' as const, content: response }
-                                            ]
-                                          };
-                                        }
-                                        return tab;
-                                      })
-                                    );
-                                    
-                                    // Set status based on whether the response was an error
-                                    setProcesses(prevProcesses => 
-                                      prevProcesses.map(process => 
-                                        process.id === activeTab.id 
-                                          ? { 
-                                              ...process, 
-                                              status: isErrorResponse ? 'failed' as const : 'completed' as const 
-                                            } 
-                                          : process
-                                      )
-                                    );
-                                  })
-                                  .catch(error => {
-                                    console.error('Error calling AI agent:', error);
-                                    
-                                    // Update chat with error message
-                                    setChatTabs(prevTabs => 
-                                      prevTabs.map(tab => {
-                                        if (tab.id === activeTab.id) {
-                                          return { 
-                                            ...tab, 
-                                            isProcessing: false,
-                                            messages: [
-                                              ...tab.messages,
-                                              { sender: 'bot' as const, content: 'Sorry, there was an error connecting to the AI agent.' }
-                                            ]
-                                          };
-                                        }
-                                        return tab;
-                                      })
-                                    );
-                                    
-                                    // Set to failed in Active Processes
-                                    setProcesses(prevProcesses => 
-                                      prevProcesses.map(process => 
-                                        process.id === activeTab.id 
-                                          ? { ...process, status: 'failed' as const } 
-                                          : process
-                                      )
-                                    );
-                                  });
-                              }
-                            }
-                          }}
-                        />
+                              }}
+                            />
+                          </div>
+                        </div>
                       </>
                     )}
                   </div>
@@ -1965,7 +2095,9 @@ export default function Dashboard() {
           }
           
           // Add the new topic to the knowledgebase data
-          knowledgebaseData[0].children.push(newTopic as any); // Type assertion to fix TypeScript error
+          if (knowledgebaseData && knowledgebaseData.length > 0 && knowledgebaseData[0].children) {
+            knowledgebaseData[0].children.push(newTopic as any); // Type assertion to fix TypeScript error
+          }
           
           // Make sure the topics folder is expanded
           if (!expandedFolders.includes('topics')) {
