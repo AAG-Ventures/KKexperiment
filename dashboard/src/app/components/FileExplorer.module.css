@@ -33,14 +33,24 @@
   list-style-type: none;
 }
 
+.fileItemInner {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 5px 0;
+  margin-left: 3px;
+}
+
 .fileRow, .folderRow {
   display: flex;
   align-items: center;
-  padding: 2px 3px;
-  border-radius: 2px;
+  padding: 6px 8px;
+  border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.2s;
   user-select: none;
+  width: 100%;
+  margin: 1px 0;
 }
 
 .breadcrumbNav {
@@ -67,21 +77,44 @@
 }
 
 .icon {
-  margin-right: 10px;
-  width: 22px;
-  height: 22px;
+  margin-right: 8px;
+  width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.fileIconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  color: var(--foreground-secondary);
   flex-shrink: 0;
 }
 
 .folderIcon {
   color: var(--brand-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
 }
 
 .fileIcon {
   color: var(--foreground-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  line-height: 1;
 }
 
 .name {
@@ -104,6 +137,8 @@
   transition: transform 0.2s;
   user-select: none;
   font-size: 9px;
+  position: relative;
+  top: 1px;
 }
 
 .chevronExpanded {
@@ -145,6 +180,18 @@
 }
 
 /* Context menu indicator */
+/* File dot style */
+.fileDot {
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: var(--foreground-tertiary);
+  opacity: 0.5;
+  margin-right: 5px;
+  flex-shrink: 0;
+}
+
 .contextMenuTrigger {
   opacity: 0;
   width: 16px;
