@@ -719,8 +719,15 @@ export default function Dashboard() {
     
     setTasks(updatedTasks);
     localStorage.setItem('dashboard_tasks', JSON.stringify(updatedTasks));
+    
+    // Close the date picker but keep task details panel open
     setDatePickerVisible(false);
     setDatePickerTaskId(null);
+    
+    // Make sure the selected task is still active after date selection
+    if (selectedTaskId !== taskId) {
+      setSelectedTaskId(taskId);
+    }
   };
   
   // Function to add an attachment to a task

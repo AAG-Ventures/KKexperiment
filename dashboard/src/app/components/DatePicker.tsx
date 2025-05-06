@@ -51,7 +51,10 @@ const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onDateChange, onC
       day
     );
     onDateChange(newDate);
-    onClose();
+    // Ensure the datepicker closes immediately after selection
+    setTimeout(() => {
+      onClose();
+    }, 50); // Very short timeout to ensure the state updates properly
   };
   
   // Check if a date is today
