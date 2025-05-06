@@ -111,19 +111,14 @@ const Folder: React.FC<FolderProps> = ({
   const shouldBeExpanded = expandedFolders.includes(folder.id) || defaultExpanded;
   
   // Use state for internal tracking of expanded status
+  // Always use external state for expansion status
   const [expanded, setExpanded] = useState(shouldBeExpanded);
   
   // Use effect to respond to external expansion requests
   useEffect(() => {
-    // For topics folder, always sync with external state
-    if (folder.id === 'topics') {
-      setExpanded(shouldBeExpanded);
-    } 
-    // For other folders, only expand if needed
-    else if (shouldBeExpanded && !expanded) {
-      setExpanded(true);
-    }
-  }, [shouldBeExpanded, expanded, folder.id]);
+    // Always sync with external state
+    setExpanded(shouldBeExpanded);
+  }, [shouldBeExpanded]);
   
   const isActive = selected === folder.id;
   
@@ -187,25 +182,29 @@ const Folder: React.FC<FolderProps> = ({
       
       {expanded && (
         <div className={styles.children}>
-          {folder.children.map((item) => (
-            <div key={item.id}>
-              {isFolder(item) ? (
-                <Folder 
-                  folder={item} 
-                  onSelect={onSelect} 
-                  selected={selected}
-                  expandedFolders={expandedFolders}
-                  defaultExpanded={false} // Let expandedFolders control expansion
-                />
-              ) : (
-                <File 
-                  file={item} 
-                  onSelect={onSelect} 
-                  selected={selected} 
-                />
-              )}
-            </div>
-          ))}
+          {/* Only show children if folder is expanded according to external state */}
+          {(folder.id === 'topics' ? expandedFolders.includes('topics') : expanded) && 
+            folder.children.map((item) => (
+              <div key={item.id}>
+                {isFolder(item) ? (
+                  <Folder 
+                    folder={item} 
+                    onSelect={onSelect} 
+                    selected={selected}
+                    expandedFolders={expandedFolders}
+                    defaultExpanded={false} // Let expandedFolders control expansion
+                    onToggleFolder={onToggleFolder}
+                  />
+                ) : (
+                  <File 
+                    file={item} 
+                    onSelect={onSelect} 
+                    selected={selected} 
+                  />
+                )}
+              </div>
+            ))
+          }
         </div>
       )}
     </div>

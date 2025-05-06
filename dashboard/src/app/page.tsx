@@ -127,7 +127,7 @@ export default function Dashboard() {
   const [processes, setProcesses] = useState<Process[]>([]);
   
   // Track expanded folders in knowledgebase
-  const [expandedFolders, setExpandedFolders] = useState<string[]>(['topics']);
+  const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
   
   // Function to toggle folder expansion (including Topics)
   const toggleFolderExpansion = (folderId: string) => {
@@ -1405,7 +1405,7 @@ Formulating response based on available information...`
           
           {/* Notification Panel Popup */}
           {isNotificationPanelOpen && (
-            <div ref={notificationPanelRef} className={styles.notificationPanel}>
+            <div ref={notificationPanelRef} className={styles.notificationPanel} style={{zIndex: 2000}}>
               <div className={styles.notificationPanelHeader}>
                 <h3>Notifications</h3>
                 <button 
@@ -1481,9 +1481,9 @@ Formulating response based on available information...`
 
       {/* Main Layout */}
       <div className={`${styles.layout} ${isSidebarCollapsed ? styles.layoutCollapsed : ''}`}>
-        {/* Sticky Create Button */}
+        {/* Sticky Create Button - Apply hideWhenNotifications class when notification panel is open */}
         <button 
-          className={styles.stickyCreateButton}
+          className={`${styles.stickyCreateButton} ${isNotificationPanelOpen ? styles.hideWhenNotifications : ''}`}
           onClick={handleOpenAddModal}
           aria-label="Create new item"
         >
@@ -1530,13 +1530,19 @@ Formulating response based on available information...`
                           }}
                         >
                           <h3 
-                            style={{ cursor: 'pointer' }}
+                            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
                             onClick={() => {
                               // Direct toggle for the topics folder
                               toggleFolderExpansion('topics');
                             }}
                           >
-                            Knowledgebase {expandedFolders.includes('topics') ? '▼' : '►'}
+                            <span style={{ display: 'flex', alignItems: 'center' }}>
+                              {expandedFolders.includes('topics') ? 
+                                <ChevronDownIcon size={18} /> : 
+                                <ChevronRightIcon size={18} />
+                              }
+                            </span>
+                            Knowledgebase
                           </h3>
                         </div>
                         {/* File Explorer Component */}
@@ -2097,14 +2103,16 @@ This marketing plan provides a comprehensive framework for achieving our busines
                   <div className={styles.widgetBox}>
                     <div className={styles.widgetHeader}>
                       <h3>My Tasks</h3>
-                      <button 
-                        className={styles.newTabButton} 
-                        title="Add New Task"
-                        type="button"
-                        onClick={startAddingTask}
-                      >
-                        <PlusIcon size={20} />
-                      </button>
+                      {!isNotificationPanelOpen && (
+                        <button 
+                          className={styles.newTabButton} 
+                          title="Add New Task"
+                          type="button"
+                          onClick={startAddingTask}
+                        >
+                          <PlusIcon size={20} />
+                        </button>
+                      )}
                     </div>
                     <div className={styles.tasksContainer}>
                       {/* Active Tasks */}
