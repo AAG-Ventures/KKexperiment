@@ -10,6 +10,7 @@ import { DraggableWidgetContainer } from "./components/DraggableWidgetContainer"
 import FileExplorer, { isFolder, FileExplorerProps } from './components/FileExplorer';
 import { UploadIcon, FileIcon, SearchIcon, ShareIcon, FolderIcon, ChevronRightIcon, ChevronDownIcon, EditIcon, MessageIcon, ClockIcon, BellIcon, UserIcon, PlusIcon, SendIcon, HomeIcon, CheckIcon } from './components/Icons';
 import DatePicker from './components/DatePicker';
+import CalendarWidget from './components/CalendarWidget';
 import { knowledgebaseData } from './components/KnowledgebaseSampleData';
 // Import explicitly for client component
 import { useRouter } from 'next/navigation';
@@ -1496,6 +1497,40 @@ export default function Dashboard() {
                   </div>
                 </div>
 
+                {/* Calendar Card */}
+                <div className={`${styles.card} ${styles.cardCalendar}`}>
+                  <div className={styles.widgetHeader}>
+                    <h3>Calendar</h3>
+                    <span className={styles.widgetIcon}>📅</span>
+                  </div>
+                  <div className={styles.calendarContainer}>
+                    <CalendarWidget 
+                      tasks={tasks.map(task => ({
+                        id: task.id,
+                        text: task.text,
+                        deadline: task.deadline || new Date(),
+                        priority: task.priority,
+                        completed: task.completed
+                      }))}
+                      onSelectDate={(date: Date) => {
+                        // When a date is selected, open the task creation interface
+                        startAddingTask();
+                        // If there's a new task being added, pre-fill its deadline
+                        if (isAddingTask && newTaskInputRef.current) {
+                          // Focus on the input after setting deadline
+                          setTimeout(() => {
+                            newTaskInputRef.current?.focus();
+                          }, 100);
+                        }
+                      }}
+                      onSelectTask={(taskId: string) => {
+                        // When a task is selected in the calendar, show its details
+                        setSelectedTaskId(taskId);
+                      }}
+                    />
+                  </div>
+                </div>
+
                 {/* Quick Actions Card */}
                 <div className={styles.card}>
                   <div className={styles.widgetHeader}>
@@ -1829,6 +1864,7 @@ export default function Dashboard() {
                   </div>
                 )
               },
+
               {
                 id: 'chat',
                 content: (
