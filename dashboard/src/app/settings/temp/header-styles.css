@@ -1,0 +1,27 @@
+/* Settings Header Styles */
+.settingsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.headerLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+}
+
+.settingsTitle {
+  font-size: 1.75rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--foreground-primary);
+  margin: 0;
+}

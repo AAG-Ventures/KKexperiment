@@ -1,0 +1,62 @@
+/* Toggle List Styles */
+.toggleList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.toggleItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: var(--background-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+}
+
+.toggleLabel {
+  font-weight: var(--font-weight-medium);
+}
+
+/* Action Buttons Styles */
+.actionButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.quickAction {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--background-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.quickAction:hover {
+  background-color: var(--background-tertiary);
+  transform: translateY(-2px);
+}
+
+.quickAction.danger {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.quickAction.danger:hover {
+  background-color: var(--error-light);
+}
+
+.actionIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

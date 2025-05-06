@@ -1,0 +1,77 @@
+/* Notification Section Styles */
+.notificationsSection {
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--border-light);
+  padding-top: 1.5rem;
+}
+
+.notificationsSection h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.settingsFull {
+  flex: 1;
+  width: 100%;
+}
+
+/* Make sure the toggle styles are applied */
+.settingItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.75rem 0;
+}
+
+.settingItem label {
+  font-weight: var(--font-weight-medium);
+}
+
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 3rem;
+  height: 1.5rem;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle label {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--background-tertiary);
+  transition: .4s;
+  border-radius: 34px;
+  border: 1px solid var(--border-light);
+}
+
+.toggle label:before {
+  position: absolute;
+  content: "";
+  height: 1rem;
+  width: 1rem;
+  left: 0.25rem;
+  bottom: 0.25rem;
+  background-color: var(--foreground-tertiary);
+  transition: .4s;
+  border-radius: 50%;
+}
+
+.toggle input:checked + label {
+  background-color: var(--brand-primary);
+}
+
+.toggle input:checked + label:before {
+  transform: translateX(1.5rem);
+  background-color: white;
+}

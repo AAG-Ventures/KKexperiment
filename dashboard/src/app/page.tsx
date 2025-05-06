@@ -9,12 +9,28 @@ import styles from "./page.module.css";
 import AddModal from "./components/AddModal";
 import { DraggableWidgetContainer } from "./components/DraggableWidgetContainer";
 import FileExplorer, { isFolder, FileExplorerProps } from './components/FileExplorer';
-import { UploadIcon, FileIcon, SearchIcon, ShareIcon, FolderIcon, ChevronRightIcon, ChevronDownIcon, EditIcon, MessageIcon, ClockIcon, BellIcon, UserIcon, PlusIcon, SendIcon, HomeIcon, CheckIcon } from './components/Icons';
+import { UploadIcon, FileIcon, SearchIcon, ShareIcon, FolderIcon, ChevronRightIcon, ChevronDownIcon, EditIcon, MessageIcon, ClockIcon, BellIcon, UserIcon, PlusIcon, SendIcon, HomeIcon, CheckIcon, CalendarIcon } from './components/Icons';
 import DatePicker from './components/DatePicker';
 import CalendarWidget from './components/CalendarWidget';
 import { knowledgebaseData } from './components/KnowledgebaseSampleData';
 // Import explicitly for client component
 import { useRouter } from 'next/navigation';
+
+// Helper function to format dates
+const formatDate = (date: Date) => {
+  if (!date) return '';
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  
+  const isToday = date.toDateString() === today.toDateString();
+  const isTomorrow = date.toDateString() === tomorrow.toDateString();
+  
+  if (isToday) return 'Today';
+  if (isTomorrow) return 'Tomorrow';
+  
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
 
 // Type definitions
 type TaskPriority = 'low' | 'medium' | 'high';
@@ -1293,7 +1309,7 @@ Formulating response based on available information...`
   };
   
   // Handle widget selection 
-  const handleWidgetSelect = (widgetType: 'calendar' | 'quickActions' | 'myTasks' | 'activeProcesses' | 'myAgents') => {
+  const handleWidgetSelect = (widgetType: 'calendar' | 'myTasks' | 'activeProcesses' | 'myAgents') => {
     console.log(`Selected widget type: ${widgetType}`);
     
     // Create widget content based on the selected type
@@ -1320,27 +1336,7 @@ Formulating response based on available information...`
         );
         break;
         
-      case 'quickActions':
-        widgetContent = (
-          <div className={styles.quickActionsWidget}>
-            <h3>Quick Actions</h3>
-            <div className={styles.quickActionButtons}>
-              <button className={styles.quickActionButton}>
-                <FileIcon size={16} /> New Document
-              </button>
-              <button className={styles.quickActionButton}>
-                <MessageIcon size={16} /> New Chat
-              </button>
-              <button className={styles.quickActionButton}>
-                <UploadIcon size={16} /> Upload File
-              </button>
-              <button className={styles.quickActionButton}>
-                <SearchIcon size={16} /> Search
-              </button>
-            </div>
-          </div>
-        );
-        break;
+
         
       case 'myTasks':
         widgetContent = (
@@ -2107,6 +2103,215 @@ This marketing plan provides a comprehensive framework for achieving our busines
               <h2 className={styles.pageTitle}>Dashboard Overview</h2>
               
               <div className={styles.cardGrid}>
+                {/* Calendar Card */}
+                <div className={`${styles.card} ${styles.cardCalendar}`}>
+                  <div className={styles.widgetHeader}>
+                    <h3>Calendar</h3>
+                    <span className={styles.widgetIcon}>📅</span>
+                  </div>
+                  <div className={styles.calendarContainer}>
+                    <CalendarWidget 
+                      tasks={tasks.map(task => ({
+                        id: task.id,
+                        text: task.text,
+                        deadline: task.deadline || new Date(),
+                        priority: task.priority,
+                        completed: task.completed
+                      }))}
+                      onSelectDate={(date: Date) => {
+                        console.log('Date selected in calendar:', date);
+                        // Set the selected date as the deadline for the new task
+                        setNewTaskDeadline(date);
+                        // Start adding a task
+                        setIsAddingTask(true);
+                        setNewTaskText('');
+                        // Skip date picker and show priority selector after text is entered
+                        
+                        // Focus on the input after a short delay
+                        setTimeout(() => {
+                          if (newTaskInputRef.current) {
+                            newTaskInputRef.current.focus();
+                          }
+                        }, 100);
+                      }}
+                      onSelectTask={(taskId: string) => {
+                        // When a task is selected in the calendar, show its details
+                        setSelectedTaskId(taskId);
+                      }}
+                    />
+                  </div>
+                </div>
+                
+                {/* My Tasks Widget */}
+                <div className={styles.widgetBox} style={{maxWidth: '350px', margin: '24px auto 0'}}>
+                  <div className={styles.widgetHeader}>
+                    <h3>My Tasks</h3>
+                    {!isNotificationPanelOpen && (
+                      <button 
+                        className={styles.newTabButton} 
+                        title="Add New Task"
+                        type="button"
+                        onClick={startAddingTask}
+                      >
+                        <PlusIcon size={20} />
+                      </button>
+                    )}
+                  </div>
+                  <div className={styles.tasksContainer}>
+                    {/* Active Tasks */}
+                    <div className={styles.taskSection}>
+                      {tasks.filter(task => !task.completed).length === 0 && !isAddingTask ? (
+                        <div className={styles.emptyTasksMessage}>
+                          <div className={styles.emptyTasksIcon}>✓</div>
+                          <p>You've completed everything in your plan!</p>
+                          <button 
+                            className={styles.addTaskButton}
+                            onClick={startAddingTask}
+                          >
+                            Add a new task
+                          </button>
+                        </div>
+                      ) : (
+                        <ul className={styles.taskList}>
+                          {tasks
+                            .filter(task => !task.completed)
+                            // Sort tasks by deadline (nearest at top)
+                            .sort((a, b) => {
+                              // Tasks without deadlines go to the bottom
+                              if (!a.deadline && !b.deadline) return 0;
+                              if (!a.deadline) return 1;
+                              if (!b.deadline) return -1;
+                              
+                              // Safer approach: use try-catch to prevent any runtime errors
+                              try {
+                                // Convert to timestamps with error handling
+                                let aTime, bTime;
+                                
+                                try {
+                                  aTime = a.deadline instanceof Date ? 
+                                    a.deadline.getTime() : 
+                                    new Date(a.deadline).getTime();
+                                } catch (e) {
+                                  // If there's an error, put this task at the bottom
+                                  return 1;
+                                }
+                                
+                                try {
+                                  bTime = b.deadline instanceof Date ? 
+                                    b.deadline.getTime() : 
+                                    new Date(b.deadline).getTime();
+                                } catch (e) {
+                                  // If there's an error, put this task at the bottom
+                                  return -1;
+                                }
+                                
+                                // Additional validation
+                                if (isNaN(aTime)) return 1;
+                                if (isNaN(bTime)) return -1;
+                                
+                                // Sort by date
+                                return aTime - bTime;
+                              } catch (e) {
+                                // Last resort fallback if anything goes wrong
+                                console.error('Error sorting tasks:', e);
+                                return 0;
+                              }
+                            })
+                            .map(task => (
+                              <li key={task.id} className={`${styles.taskItem} ${styles.taskItemClickable}`}>
+                                <button 
+                                  className={styles.taskCheckbox} 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleTaskCompletion(task.id);
+                                  }}
+                                  aria-label={task.completed ? 'Mark as incomplete' : 'Mark as complete'}
+                                >
+                                  {task.completed && <span className={styles.checkIcon} />}
+                                </button>
+
+                                <div className={styles.taskContent} onClick={() => setSelectedTaskId(task.id)}>
+                                  <span className={styles.taskText}>{task.text}</span>
+                                  
+                                  {task.deadline && (
+                                    <span 
+                                      className={`${styles.taskDeadline} 
+                                        ${isDeadlineUrgent(task.deadline) ? styles.urgentDeadline : ''}
+                                        ${isDeadlineSoon(task.deadline) ? styles.soonDeadline : ''}
+                                        ${isDeadlineNormal(task.deadline) ? styles.normalDeadline : ''}`
+                                      }
+                                    >
+                                      <CalendarIcon size={12} />
+                                      <span>{formatDate(task.deadline)}</span>
+                                    </span>
+                                  )}
+                                </div>
+                              </li>
+                            ))
+                          }
+                          {isAddingTask && (
+                            <li className={`${styles.taskItem} ${styles.newTaskItem}`}>
+                              <form onSubmit={(e) => { e.preventDefault(); saveNewTask(); }}>
+                                <input
+                                  type="text"
+                                  ref={newTaskInputRef}
+                                  className={styles.newTaskInput}
+                                  placeholder="What needs to be done?"
+                                  value={newTaskText}
+                                  onChange={(e) => setNewTaskText(e.target.value)}
+                                  autoFocus
+                                />
+                                <div className={styles.newTaskActions}>
+                                  <div className={styles.taskPrioritySelector}>
+                                    <button 
+                                      type="button"
+                                      className={`${styles.priorityOption} ${newTaskPriority === 'low' ? styles.selectedPriority : ''}`}
+                                      onClick={() => setNewTaskPriority('low')}
+                                    >
+                                      Low
+                                    </button>
+                                    <button 
+                                      type="button"
+                                      className={`${styles.priorityOption} ${newTaskPriority === 'medium' ? styles.selectedPriority : ''}`}
+                                      onClick={() => setNewTaskPriority('medium')}
+                                    >
+                                      Medium
+                                    </button>
+                                    <button 
+                                      type="button"
+                                      className={`${styles.priorityOption} ${newTaskPriority === 'high' ? styles.selectedPriority : ''}`}
+                                      onClick={() => setNewTaskPriority('high')}
+                                    >
+                                      High
+                                    </button>
+                                  </div>
+                                  <div className={styles.taskFormControls}>
+                                    <button
+                                      type="button"
+                                      className={styles.taskDate}
+                                      onClick={() => setDatePickerVisible(prev => !prev)}
+                                    >
+                                      {newTaskDeadline ? formatDate(newTaskDeadline) : 'Add date'}
+                                    </button>
+                                    <button type="submit" className={styles.addTaskSubmit}>Add</button>
+                                    <button 
+                                      type="button" 
+                                      className={styles.cancelTaskButton}
+                                      onClick={cancelAddingTask}
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              </form>
+                            </li>
+                          )}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
                 {/* Recent Activity Card */}
                 <div className={`${styles.card} ${styles.cardActivity}`}>
                   <div className={styles.widgetHeader}>
@@ -2166,44 +2371,6 @@ This marketing plan provides a comprehensive framework for achieving our busines
                   </div>
                 </div>
 
-                {/* Calendar Card */}
-                <div className={`${styles.card} ${styles.cardCalendar}`}>
-                  <div className={styles.widgetHeader}>
-                    <h3>Calendar</h3>
-                    <span className={styles.widgetIcon}>📅</span>
-                  </div>
-                  <div className={styles.calendarContainer}>
-                    <CalendarWidget 
-                      tasks={tasks.map(task => ({
-                        id: task.id,
-                        text: task.text,
-                        deadline: task.deadline || new Date(),
-                        priority: task.priority,
-                        completed: task.completed
-                      }))}
-                      onSelectDate={(date: Date) => {
-                        console.log('Date selected in calendar:', date);
-                        // Set the selected date as the deadline for the new task
-                        setNewTaskDeadline(date);
-                        // Start adding a task
-                        setIsAddingTask(true);
-                        setNewTaskText('');
-                        // Skip date picker and show priority selector after text is entered
-                        
-                        // Focus on the input after a short delay
-                        setTimeout(() => {
-                          if (newTaskInputRef.current) {
-                            newTaskInputRef.current.focus();
-                          }
-                        }, 100);
-                      }}
-                      onSelectTask={(taskId: string) => {
-                        // When a task is selected in the calendar, show its details
-                        setSelectedTaskId(taskId);
-                      }}
-                    />
-                  </div>
-                </div>
 
 
               </div>
