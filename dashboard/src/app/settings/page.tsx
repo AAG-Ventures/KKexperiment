@@ -4,10 +4,14 @@ import styles from "./settings.module.css";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { CreditCardIcon, DollarSignIcon, AlertCircleIcon, CheckCircleIcon } from "lucide-react";
 
 export default function SettingsPage() {
   const [theme, setTheme] = useState<"light" | "dark" | "system">("light");
   const [saveNotification, setSaveNotification] = useState<string | null>(null);
+  const [subscription, setSubscription] = useState<"user" | "builder">("user");
+  const [showAddPayment, setShowAddPayment] = useState(false);
+  const [paymentSuccessMsg, setPaymentSuccessMsg] = useState<string | null>(null);
   
   // Initialize theme from localStorage
   useEffect(() => {
@@ -27,10 +31,31 @@ export default function SettingsPage() {
   }, []);
 
   // Helper function to show and auto-hide the save notification
-  const showSavedNotification = () => {
-    setSaveNotification("Theme preference saved!");
+  const showSavedNotification = (message: string = "Theme preference saved!") => {
+    setSaveNotification(message);
     setTimeout(() => {
       setSaveNotification(null);
+    }, 3000);
+  };
+  
+  // Handle subscription change
+  const handleSubscriptionChange = (newSubscription: "user" | "builder") => {
+    setSubscription(newSubscription);
+    showSavedNotification("Subscription updated successfully!");
+  };
+  
+  // Handle adding a new payment method
+  const handleAddPayment = () => {
+    setShowAddPayment(!showAddPayment);
+  };
+  
+  // Handle payment form submission
+  const handlePaymentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setShowAddPayment(false);
+    setPaymentSuccessMsg("Payment method added successfully!");
+    setTimeout(() => {
+      setPaymentSuccessMsg(null);
     }, 3000);
   };
   
@@ -214,6 +239,153 @@ export default function SettingsPage() {
           </div>
         </section>
 
+        {/* Subscription */}
+        <section className={styles.settingsSection}>
+          <h2>Subscription</h2>
+          <div className={styles.financeInfo}>
+            <div className={styles.subscriptionStatus}>
+              <h3>Current Subscription</h3>
+              <div className={styles.subscriptionOptions}>
+                <div className={`${styles.subscriptionOption} ${subscription === 'user' ? styles.activeSubscription : ''}`}>
+                  <input 
+                    type="radio" 
+                    id="userSub" 
+                    name="subscription" 
+                    checked={subscription === "user"}
+                    onChange={() => handleSubscriptionChange("user")}
+                  />
+                  <label htmlFor="userSub">
+                    <div className={styles.subscriptionDetails}>
+                      <h4>User Subscription</h4>
+                      <p className={styles.price}><span>$15</span>/month</p>
+                      <p>Access to the full platform and features</p>
+                      <ul className={styles.subscriptionFeatures}>
+                        <li><CheckCircleIcon size={16} /> Dedicated AI agent</li>
+                        <li><CheckCircleIcon size={16} /> Persistent memory</li>
+                        <li><CheckCircleIcon size={16} /> All basic features</li>
+                      </ul>
+                    </div>
+                  </label>
+                </div>
+
+                <div className={`${styles.subscriptionOption} ${subscription === 'builder' ? styles.activeSubscription : ''}`}>
+                  <input 
+                    type="radio" 
+                    id="builderSub" 
+                    name="subscription" 
+                    checked={subscription === "builder"}
+                    onChange={() => handleSubscriptionChange("builder")}
+                  />
+                  <label htmlFor="builderSub">
+                    <div className={styles.subscriptionDetails}>
+                      <h4>Builder Subscription</h4>
+                      <p className={styles.price}><span>$20</span>/month</p>
+                      <p>Premium developer tools and resources</p>
+                      <ul className={styles.subscriptionFeatures}>
+                        <li><CheckCircleIcon size={16} /> Everything in User plan</li>
+                        <li><CheckCircleIcon size={16} /> Agent creation tools</li>
+                        <li><CheckCircleIcon size={16} /> Marketplace access</li>
+                      </ul>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            <div className={styles.billingSection}>
+              <h3>Billing Information</h3>
+              <div className={styles.paymentMethods}>
+                <div className={styles.paymentMethod}>
+                  <CreditCardIcon size={20} />
+                  <div className={styles.paymentDetails}>
+                    <span className={styles.cardName}>Visa ending in 4242</span>
+                    <span className={styles.cardExpiry}>Expires 12/26</span>
+                  </div>
+                  <span className={styles.defaultBadge}>Default</span>
+                </div>
+                
+                <button 
+                  className={styles.addPaymentButton}
+                  onClick={handleAddPayment}
+                >
+                  {showAddPayment ? "Cancel" : "+ Add Payment Method"}
+                </button>
+                
+                {showAddPayment && (
+                  <form className={styles.paymentForm} onSubmit={handlePaymentSubmit}>
+                    <div className={styles.formRow}>
+                      <label htmlFor="cardName">Name on Card</label>
+                      <input type="text" id="cardName" placeholder="John Doe" required />
+                    </div>
+                    <div className={styles.formRow}>
+                      <label htmlFor="cardNumber">Card Number</label>
+                      <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" required pattern="[0-9\s]{13,19}" />
+                    </div>
+                    <div className={styles.formRowSplit}>
+                      <div>
+                        <label htmlFor="cardExpiry">Expiry</label>
+                        <input type="text" id="cardExpiry" placeholder="MM/YY" required pattern="[0-9]{2}/[0-9]{2}" />
+                      </div>
+                      <div>
+                        <label htmlFor="cardCvc">CVC</label>
+                        <input type="text" id="cardCvc" placeholder="123" required pattern="[0-9]{3,4}" />
+                      </div>
+                    </div>
+                    <button type="submit" className={styles.saveButton}>Save Payment Method</button>
+                  </form>
+                )}
+                
+                {paymentSuccessMsg && (
+                  <div className={styles.successMessage}>                 
+                    <CheckCircleIcon size={16} />
+                    {paymentSuccessMsg}
+                  </div>
+                )}
+              </div>
+              
+              <div className={styles.billingHistory}>
+                <h3>Billing History</h3>
+                <table className={styles.billingTable}>
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Description</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>May 1, 2025</td>
+                      <td>User Subscription</td>
+                      <td>$15.00</td>
+                      <td><span className={styles.paidStatus}>Paid</span></td>
+                    </tr>
+                    <tr>
+                      <td>Apr 1, 2025</td>
+                      <td>User Subscription</td>
+                      <td>$15.00</td>
+                      <td><span className={styles.paidStatus}>Paid</span></td>
+                    </tr>
+                    <tr>
+                      <td>Mar 1, 2025</td>
+                      <td>User Subscription</td>
+                      <td>$15.00</td>
+                      <td><span className={styles.paidStatus}>Paid</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+                <a href="#" className={styles.viewAllLink}>View All Transactions</a>
+              </div>
+              
+              <div className={styles.nextBilling}>
+                <DollarSignIcon size={16} />
+                <span>Your next billing date is <strong>June 1, 2025</strong></span>
+              </div>
+            </div>
+          </div>
+        </section>
+        
         {/* Quick Actions */}
         <section className={styles.settingsSection}>
           <h2>Quick Actions</h2>
@@ -221,15 +393,21 @@ export default function SettingsPage() {
             <p>Command palette shortcuts for faster navigation</p>
             <div className={styles.shortcutItem}>
               <span>Open Command Palette</span>
-              <kbd>Ctrl</kbd> + <kbd>K</kbd>
+              <div className={styles.shortcutControls}>
+                <kbd>Ctrl</kbd> <span>+</span> <kbd>K</kbd>
+              </div>
             </div>
             <div className={styles.shortcutItem}>
               <span>Quick Create</span>
-              <kbd>Ctrl</kbd> + <kbd>N</kbd>
+              <div className={styles.shortcutControls}>
+                <kbd>Ctrl</kbd> <span>+</span> <kbd>N</kbd>
+              </div>
             </div>
             <div className={styles.shortcutItem}>
               <span>Search</span>
-              <kbd>Ctrl</kbd> + <kbd>F</kbd>
+              <div className={styles.shortcutControls}>
+                <kbd>Ctrl</kbd> <span>+</span> <kbd>F</kbd>
+              </div>
             </div>
           </div>
         </section>
