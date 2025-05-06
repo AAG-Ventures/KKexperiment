@@ -24,7 +24,6 @@ type Task = {
   completed: boolean;
   deadline?: Date; // Add deadline field
   description?: string;
-  assignee?: string;
   priority?: TaskPriority;
   attachments?: string[];
   comments?: { id: string; author: string; text: string; timestamp: Date }[];
@@ -90,6 +89,11 @@ export default function Dashboard() {
   const [newAttachment, setNewAttachment] = useState('');
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [datePickerTaskId, setDatePickerTaskId] = useState<string | null>(null);
+  
+  // New task state
+  const [newTaskDeadline, setNewTaskDeadline] = useState<Date | null>(null);
+  const [newTaskPriority, setNewTaskPriority] = useState<TaskPriority | null>(null);
+  const [showPrioritySelector, setShowPrioritySelector] = useState(false);
   
   // Refs
   const newTaskInputRef = useRef<HTMLInputElement>(null);
@@ -470,7 +474,7 @@ export default function Dashboard() {
           completed: false, 
           deadline: tomorrow,
           description: 'Create wireframes and design mockups for the main dashboard interface. Focus on widget layout, color scheme, and responsive design. Include considerations for dark mode and accessibility.',
-          assignee: 'Karina',
+
           priority: 'high' as TaskPriority,
           attachments: ['dashboard_wireframe.fig', 'color_palette.pdf'],
           comments: [
@@ -494,7 +498,7 @@ export default function Dashboard() {
           completed: false, 
           deadline: inThreeDays,
           description: '',
-          assignee: 'Alex',
+
           priority: 'medium' as TaskPriority,
           attachments: [],
           comments: []
@@ -516,7 +520,7 @@ export default function Dashboard() {
           completed: false, 
           deadline: may19,
           description: '',
-          assignee: 'Karina',
+
           priority: 'medium' as TaskPriority,
           attachments: [],
           comments: []
@@ -731,6 +735,22 @@ export default function Dashboard() {
     }
   };
   
+  // Function to delete a task
+  const deleteTask = (taskId: string) => {
+    // First confirm the user wants to delete the task
+    if (confirm('Are you sure you want to delete this task?')) {
+      // Filter out the task with the given ID
+      const updatedTasks = tasks.filter(task => task.id !== taskId);
+      
+      // Update state and localStorage
+      setTasks(updatedTasks);
+      localStorage.setItem('dashboard_tasks', JSON.stringify(updatedTasks));
+      
+      // Close the task detail panel
+      setSelectedTaskId(null);
+    }
+  };
+
   // Function to add an attachment to a task
   const addTaskAttachment = async (taskId: string) => {
     try {
@@ -839,6 +859,9 @@ export default function Dashboard() {
   const startAddingTask = () => {
     setIsAddingTask(true);
     setNewTaskText('');
+    setShowPrioritySelector(false);
+    setNewTaskPriority(null);
+    setNewTaskDeadline(null);
     
     // Focus the input after a short delay
     setTimeout(() => {
@@ -852,18 +875,40 @@ export default function Dashboard() {
   const saveNewTask = () => {
     if (newTaskText.trim()) {
       // Create a new task and add it to the list
-      const newTask = {
+      const newTask: Task = {
         id: `task-${Date.now()}`,
         text: newTaskText.trim(),
-        completed: false
+        completed: false,
+        ...(newTaskDeadline && { deadline: newTaskDeadline }),
+        ...(newTaskPriority && { priority: newTaskPriority })
       };
       
       setTasks(prevTasks => [...prevTasks, newTask]);
+      
+      // Save to localStorage
+      const updatedTasks = [...tasks, newTask];
+      localStorage.setItem('dashboard_tasks', JSON.stringify(updatedTasks));
     }
     
     // Reset the adding task state
     setIsAddingTask(false);
     setNewTaskText('');
+    setShowPrioritySelector(false);
+    setNewTaskPriority(null);
+    setNewTaskDeadline(null);
+  };
+  
+  // Function to set date for a new task
+  const setNewTaskDate = (date: Date) => {
+    setNewTaskDeadline(date);
+    setDatePickerVisible(false);
+    setShowPrioritySelector(true);
+  };
+  
+  // Function to set priority for a new task
+  const setTaskPriority = (priority: TaskPriority) => {
+    setNewTaskPriority(priority);
+    setShowPrioritySelector(false);
   };
   
   // Function to cancel adding a task
@@ -1513,15 +1558,20 @@ export default function Dashboard() {
                         completed: task.completed
                       }))}
                       onSelectDate={(date: Date) => {
-                        // When a date is selected, open the task creation interface
-                        startAddingTask();
-                        // If there's a new task being added, pre-fill its deadline
-                        if (isAddingTask && newTaskInputRef.current) {
-                          // Focus on the input after setting deadline
-                          setTimeout(() => {
-                            newTaskInputRef.current?.focus();
-                          }, 100);
-                        }
+                        console.log('Date selected in calendar:', date);
+                        // Set the selected date as the deadline for the new task
+                        setNewTaskDeadline(date);
+                        // Start adding a task
+                        setIsAddingTask(true);
+                        setNewTaskText('');
+                        // Skip date picker and show priority selector after text is entered
+                        
+                        // Focus on the input after a short delay
+                        setTimeout(() => {
+                          if (newTaskInputRef.current) {
+                            newTaskInputRef.current.focus();
+                          }
+                        }, 100);
                       }}
                       onSelectTask={(taskId: string) => {
                         // When a task is selected in the calendar, show its details
@@ -1780,27 +1830,154 @@ export default function Dashboard() {
                               ))}
                             
                             {isAddingTask && (
-                              <li className={styles.taskItem}>
-                                <button className={styles.taskCheckbox}>
-                                  <span className={styles.checkboxInner}></span>
-                                </button>
-                                <input
-                                  ref={newTaskInputRef}
-                                  className={styles.newTaskInput}
-                                  type="text"
-                                  placeholder="Type a new task..."
-                                  value={newTaskText}
-                                  onChange={(e) => setNewTaskText(e.target.value)}
-                                  onBlur={saveNewTask}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                      saveNewTask();
-                                    } else if (e.key === 'Escape') {
-                                      cancelAddingTask();
-                                    }
-                                  }}
-                                />
-                              </li>
+                              <>
+                                <li className={styles.taskItem}>
+                                  <button className={styles.taskCheckbox}>
+                                    <span className={styles.checkboxInner}></span>
+                                  </button>
+                                  <div className={styles.newTaskContainer}>
+                                    <input
+                                      ref={newTaskInputRef}
+                                      className={styles.newTaskInput}
+                                      type="text"
+                                      placeholder="Type a new task..."
+                                      value={newTaskText}
+                                      onChange={(e) => setNewTaskText(e.target.value)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !showPrioritySelector) {
+                                          if (newTaskText.trim()) {
+                                            // If task text exists and deadline is already set (from calendar)
+                                            // skip the date picker and go straight to priority selection
+                                            if (newTaskDeadline) {
+                                              setShowPrioritySelector(true);
+                                            } else {
+                                              // Otherwise, show date picker
+                                              setDatePickerVisible(true);
+                                              setDatePickerTaskId('new');
+                                            }
+                                          } else {
+                                            cancelAddingTask();
+                                          }
+                                        } else if (e.key === 'Escape') {
+                                          cancelAddingTask();
+                                        }
+                                      }}
+                                    />
+                                    {newTaskText.trim() && (
+                                      <div className={styles.newTaskActions}>
+                                        <div className={styles.taskMetaItem}>
+                                          <span className={styles.taskMetaLabel}>Due Date</span>
+                                          <span 
+                                            className={`${styles.taskMetaValue} ${styles.clickableDate} ${newTaskDeadline ? (
+                                              `${isDeadlineUrgent(newTaskDeadline) ? styles.urgentDeadline : ''}
+                                              ${isDeadlineSoon(newTaskDeadline) ? styles.soonDeadline : ''}
+                                              ${isDeadlineNormal(newTaskDeadline) ? styles.normalDeadline : ''}`
+                                            ) : ''}`}
+                                            onClick={() => {
+                                              setDatePickerVisible(true);
+                                              setDatePickerTaskId('new');
+                                            }}
+                                            style={{ 
+                                              cursor: 'pointer',
+                                              position: 'relative',
+                                              textDecoration: 'underline',
+                                              display: 'inline-flex',
+                                              alignItems: 'center',
+                                              gap: '4px'
+                                            }}
+                                          >
+                                            {newTaskDeadline ? (
+                                              <>
+                                                {formatDeadline(newTaskDeadline)}
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                  <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                  <path d="M16 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                  <path d="M8 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                  <path d="M3 10H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                </svg>
+                                              </>
+                                            ) : (
+                                              <>
+                                                <span className={styles.dueDatePlaceholder}>Click to set</span>
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                  <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                  <path d="M16 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                  <path d="M8 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                  <path d="M3 10H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                </svg>
+                                              </>
+                                            )}
+                                          </span>
+                                        </div>
+                                        {newTaskPriority && (
+                                          <div className={`${styles.taskPriorityBadge} ${styles[`priority${newTaskPriority.charAt(0).toUpperCase() + newTaskPriority.slice(1)}`]}`}>
+                                            {newTaskPriority.charAt(0).toUpperCase() + newTaskPriority.slice(1)}
+                                          </div>
+                                        )}
+                                        <button 
+                                          className={styles.newTaskSaveButton}
+                                          onClick={saveNewTask}
+                                          type="button"
+                                        >
+                                          Save
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                </li>
+                                
+                                {/* Date picker for new task */}
+                                {datePickerVisible && datePickerTaskId === 'new' && (
+                                  <div className={styles.newTaskDatePicker}>
+                                    <DatePicker
+                                      selectedDate={newTaskDeadline || new Date()}
+                                      onDateChange={setNewTaskDate}
+                                      onClose={() => {
+                                        setDatePickerVisible(false);
+                                        setDatePickerTaskId(null);
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                                
+                                {/* Priority selector for new task */}
+                                {showPrioritySelector && (
+                                  <li className={styles.prioritySelectorContainer}>
+                                    <div className={styles.prioritySelector}>
+                                      <div className={styles.prioritySelectorHeader}>Select task priority:</div>
+                                      <div className={styles.priorityOptions}>
+                                        <button 
+                                          className={`${styles.priorityOption} ${styles.priorityHigh}`}
+                                          onClick={() => setTaskPriority('high' as TaskPriority)}
+                                        >
+                                          High
+                                        </button>
+                                        <button 
+                                          className={`${styles.priorityOption} ${styles.priorityMedium}`}
+                                          onClick={() => setTaskPriority('medium' as TaskPriority)}
+                                        >
+                                          Medium
+                                        </button>
+                                        <button 
+                                          className={`${styles.priorityOption} ${styles.priorityLow}`}
+                                          onClick={() => setTaskPriority('low' as TaskPriority)}
+                                        >
+                                          Low
+                                        </button>
+                                        <button 
+                                          className={styles.priorityOption}
+                                          onClick={() => {
+                                            setNewTaskPriority(null);
+                                            setShowPrioritySelector(false);
+                                          }}
+                                        >
+                                          None
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </li>
+                                )}
+                              </>
                             )}
                           </ul>
                         )}         
@@ -2243,12 +2420,7 @@ export default function Dashboard() {
                   </div>
                 )}
                 
-                {task.assignee && (
-                  <div className={styles.taskMetaItem}>
-                    <span className={styles.taskMetaLabel}>Assignee</span>
-                    <span className={styles.taskMetaValue}>{task.assignee}</span>
-                  </div>
-                )}
+
                 
                 {task.priority && (
                   <div className={styles.taskMetaItem}>
@@ -2384,6 +2556,19 @@ export default function Dashboard() {
                     Post
                   </button>
                 </div>
+              </div>
+
+              <div className={styles.taskDetailSection} style={{ display: 'flex', justifyContent: 'center' }}>
+                <button
+                  className={styles.removeTaskButton}
+                  onClick={() => deleteTask(task.id)}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 6H5H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Remove Task
+                </button>
               </div>
             </>
           );
