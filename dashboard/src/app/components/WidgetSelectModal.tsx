@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from './WidgetSelectModal.module.css';
 
-type WidgetType = 'calendar' | 'quickActions' | 'myTasks' | 'activeProcesses' | 'myAgents';
+type WidgetType = 'calendar' | 'myTasks' | 'activeProcesses' | 'myAgents';
 
 interface WidgetSelectModalProps {
   isOpen: boolean;
@@ -21,12 +21,7 @@ const WidgetSelectModal: React.FC<WidgetSelectModalProps> = ({
       description: 'Track your schedule and appointments',
       icon: '📅'
     },
-    {
-      id: 'quickActions',
-      name: 'Quick Actions',
-      description: 'Fast access to common tasks',
-      icon: '⚡'
-    },
+
     {
       id: 'myTasks',
       name: 'My Tasks',

@@ -14,7 +14,7 @@ type AddModalProps = {
   onFolderCreate: (folderName: string, files: File[]) => void;
   onFileUpload: (destinationFolder: string, files: File[]) => void;
   onCreateAgent?: (name: string, description: string, avatar: string, capabilities: string[]) => void;
-  onWidgetSelect?: (widgetType: 'calendar' | 'quickActions' | 'myTasks' | 'activeProcesses') => void;
+  onWidgetSelect?: (widgetType: 'calendar' | 'myTasks' | 'activeProcesses' | 'myAgents') => void;
   availableFolders: Array<{id: string, name: string}>;
 };
 

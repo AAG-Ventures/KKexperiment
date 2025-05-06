@@ -1544,50 +1544,7 @@
   margin-top: 4px;
 }
 
-/* Quick Actions Styles */
-.actionButtons {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  padding: 4px 0;
-  margin-top: -6px;
-}
 
-.actionButton {
-  background-color: rgba(255, 255, 255, 0.3); /* Much more transparent background */
-  color: #0a1020; /* Darker text for contrast */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 16px; /* Increased vertical padding */
-  border-radius: var(--radius-md);
-  font-weight: var(--font-weight-medium);
-  font-size: var(--font-size-sm);
-  transition: all var(--transition-fast);
-  border: 1px solid rgba(10, 246, 187, 0.2); /* Cyan-tinted border */
-  cursor: pointer;
-  backdrop-filter: blur(10px); /* Keep the blur for depth */
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.actionIcon {
-  color: var(--brand-primary);
-}
-
-.actionButton:hover {
-  background-color: rgba(10, 246, 187, 0.1); /* Cyan tint on hover */
-  transform: translateY(-1px);
-  border-color: rgba(10, 246, 187, 0.3); /* Stronger cyan border on hover */
-  box-shadow: 0 2px 8px rgba(10, 246, 187, 0.15); /* Subtle cyan glow */
-}
-
-.actionButton span.material-icons,
-.actionButton svg {
-  font-size: 20px;
-  margin-right: 8px;
-  color: var(--brand-primary); /* Keep the cyan color for icons */
-}
 
 .primaryButton {
   background: linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover));
