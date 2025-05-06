@@ -239,9 +239,9 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* Finances & Subscription */}
+        {/* Subscription */}
         <section className={styles.settingsSection}>
-          <h2>Finances & Subscription</h2>
+          <h2>Subscription</h2>
           <div className={styles.financeInfo}>
             <div className={styles.subscriptionStatus}>
               <h3>Current Subscription</h3>
