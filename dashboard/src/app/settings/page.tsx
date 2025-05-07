@@ -31,6 +31,9 @@ export default function SettingsPage() {
       // Apply theme to document
       document.documentElement.classList.remove("light-theme", "dark-theme");
       document.documentElement.classList.add(`${validTheme}-theme`);
+
+      // Store the theme in localStorage to persist the change
+      localStorage.setItem("theme", validTheme);
     }
   }, []); 
   
@@ -102,7 +105,15 @@ export default function SettingsPage() {
   // Handle theme change
   const handleThemeChange = (selectedTheme: "light" | "dark") => {
     setTheme(selectedTheme);
-    // In a real app, this would persist the theme choice
+    
+    // Save to localStorage
+    localStorage.setItem("theme", selectedTheme);
+    
+    // Apply theme to document
+    document.documentElement.classList.remove("light-theme", "dark-theme");
+    document.documentElement.classList.add(`${selectedTheme}-theme`);
+    
+    // Show notification
     showSavedNotification("Theme preference saved!");
   };
   
