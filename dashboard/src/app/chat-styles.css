@@ -1,0 +1,33 @@
+/* Full-height chat styles */
+.fullHeightChat {
+  height: calc(100vh - 210px) !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.chatBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 12px;
+}
+
+.sendButton {
+  background: var(--brand-primary);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-right: 8px;
+  transition: all 0.2s;
+}
+
+.sendButton:hover {
+  background: var(--brand-dark);
+  transform: scale(1.05);
+}

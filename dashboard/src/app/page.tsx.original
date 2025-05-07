@@ -3,55 +3,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import FileContent from './components/FileContent';
-import MarkdownViewer from './components/MarkdownViewer';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import styles from "./page.module.css";
 import AddModal from "./components/AddModal";
 import { DraggableWidgetContainer } from "./components/DraggableWidgetContainer";
 import FileExplorer, { isFolder, FileExplorerProps } from './components/FileExplorer';
-import { UploadIcon, FileIcon, SearchIcon, ShareIcon, FolderIcon, ChevronRightIcon, ChevronDownIcon, EditIcon, MessageIcon, ClockIcon, BellIcon, UserIcon, PlusIcon, SendIcon, HomeIcon, CheckIcon, CalendarIcon } from './components/Icons';
+import { UploadIcon, FileIcon, SearchIcon, ShareIcon, FolderIcon, ChevronRightIcon, ChevronDownIcon, EditIcon, MessageIcon, ClockIcon, BellIcon, UserIcon, PlusIcon, SendIcon, HomeIcon, CheckIcon } from './components/Icons';
 import DatePicker from './components/DatePicker';
-import CalendarWidget from './components/CalendarWidget';
 import { knowledgebaseData } from './components/KnowledgebaseSampleData';
 // Import explicitly for client component
 import { useRouter } from 'next/navigation';
-
-// Helper function to format dates
-const formatDate = (date: Date | string | number) => {
-  if (!date) return '';
-  
-  // Ensure we're working with a Date object
-  let dateObj: Date;
-  try {
-    if (date instanceof Date) {
-      dateObj = date;
-    } else if (typeof date === 'string' || typeof date === 'number') {
-      dateObj = new Date(date);
-    } else {
-      return ''; // Invalid date format
-    }
-    
-    // Check if date is valid
-    if (isNaN(dateObj.getTime())) {
-      return ''; // Invalid date
-    }
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return ''; // Return empty string on error
-  }
-  
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  
-  const isToday = dateObj.toDateString() === today.toDateString();
-  const isTomorrow = dateObj.toDateString() === tomorrow.toDateString();
-  
-  if (isToday) return 'Today';
-  if (isTomorrow) return 'Tomorrow';
-  
-  return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-};
 
 // Type definitions
 type TaskPriority = 'low' | 'medium' | 'high';
@@ -62,6 +23,7 @@ type Task = {
   completed: boolean;
   deadline?: Date; // Add deadline field
   description?: string;
+  assignee?: string;
   priority?: TaskPriority;
   attachments?: string[];
   comments?: { id: string; author: string; text: string; timestamp: Date }[];
@@ -70,7 +32,6 @@ type Task = {
 type WidgetItem = {
   id: string;
   content: React.ReactNode;
-  column?: string;
 };
 
 type ChatTab = {
@@ -85,7 +46,6 @@ type ChatTab = {
   isRenaming?: boolean;
   isProcessing?: boolean;
   sessionId?: string; // AI agent session ID
-  agentId?: string; // ID of the agent for this chat
 };
 
 type Process = {
@@ -125,13 +85,6 @@ export default function Dashboard() {
   const [openTabKey, setOpenTabKey] = useState('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   
-  // Dashboard widgets state
-  const [dashboardItems, setDashboardItems] = useState<Record<string, WidgetItem[]>>({
-    column1: [],
-    column2: [],
-    column3: []
-  });
-  
   // Notification panel state
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
   const notificationPanelRef = useRef<HTMLDivElement>(null);
@@ -149,11 +102,6 @@ export default function Dashboard() {
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [datePickerTaskId, setDatePickerTaskId] = useState<string | null>(null);
   
-  // New task state
-  const [newTaskDeadline, setNewTaskDeadline] = useState<Date | null>(null);
-  const [newTaskPriority, setNewTaskPriority] = useState<TaskPriority | null>(null);
-  const [showPrioritySelector, setShowPrioritySelector] = useState(false);
-  
   // Refs
   const newTaskInputRef = useRef<HTMLInputElement>(null);
   
@@ -167,28 +115,17 @@ export default function Dashboard() {
   // Tab system state
   const [openTabs, setOpenTabs] = useState([
     { id: 'dashboard', title: 'Dashboard', isPermanent: true },
-    { id: 'marketing-plan', title: 'MarketingPlan.md' }
+    { id: 'marketing-plan', title: 'Marketing Plan' },
+    { id: 'health', title: 'Health' }
   ]);
   const [activeTabId, setActiveTabId] = useState('dashboard');
   
   // Initialize with empty states to prevent server  // Initialize chat and processes state
   const [chatTabs, setChatTabs] = useState<ChatTab[]>([]);
-  const [currentAgent, setCurrentAgent] = useState<Agent | null>(null); // Track current agent for chat
   const [processes, setProcesses] = useState<Process[]>([]);
   
   // Initialize agents state
-  const [userAgents, setUserAgents] = useState<Agent[]>([  
-    {
-      id: 'agent-onboarding',
-      name: 'Onboarding Guide',
-      description: 'Helps you get started with the dashboard and understand its features',
-      avatar: '🧭',
-      status: 'online',
-      lastActive: new Date(), // Now
-      createdAt: new Date(),
-      capabilities: ['Tutorial', 'Help', 'Documentation', 'Feature demonstration'],
-      author: 'ME'
-    },
+  const [userAgents, setUserAgents] = useState<Agent[]>([
     {
       id: 'agent-1',
       name: 'Research Assistant',
@@ -211,62 +148,26 @@ export default function Dashboard() {
       capabilities: ['Data processing', 'Visualization', 'Statistical analysis'],
       author: 'ME'
     },
-    {
-      id: 'agent-3',
-      name: 'Workspace Manager',
-      description: 'Manages your workspace, organizes files, and helps with productivity tasks',
-      avatar: '🤖',
-      status: 'online',
-      lastActive: new Date(), // Now
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3), // 3 days ago
-      capabilities: ['File organization', 'Task management', 'Workspace optimization'],
-      author: 'ME'
-    },
   ]);
   
   // Track expanded folders in knowledgebase
-  const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
+  const [expandedFolders, setExpandedFolders] = useState<string[]>(['topics']);
   
-  // Function to toggle folder expansion (for special folders like Topics and Shared Space)
+  // Function to toggle folder expansion (including Topics)
   const toggleFolderExpansion = (folderId: string) => {
     console.log(`Toggling folder: ${folderId}`);
-    
-    // Special case for the Topics folder - either show it with all subtopics or hide all
-    if (folderId === 'topics') {
-      if (expandedFolders.includes('topics')) {
-        // If Topics is currently expanded, collapse it (remove it from expanded folders)
-        console.log('Closing Topics folder');
-        setExpandedFolders(expandedFolders.filter(id => id !== 'topics'));
-      } else {
-        // If Topics is currently collapsed, expand it (add it to expanded folders)
-        console.log('Opening Topics folder');
-        setExpandedFolders([...expandedFolders, 'topics']);
-      }
-      return;
-    }
-    
-    // Special case for the Shared Space folder - either show it with all subtopics or hide all
-    if (folderId === 'shared') {
-      if (expandedFolders.includes('shared')) {
-        // If Shared Space is currently expanded, collapse it (remove it from expanded folders)
-        console.log('Closing Shared Space folder');
-        setExpandedFolders(expandedFolders.filter(id => id !== 'shared'));
-      } else {
-        // If Shared Space is currently collapsed, expand it (add it to expanded folders)
-        console.log('Opening Shared Space folder');
-        setExpandedFolders([...expandedFolders, 'shared']);
-      }
-      return;
-    }
-    
-    // For all other folders, use the standard logic
     setExpandedFolders(prev => {
+      // Log current expanded folders
+      console.log('Current expanded folders:', prev);
+      
       if (prev.includes(folderId)) {
-        // Remove folder from expanded list to collapse it
-        return prev.filter(id => id !== folderId);
+        const result = prev.filter(id => id !== folderId);
+        console.log('Removing from expanded folders, new state:', result);
+        return result;
       } else {
-        // Add folder to expanded list to expand it
-        return [...prev, folderId];
+        const result = [...prev, folderId];
+        console.log('Adding to expanded folders, new state:', result);
+        return result;
       }
     });
   };
@@ -279,42 +180,35 @@ export default function Dashboard() {
   
   // Initialize chat state client-side only
   useEffect(() => {
-    // Initialize tasks from localStorage if available
-    const savedTasks = localStorage.getItem('dashboard_tasks');
-    if (savedTasks) {
-      try {
-        const parsedTasks = JSON.parse(savedTasks);
-        setTasks(parsedTasks);
-      } catch (e) {
-        console.error('Error parsing saved tasks:', e);
+    // Only run this on the client
+    if (typeof window !== 'undefined') {
+      // Only initialize if not already done
+      if (chatTabs.length === 0) {
+        const initialChatId = 'chat-1';
+        
+        // Set up initial chat tab
+        setChatTabs([
+          {
+            id: initialChatId,
+            title: 'Chat 1',
+            messages: [{ sender: 'bot' as const, content: 'Hi! How can I help you today?' }],
+            active: true,
+            isRenaming: false,
+            isProcessing: false,
+            sessionId: generateUUID()
+          }
+        ]);
+        
+        // Set up initial process
+        setProcesses([
+          {
+            id: initialChatId,
+            name: 'Chat 1',
+            type: 'chat',
+            status: 'completed'
+          }
+        ]);
       }
-    }
-    
-    // Set default agent (Onboarding Guide)
-    const defaultAgent = userAgents.find(agent => agent.name === 'Onboarding Guide') || userAgents[0];
-    setCurrentAgent(defaultAgent);
-    
-    // Initialize chat tabs or create a default one
-    if (chatTabs.length === 0) {
-      const initialChatId = generateUUID();
-      const sessionId = generateUUID(); // Create a unique session ID for this chat
-      setChatTabs([{
-        id: initialChatId,
-        title: 'Onboarding Guide',
-        messages: [{ sender: 'bot', content: "Welcome to the Dashboard! 👋 I'm your Onboarding Guide and I'm here to help you get started. Here are some things you can do:\n\n• Explore your Knowledge Base in the left sidebar\n• Create and manage tasks in the Tasks widget\n• Chat with different AI agents for specialized help\n• Add widgets to customize your dashboard\n\nWhat would you like to learn about first?" }],
-        active: true,
-        isProcessing: false,
-        sessionId: sessionId, // Store the session ID for conversation continuity
-        agentId: defaultAgent.id // Store the agent ID for this chat
-      }]);
-      
-      // Add initial chat to Active Processes
-      setProcesses([{
-        id: initialChatId,
-        name: 'Onboarding Guide',
-        type: 'chat',
-        status: 'inProgress'
-      }]);
     }
   }, [chatTabs.length]);
   
@@ -494,142 +388,6 @@ export default function Dashboard() {
     }
   };
 
-  // Function to handle sending a message
-  const handleSendMessage = (userMsg: string, activeTab: ChatTab) => {
-    // Add user message
-    const newMessages = [
-      ...activeTab.messages,
-      { sender: 'user' as const, content: userMsg }
-    ];
-
-    // Update the active tab with user message and set as processing
-    setChatTabs(prevTabs => 
-      prevTabs.map(tab => {
-        if (tab.id === activeTab.id) {
-          return { ...tab, messages: newMessages, isProcessing: true };
-        }
-        return tab;
-      })
-    );
-    
-    // Scroll to bottom after user sends a message
-    setTimeout(() => {
-      const chatContainer = document.getElementById('chatBodyContainer');
-      if (chatContainer) {
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-      }
-    }, 50);
-    
-    // Ensure the processing state is visible
-    setTimeout(() => {
-      // Double-check that the tab is still in processing state
-      setChatTabs(tabs => {
-        return tabs.map(tab => tab.id === activeTab.id && !tab.isProcessing ? 
-          { ...tab, isProcessing: true } : tab);
-      });
-    }, 100);
-    
-    // Get or create a session ID for this chat
-    const chatSessionId = activeTab.sessionId || generateUUID();
-    
-    // Call the AI agent API
-    sendMessageToAIAgent(userMsg, chatSessionId)
-      .then(response => {
-        console.log('AI agent response:', response);
-        
-        // Add bot message with response from the AI agent
-        setChatTabs(prevTabs => {
-          return prevTabs.map(tab => {
-            if (tab.id === activeTab.id) {
-              const botReply = {
-                sender: 'bot' as const, 
-                content: response,
-                thinking: `Processing user input: "${userMsg}"
-
-Analyzing context...
-
-Identifying key points:
-1. User is asking about: ${userMsg}
-2. Relevant context: Dashboard environment
-
-Formulating response based on available information...`
-              };
-              return { 
-                ...tab, 
-                sessionId: chatSessionId, // Store sessionId for conversation continuity
-                messages: [...tab.messages, botReply],
-                isProcessing: false 
-              };
-            }
-            return tab;
-          });
-        });
-        
-        // Scroll to the bottom after message is added
-        setTimeout(() => {
-          const chatContainer = document.getElementById('chatBodyContainer');
-          if (chatContainer) {
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-          }
-        }, 100);
-        
-        // Update process status to completed
-        setProcesses(prevProcesses => 
-          prevProcesses.map(process => 
-            process.id === activeTab.id ? 
-              { ...process, status: 'completed' as const } : 
-              process
-          )
-        );
-      })
-      .catch(error => {
-        console.error('Error calling AI agent:', error);
-        
-        // Update chat with error message
-        setChatTabs(prevTabs => 
-          prevTabs.map(tab => {
-            if (tab.id === activeTab.id) {
-              return { 
-                ...tab, 
-                isProcessing: false,
-                messages: [
-                  ...tab.messages,
-                  { sender: 'bot' as const, content: 'Sorry, there was an error connecting to the AI agent.' }
-                ]
-              };
-            }
-            return tab;
-          })
-        );
-        
-        // Scroll to bottom even on error response
-        setTimeout(() => {
-          const chatContainer = document.getElementById('chatBodyContainer');
-          if (chatContainer) {
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-          }
-        }, 100);
-        
-        // Update status to failed
-        setProcesses(prevProcesses => 
-          prevProcesses.map(process => 
-            process.id === activeTab.id ? 
-              { ...process, status: 'failed' as const } : 
-              process
-          )
-        );
-      });
-    
-    // Update status in Active Processes to in progress
-    setProcesses(prevProcesses => 
-      prevProcesses.map(process => 
-        process.id === activeTab.id 
-          ? { ...process, status: 'inProgress' as const } 
-          : process
-      )
-    );
-  };
-
   // Function to create a new chat tab
   const createNewChatTab = () => {
     const newId = `chat-${Date.now()}`;
@@ -749,7 +507,7 @@ Formulating response based on available information...`
           completed: false, 
           deadline: tomorrow,
           description: 'Create wireframes and design mockups for the main dashboard interface. Focus on widget layout, color scheme, and responsive design. Include considerations for dark mode and accessibility.',
-
+          assignee: 'Karina',
           priority: 'high' as TaskPriority,
           attachments: ['dashboard_wireframe.fig', 'color_palette.pdf'],
           comments: [
@@ -773,7 +531,7 @@ Formulating response based on available information...`
           completed: false, 
           deadline: inThreeDays,
           description: '',
-
+          assignee: 'Alex',
           priority: 'medium' as TaskPriority,
           attachments: [],
           comments: []
@@ -795,7 +553,7 @@ Formulating response based on available information...`
           completed: false, 
           deadline: may19,
           description: '',
-
+          assignee: 'Karina',
           priority: 'medium' as TaskPriority,
           attachments: [],
           comments: []
@@ -1010,22 +768,6 @@ Formulating response based on available information...`
     }
   };
   
-  // Function to delete a task
-  const deleteTask = (taskId: string) => {
-    // First confirm the user wants to delete the task
-    if (confirm('Are you sure you want to delete this task?')) {
-      // Filter out the task with the given ID
-      const updatedTasks = tasks.filter(task => task.id !== taskId);
-      
-      // Update state and localStorage
-      setTasks(updatedTasks);
-      localStorage.setItem('dashboard_tasks', JSON.stringify(updatedTasks));
-      
-      // Close the task detail panel
-      setSelectedTaskId(null);
-    }
-  };
-
   // Function to add an attachment to a task
   const addTaskAttachment = async (taskId: string) => {
     try {
@@ -1134,9 +876,6 @@ Formulating response based on available information...`
   const startAddingTask = () => {
     setIsAddingTask(true);
     setNewTaskText('');
-    setShowPrioritySelector(false);
-    setNewTaskPriority(null);
-    setNewTaskDeadline(null);
     
     // Focus the input after a short delay
     setTimeout(() => {
@@ -1150,40 +889,18 @@ Formulating response based on available information...`
   const saveNewTask = () => {
     if (newTaskText.trim()) {
       // Create a new task and add it to the list
-      const newTask: Task = {
+      const newTask = {
         id: `task-${Date.now()}`,
         text: newTaskText.trim(),
-        completed: false,
-        ...(newTaskDeadline && { deadline: newTaskDeadline }),
-        ...(newTaskPriority && { priority: newTaskPriority })
+        completed: false
       };
       
       setTasks(prevTasks => [...prevTasks, newTask]);
-      
-      // Save to localStorage
-      const updatedTasks = [...tasks, newTask];
-      localStorage.setItem('dashboard_tasks', JSON.stringify(updatedTasks));
     }
     
     // Reset the adding task state
     setIsAddingTask(false);
     setNewTaskText('');
-    setShowPrioritySelector(false);
-    setNewTaskPriority(null);
-    setNewTaskDeadline(null);
-  };
-  
-  // Function to set date for a new task
-  const setNewTaskDate = (date: Date) => {
-    setNewTaskDeadline(date);
-    setDatePickerVisible(false);
-    setShowPrioritySelector(true);
-  };
-  
-  // Function to set priority for a new task
-  const setTaskPriority = (priority: TaskPriority) => {
-    setNewTaskPriority(priority);
-    setShowPrioritySelector(false);
   };
   
   // Function to cancel adding a task
@@ -1200,13 +917,8 @@ Formulating response based on available information...`
     // Clear previous expanded folders except the active topic
     setExpandedFolders([topicId]);
     
-    // Also switch to the corresponding tab if it exists
-    if (openTabs.some(tab => tab.id === topicId)) {
-      setActiveTabId(topicId);
-    } else {
-      // If tab doesn't exist (like removed 'health' tab), use dashboard as fallback
-      setActiveTabId('dashboard');
-    }
+    // Also switch to the corresponding tab
+    setActiveTabId(topicId);
   };
   
   // Function to return to main Topics view in knowledgebase
@@ -1333,8 +1045,10 @@ Formulating response based on available information...`
         return; // Return early to prevent closing the modal
         
       case 'widget':
-        // Don't close the modal for widget - the AddModal component will show WidgetSelectModal
-        return; // Return early to prevent closing the modal
+        // Logic for creating a new dashboard widget
+        console.log('Creating a new widget');
+        handleCloseAddModal();
+        break;
         
       case 'agent':
         // Don't close the modal for agent - the AddModal component will show AgentBrowserModal
@@ -1360,167 +1074,10 @@ Formulating response based on available information...`
     }
   };
   
-  // Handle widget selection 
-  const handleWidgetSelect = (widgetType: 'calendar' | 'myTasks' | 'activeProcesses' | 'myAgents') => {
-    console.log(`Selected widget type: ${widgetType}`);
-    
-    // Create widget content based on the selected type
-    let widgetContent: React.ReactNode;
-    
-    switch (widgetType) {
-      case 'calendar':
-        widgetContent = (
-          <CalendarWidget 
-            tasks={tasks.filter(task => task.deadline).map(task => ({
-              id: task.id,
-              text: task.text,
-              deadline: task.deadline || new Date(),
-              priority: task.priority || 'medium',
-              completed: task.completed
-            }))}
-            onSelectDate={(date) => {
-              console.log('Calendar date selected:', date);
-            }}
-            onSelectTask={(taskId) => {
-              setSelectedTaskId(taskId);
-            }}
-          />
-        );
-        break;
-        
-
-        
-      case 'myTasks':
-        widgetContent = (
-          <div className={styles.tasksWidget}>
-            <h3>My Tasks</h3>
-            <div className={styles.tasksList}>
-              {tasks.slice(0, 3).map(task => (
-                <div key={task.id} className={styles.taskItem}>
-                  <input 
-                    type="checkbox" 
-                    checked={task.completed} 
-                    onChange={() => toggleTaskCompletion(task.id)}
-                  />
-                  <span className={task.completed ? styles.completedTask : ''}>
-                    {task.text}
-                  </span>
-                </div>
-              ))}
-              {tasks.length === 0 && (
-                <p>No tasks yet</p>
-              )}
-            </div>
-            <button className={styles.viewAllButton}>
-              View All Tasks
-            </button>
-          </div>
-        );
-        break;
-        
-      case 'activeProcesses':
-        widgetContent = (
-          <div className={styles.processesWidget}>
-            <h3>Active Processes</h3>
-            <div className={styles.processesList}>
-              {processes.filter(p => p.status === 'inProgress').slice(0, 3).map(process => (
-                <div key={process.id} className={styles.processItem}>
-                  <span>{process.name}</span>
-                  <div className={styles.processStatus}>
-                    <div className={styles.processingIndicator}></div>
-                    Processing
-                  </div>
-                </div>
-              ))}
-              {processes.filter(p => p.status === 'inProgress').length === 0 && (
-                <p>No active processes</p>
-              )}
-            </div>
-          </div>
-        );
-        break;
-        
-      case 'myAgents':
-        widgetContent = (
-          <div className={styles.agentsWidget}>
-            <h3>My Agents</h3>
-            <div className={styles.agentsList}>
-              {chatTabs.slice(0, 3).map(chatTab => (
-                <div key={chatTab.id} className={styles.agentItem}>
-                  <div className={styles.agentIcon}>
-                    <UserIcon size={20} />
-                  </div>
-                  <div className={styles.agentInfo}>
-                    <div className={styles.agentName}>{chatTab.title}</div>
-                    <div className={styles.agentStatus}>
-                      {chatTab.isProcessing ? 'Processing...' : 'Ready'}
-                    </div>
-                  </div>
-                  <button className={styles.agentActionButton}>
-                    <MessageIcon size={16} />
-                  </button>
-                </div>
-              ))}
-              {chatTabs.length === 0 && (
-                <p>No agents available</p>
-              )}
-            </div>
-            <button className={styles.viewAllButton}>
-              Manage Agents
-            </button>
-          </div>
-        );
-        break;
-    }
-    
-    // Add the new widget to the dashboard
-    const newWidgetId = `widget-${Date.now()}`;
-    const newWidget = { id: newWidgetId, content: widgetContent };
-    
-    // Add to first column for simplicity
-    const columnId = 'column1';
-    const columnWidgets = dashboardItems[columnId] || [];
-    
-    // Create the widget with drag-and-drop enabled
-    const draggableWidget = {
-      ...newWidget,
-      column: columnId,
-      isDraggable: true
-    };
-    
-    setDashboardItems(prev => ({
-      ...prev,
-      [columnId]: [...columnWidgets, draggableWidget]
-    }));
-    
-    // Show confirmation notification
-    addNotification({
-      id: generateUUID(),
-      title: 'Widget Added',
-      message: `New ${widgetType} widget has been added to your dashboard`,
-      type: 'success',
-      read: false,
-      timestamp: new Date()
-    });
-    
-    handleCloseAddModal();
-  };
-  
   // Add drag and drop event listeners when component mounts
   useEffect(() => {
     const dashboard = dashboardRef.current;
     if (!dashboard) return;
-    
-    // Handler for dragging widgets from the selection modal
-    const handleWidgetDragStart = (e: DragEvent) => {
-      if (e.target && (e.target as HTMLElement).classList.contains(styles.widgetCard)) {
-        const widgetId = (e.target as HTMLElement).dataset.widgetId;
-        if (widgetId) {
-          e.dataTransfer?.setData('text/plain', `widget:${widgetId}`);
-          e.dataTransfer?.setDragImage(e.target as Element, 50, 50);
-        }
-      }
-    };
 
     const handleDragOver = (e: DragEvent) => {
       e.preventDefault();
@@ -1588,33 +1145,20 @@ Formulating response based on available information...`
         </div>
         <div className={styles.spacer}></div>
         <div className={styles.topBarRight}>
-          <div className={styles.iconGroup}>
-            <button 
-              className={styles.iconButton} 
-              title="Notifications"
-              onClick={() => setIsNotificationPanelOpen(!isNotificationPanelOpen)}
-            >
-              <BellIcon size={20} />
-              {unreadCount > 0 && (
-                <span className={styles.notificationBadge}>{unreadCount}</span>
-              )}
-            </button>
-            
-            {/* Profile Icon - Without text */}
-            <div className={styles.profileIconOnly}>
-              <Link 
-                href="/settings" 
-                title="Profile & Settings"
-                passHref
-              >
-                <UserIcon size={22} />
-              </Link>
-            </div>
-          </div>
+          <button 
+            className={styles.iconButton} 
+            title="Notifications"
+            onClick={() => setIsNotificationPanelOpen(!isNotificationPanelOpen)}
+          >
+            <BellIcon size={20} />
+            {unreadCount > 0 && (
+              <span className={styles.notificationBadge}>{unreadCount}</span>
+            )}
+          </button>
           
           {/* Notification Panel Popup */}
           {isNotificationPanelOpen && (
-            <div ref={notificationPanelRef} className={styles.notificationPanel} style={{zIndex: 2000}}>
+            <div ref={notificationPanelRef} className={styles.notificationPanel}>
               <div className={styles.notificationPanelHeader}>
                 <h3>Notifications</h3>
                 <button 
@@ -1670,14 +1214,29 @@ Formulating response based on available information...`
               )}
             </div>
           )}
+          <div className={styles.profileBar}>
+            <div className={styles.userInfo}>
+              <span className={styles.userName}>User Name</span>
+              <span className={styles.userRole}>Premium Account</span>
+            </div>
+            <div className={styles.profileImage}>
+              <Link 
+                href="/settings" 
+                title="Profile & Settings"
+                passHref
+              >
+                <UserIcon size={22} />
+              </Link>
+            </div>
+          </div>
         </div>
       </header>
 
       {/* Main Layout */}
       <div className={`${styles.layout} ${isSidebarCollapsed ? styles.layoutCollapsed : ''}`}>
-        {/* Sticky Create Button - Apply hideWhenNotifications class when notification panel is open */}
+        {/* Sticky Create Button */}
         <button 
-          className={`${styles.stickyCreateButton} ${isNotificationPanelOpen ? styles.hideWhenNotifications : ''}`}
+          className={styles.stickyCreateButton}
           onClick={handleOpenAddModal}
           aria-label="Create new item"
         >
@@ -1724,19 +1283,13 @@ Formulating response based on available information...`
                           }}
                         >
                           <h3 
-                            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                            style={{ cursor: 'pointer' }}
                             onClick={() => {
                               // Direct toggle for the topics folder
                               toggleFolderExpansion('topics');
                             }}
                           >
-                            <span style={{ display: 'flex', alignItems: 'center' }}>
-                              {expandedFolders.includes('topics') ? 
-                                <ChevronDownIcon size={18} /> : 
-                                <ChevronRightIcon size={18} />
-                              }
-                            </span>
-                            Knowledgebase
+                            Knowledgebase {expandedFolders.includes('topics') ? '▼' : '►'}
                           </h3>
                         </div>
                         {/* File Explorer Component */}
@@ -1794,9 +1347,6 @@ Formulating response based on available information...`
                                   // Open a chat with this agent
                                   console.log(`Starting chat with agent: ${agent.name}`);
                                   
-                                  // Set the current agent
-                                  setCurrentAgent(agent);
-                                  
                                   // Create a new chat tab for this agent if it doesn't exist
                                   const agentChatId = `chat-${agent.id}`;
                                   const existingTab = chatTabs.find(tab => tab.id === agentChatId);
@@ -1813,7 +1363,7 @@ Formulating response based on available information...`
                                     // Create new tab and set it as active
                                     const newTab: ChatTab = {
                                       id: agentChatId,
-                                      title: agent.name,
+                                      title: `Chat with ${agent.name}`,
                                       messages: [{ 
                                         sender: 'bot' as const, 
                                         content: `Hello! I'm ${agent.name}. How can I assist you today?` 
@@ -1821,8 +1371,7 @@ Formulating response based on available information...`
                                       active: true,
                                       isRenaming: false,
                                       isProcessing: false,
-                                      sessionId: generateUUID(),
-                                      agentId: agent.id
+                                      sessionId: generateUUID()
                                     };
                                     
                                     setChatTabs(prevTabs => [
@@ -2060,146 +1609,89 @@ Formulating response based on available information...`
                 <FileContent file={selectedFile} />
               </div>
             </div>
-          ) : activeTabId === 'marketing-plan' ? (
-            /* Show Marketing Plan content in markdown format */
-            <MarkdownViewer content={`# Marketing Plan 2025
-
-## Executive Summary
-
-This marketing plan outlines our strategy for increasing market share and brand awareness over the next fiscal year. We aim to leverage digital channels, strategic partnerships, and innovative product features to achieve our growth targets.
-
-## Target Market
-
-### Primary Audience
-- Mid-sized enterprises (100-500 employees)
-- Tech-focused startups in growth phase
-- Educational institutions
-
-### Secondary Audience
-- Individual professionals
-- Small businesses (< 100 employees)
-
-## Competitive Analysis
-
-| Competitor | Market Share | Key Strengths | Weaknesses |
-|------------|--------------|---------------|------------|
-| CompX | 34% | Brand recognition, Wide feature set | High pricing, Complex UI |
-| TechY | 28% | Modern interface, Good mobile support | Limited integrations |
-| SystemZ | 15% | Enterprise focus, Security features | Dated design, Poor customer support |
-
-## Marketing Strategy
-
-### Digital Marketing
-- **Content Marketing**: Weekly blog posts, monthly whitepapers
-- **SEO**: Target 5 high-value keywords per quarter
-- **Email Campaigns**: Bi-weekly newsletter, automated onboarding sequence
-- **Social Media**: Daily posts across platforms with focus on LinkedIn and Twitter
-
-### Event Marketing
-- Attendance at 3 major industry conferences
-- Host quarterly webinars on industry topics
-- Annual user conference in Q3
-
-### Partnerships
-- Co-marketing with 5 strategic technology partners
-- Educational institution discount program
-- Referral program for existing customers
-
-## Budget Allocation
-
-- Digital Marketing: 40%
-- Content Production: 25%
-- Events: 20%
-- Partnerships: 10%
-- Miscellaneous: 5%
-
-## Key Performance Indicators
-
-- Increase website traffic by 35%
-- Achieve 15% conversion rate from free trial to paid
-- Grow customer base by 25%
-- Improve customer retention to 90%
-- Increase social media engagement by 50%
-
-## Timeline
-
-### Q1 (Jan-Mar)
-- Launch redesigned website
-- Implement marketing automation platform
-- Develop Q1 content calendar
-
-### Q2 (Apr-Jun)
-- Begin partnership program
-- Launch spring promotional campaign
-- Attend industry conference A
-
-### Q3 (Jul-Sep)
-- Host annual user conference
-- Review and adjust digital strategy
-- Launch referral program
-
-### Q4 (Oct-Dec)
-- Holiday promotional campaign
-- Annual strategy review
-- Planning for next year
-
-## Risk Assessment
-
-- Increased competition may require additional budget allocation
-- Market trends shift may necessitate pivot in messaging
-- Economic factors could impact B2B spending
-
-## Conclusion
-
-This marketing plan provides a comprehensive framework for achieving our business objectives through strategic marketing initiatives. Regular monitoring and adjustments will ensure we stay agile in response to market changes.`} />
-            
           ) : activeTabId !== 'work' ? (
             /* Show regular dashboard content for non-Work tabs */
             <>
               <h2 className={styles.pageTitle}>Dashboard Overview</h2>
               
+              {/* Topic Shortcuts */}
+              <div className={styles.topicShortcuts}>
+                <button 
+                  className={styles.topicShortcutButton}
+                  onClick={() => {
+                    setTopicAsRoot('work'); // Set Work as root in knowledgebase
+                    // No need to call setActiveTabId as setTopicAsRoot already does this
+                  }}
+                >
+                  <span className={styles.topicIcon}>💼</span>
+                  Work
+                </button>
+                <button 
+                  className={styles.topicShortcutButton}
+                  onClick={() => {
+                    setTopicAsRoot('health'); // Set Health as root in knowledgebase
+                    // No need to call setActiveTabId as setTopicAsRoot already does this
+                  }}
+                >
+                  <span className={styles.topicIcon}>❤️</span>
+                  Health
+                </button>
+                <button 
+                  className={styles.topicShortcutButton}
+                  onClick={() => {
+                    // Check if Finance tab exists, if not create it
+                    const financeTab = openTabs.find(tab => tab.id === 'finance');
+                    if (!financeTab) {
+                      setOpenTabs(prevTabs => [
+                        ...prevTabs,
+                        { id: 'finance', title: 'Finance' }
+                      ]);
+                    }
+                    setTopicAsRoot('finance');
+                  }}
+                >
+                  <span className={styles.topicIcon}>💰</span>
+                  Finance
+                </button>
+                <button 
+                  className={styles.topicShortcutButton}
+                  onClick={() => {
+                    // Check if Travel tab exists, if not create it
+                    const travelTab = openTabs.find(tab => tab.id === 'travel');
+                    if (!travelTab) {
+                      setOpenTabs(prevTabs => [
+                        ...prevTabs,
+                        { id: 'travel', title: 'Travel' }
+                      ]);
+                    }
+                    setTopicAsRoot('travel');
+                  }}
+                >
+                  <span className={styles.topicIcon}>✈️</span>
+                  Travel
+                </button>
+                <button 
+                  className={styles.topicShortcutButton}
+                  onClick={() => {
+                    // Check if Hobbies tab exists, if not create it
+                    const hobbiesTab = openTabs.find(tab => tab.id === 'hobbies');
+                    if (!hobbiesTab) {
+                      setOpenTabs(prevTabs => [
+                        ...prevTabs,
+                        { id: 'hobbies', title: 'Hobbies' }
+                      ]);
+                    }
+                    setTopicAsRoot('hobbies');
+                  }}
+                >
+                  <span className={styles.topicIcon}>🎮</span>
+                  Hobbies
+                </button>
+              </div>
+              
               <div className={styles.cardGrid}>
-                {/* Calendar Card */}
-                <div className={`${styles.card} ${styles.cardCalendar}`}>
-                  <div className={styles.widgetHeader}>
-                    <h3>Calendar</h3>
-                    <span className={styles.widgetIcon}>📅</span>
-                  </div>
-                  <div className={styles.calendarContainer}>
-                    <CalendarWidget 
-                      tasks={tasks.map(task => ({
-                        id: task.id,
-                        text: task.text,
-                        deadline: task.deadline || new Date(),
-                        priority: task.priority,
-                        completed: task.completed
-                      }))}
-                      onSelectDate={(date: Date) => {
-                        console.log('Date selected in calendar:', date);
-                        // Set the selected date as the deadline for the new task
-                        setNewTaskDeadline(date);
-                        // Start adding a task
-                        setIsAddingTask(true);
-                        setNewTaskText('');
-                        // Skip date picker and show priority selector after text is entered
-                        
-                        // Focus on the input after a short delay
-                        setTimeout(() => {
-                          if (newTaskInputRef.current) {
-                            newTaskInputRef.current.focus();
-                          }
-                        }, 100);
-                      }}
-                      onSelectTask={(taskId: string) => {
-                        // When a task is selected in the calendar, show its details
-                        setSelectedTaskId(taskId);
-                      }}
-                    />
-                  </div>
-                </div>
-                
                 {/* Recent Activity Card */}
-                <div className={`${styles.card} ${styles.cardActivity}`}>
+                <div className={styles.card} style={{marginBottom: '20px'}}>
                   <div className={styles.widgetHeader}>
                     <h3>Recent Activity</h3>
                     <span className={styles.widgetIcon}>
@@ -2235,234 +1727,109 @@ This marketing plan provides a comprehensive framework for achieving our busines
                           <div className={styles.activityTime}>Yesterday</div>
                         </div>
                       </li>
-                      <li className={styles.activityItem}>
-                        <span className={styles.activityIcon}>
-                          <FileIcon size={20} />
-                        </span>
-                        <div className={styles.activityText}>
-                          <div>Uploaded <strong>Presentation.pdf</strong></div>
-                          <div className={styles.activityTime}>2 days ago</div>
-                        </div>
-                      </li>
-                      <li className={styles.activityItem}>
-                        <span className={styles.activityIcon}>
-                          <CheckIcon size={20} />
-                        </span>
-                        <div className={styles.activityText}>
-                          <div>Completed <strong>Project Review</strong></div>
-                          <div className={styles.activityTime}>3 days ago</div>
-                        </div>
-                      </li>
                     </ul>
+                    </div>
+                  </div>
                   </div>
                 </div>
-
-                {/* My Tasks Card */}
-                <div className={`${styles.card} ${styles.cardTasks}`}>
+                
+                {/* Quick Actions Card */}
+                <div className={styles.card} style={{marginTop: '20px'}}>
                   <div className={styles.widgetHeader}>
-                    <h3>My Tasks</h3>
-                    {!isNotificationPanelOpen && (
-                      <button 
-                        className={styles.newTabButton} 
-                        title="Add New Task"
-                        type="button"
-                        onClick={startAddingTask}
-                      >
-                        <PlusIcon size={20} />
-                      </button>
-                    )}
+                    <h3>Quick Actions</h3>
+                    <span className={styles.widgetIcon}>✦</span>
                   </div>
-                  <div className={styles.tasksContainer}>
-                    {/* Active Tasks */}
-                    <div className={styles.taskSection}>
-                      {tasks.filter(task => !task.completed).length === 0 && !isAddingTask ? (
-                        <div className={styles.emptyTasksMessage}>
-                          <div className={styles.emptyTasksIcon}>✓</div>
-                          <p>You&apos;ve completed everything in your plan!</p>
-                          <button 
-                            className={styles.addTaskButton}
-                            onClick={startAddingTask}
-                          >
-                            Add a new task
-                          </button>
-                        </div>
-                      ) : (
-                        <ul className={styles.taskList}>
-                          {tasks
-                            .filter(task => !task.completed)
-                            // Sort tasks by deadline (nearest at top)
-                            .sort((a, b) => {
-                              // Tasks without deadlines go to the bottom
-                              if (!a.deadline && !b.deadline) return 0;
-                              if (!a.deadline) return 1;
-                              if (!b.deadline) return -1;
-                              
-                              // Safer approach: use try-catch to prevent any runtime errors
-                              try {
-                                // Convert to timestamps with error handling
-                                let aTime, bTime;
-                                
-                                try {
-                                  aTime = a.deadline instanceof Date ? 
-                                    a.deadline.getTime() : 
-                                    new Date(a.deadline).getTime();
-                                } catch (e) {
-                                  // If there's an error, put this task at the bottom
-                                  return 1;
-                                }
-                                
-                                try {
-                                  bTime = b.deadline instanceof Date ? 
-                                    b.deadline.getTime() : 
-                                    new Date(b.deadline).getTime();
-                                } catch (e) {
-                                  // If there's an error, put this task at the bottom
-                                  return -1;
-                                }
-                                
-                                // Additional validation
-                                if (isNaN(aTime)) return 1;
-                                if (isNaN(bTime)) return -1;
-                                
-                                // Sort by date
-                                return aTime - bTime;
-                              } catch (e) {
-                                // Last resort fallback if anything goes wrong
-                                console.error('Error sorting tasks:', e);
-                                return 0;
-                              }
-                            })
-                            .map(task => (
-                              <li key={task.id} className={`${styles.taskItem} ${styles.taskItemClickable}`}>
-                                <button 
-                                  className={styles.taskCheckbox} 
-                                  onClick={(e) => {
-                                    e.stopPropagation(); // Prevent task selection when clicking checkbox
-                                    toggleTaskCompletion(task.id);
-                                  }}
-                                  aria-label={`Mark ${task.text} as complete`}
-                                >
-                                  <span className={styles.checkboxInner}></span>
-                                </button>
-                                <div 
-                                  className={styles.taskContent}
-                                  onClick={() => setSelectedTaskId(task.id)}
-                                >
-                                  <span className={styles.taskText}>{task.text}</span>
-                                  {task.deadline && (
-                                    <span className={`${styles.taskDeadline} 
-                                      ${isDeadlineUrgent(task.deadline) ? styles.urgentDeadline : ''}
-                                      ${isDeadlineSoon(task.deadline) ? styles.soonDeadline : ''}
-                                      ${isDeadlineNormal(task.deadline) ? styles.normalDeadline : ''}`}>
-                                      {formatDeadline(task.deadline)}
-                                    </span>
-                                  )}
-                                </div>
-                              </li>
-                            ))}
+                  <div className={styles.cardContent}>
+                    <div className={styles.actionButtons}>
+                      <button 
+                        className={styles.actionButton}
+                        onClick={() => {
+                          // Use simple file input approach to avoid browser compatibility issues
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = '*/*'; // Accept all file types
                           
-                          {isAddingTask && (
-                            <>
-                              <li className={styles.taskItem}>
-                                <button className={styles.taskCheckbox}>
-                                  <span className={styles.checkboxInner}></span>
-                                </button>
-                                <div className={styles.newTaskContainer}>
-                                  <input
-                                    ref={newTaskInputRef}
-                                    className={styles.newTaskInput}
-                                    type="text"
-                                    placeholder="Type a new task..."
-                                    value={newTaskText}
-                                    onChange={(e) => setNewTaskText(e.target.value)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') {
-                                        if (newTaskText.trim()) {
-                                          // Create task immediately on Enter press
-                                          const newTask: Task = {
-                                            id: `task-${Date.now()}`,
-                                            text: newTaskText.trim(),
-                                            completed: false
-                                          };
-                                          
-                                          setTasks(prevTasks => [...prevTasks, newTask]);
-                                          
-                                          // Save to localStorage
-                                          const updatedTasks = [...tasks, newTask];
-                                          localStorage.setItem('dashboard_tasks', JSON.stringify(updatedTasks));
-                                          
-                                          // Reset input field
-                                          setNewTaskText('');
-                                        }
-                                      } else if (e.key === 'Escape') {
-                                        cancelAddingTask();
-                                      }
-                                    }}
-                                  />
-                                </div>
-                              </li>
-                            </>
-                          )}
-                        </ul>
-                      )}
-                      {/* Completed Tasks */}
-                      {tasks.some(task => task.completed) && (
-                        <div className={styles.completedTasksSection}>
-                          <button 
-                            className={styles.completedTasksHeader} 
-                            onClick={() => {
-                              const completedSection = document.querySelector(`.${styles.completedTasksList}`);
-                              if (completedSection) {
-                                (completedSection as HTMLElement).scrollIntoView({ behavior: 'smooth' });
+                          input.onchange = (e) => {
+                            const target = e.target as HTMLInputElement;
+                            const file = target.files?.[0];
+                            if (file) {
+                              console.log(`Selected file: ${file.name}`);
+                              setSelectedFile(file);
+                              
+                              // Add Files tab if it doesn't exist
+                              const filesTabExists = openTabs.some(tab => tab.id === 'files');
+                              if (!filesTabExists) {
+                                setOpenTabs(prev => [...prev, { id: 'files', title: `File: ${file.name}` }]);
+                              } else {
+                                // Update existing tab title
+                                setOpenTabs(prev => prev.map(tab => 
+                                  tab.id === 'files' ? { ...tab, title: `File: ${file.name}` } : tab
+                                ));
                               }
-                            }}
-                          >
-                            Completed ({tasks.filter(task => task.completed).length})
-                          </button>
-                          <div className={styles.completedTasksList}>
-                            <ul className={styles.taskList}>
-                              {tasks
-                                .filter(task => task.completed)
-                                .map(task => (
-                                  <li key={task.id} className={`${styles.taskItem} ${styles.completedTask} ${styles.taskItemClickable}`}>
-                                    <button 
-                                      className={`${styles.taskCheckbox} ${styles.checked}`}
-                                      onClick={(e) => {
-                                        e.stopPropagation(); // Prevent task selection when clicking checkbox
-                                        toggleTaskCompletion(task.id);
-                                      }}
-                                      aria-label={`Mark ${task.text} as incomplete`}
-                                    >
-                                      <span className={`${styles.checkboxInner} ${styles.checked}`}>
-                                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                          <path d="M3 6L5 8L9 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                        </svg>
-                                      </span>
-                                    </button>
-                                    <div 
-                                      className={styles.taskContent}
-                                      onClick={() => setSelectedTaskId(task.id)}
-                                    >
-                                      <span className={styles.taskText}>{task.text}</span>
-                                      {task.deadline && (
-                                        <span className={`${styles.taskDeadline} 
-                                          ${isDeadlineUrgent(task.deadline) ? styles.urgentDeadline : ''}
-                                          ${isDeadlineSoon(task.deadline) ? styles.soonDeadline : ''}
-                                          ${isDeadlineNormal(task.deadline) ? styles.normalDeadline : ''}`}>
-                                          {formatDeadline(task.deadline)}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </li>
-                                ))}
-                            </ul>
-                          </div>
-                        </div>
-                      )}
+                              
+                              // Switch to files tab
+                              setActiveTabId('files');
+                              setOpenTabKey('files');
+                            }
+                          };
+                          
+                          // Trigger file dialog
+                          input.click();
+                        }}
+                      >
+                        <FileIcon size={20} className={styles.actionIcon} />
+                        New File
+                      </button>
+                      <button 
+                        className={styles.actionButton}
+                        onClick={() => {
+                          // Use simple file input approach to avoid browser compatibility issues
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = '*/*'; // Accept all file types
+                          
+                          input.onchange = (e) => {
+                            const target = e.target as HTMLInputElement;
+                            const file = target.files?.[0];
+                            if (file) {
+                              console.log(`Uploaded file: ${file.name}`);
+                              setSelectedFile(file);
+                              
+                              // Add Files tab if it doesn't exist
+                              const filesTabExists = openTabs.some(tab => tab.id === 'files');
+                              if (!filesTabExists) {
+                                setOpenTabs(prev => [...prev, { id: 'files', title: `File: ${file.name}` }]);
+                              } else {
+                                // Update existing tab title
+                                setOpenTabs(prev => prev.map(tab => 
+                                  tab.id === 'files' ? { ...tab, title: `File: ${file.name}` } : tab
+                                ));
+                              }
+                              
+                              // Switch to files tab
+                              setActiveTabId('files');
+                              setOpenTabKey('files');
+                            }
+                          };
+                          
+                          // Trigger file dialog
+                          input.click();
+                        }}
+                      >
+                        <UploadIcon size={20} className={styles.actionIcon} />
+                        Upload
+                      </button>
+                      <button className={styles.actionButton}>
+                        <ShareIcon size={20} className={styles.actionIcon} />
+                        Share
+                      </button>
+                      <button className={styles.actionButton}>
+                        <SearchIcon size={20} className={styles.actionIcon} />
+                        Search
+                      </button>
                     </div>
                   </div>
                 </div>
-
               </div>
             </>
           ) : (
@@ -2515,53 +1882,222 @@ This marketing plan provides a comprehensive framework for achieving our busines
           )}
         </main>
 
+        {/* Right Widgets */}
         <section className={styles.widgets}>
           <DraggableWidgetContainer
             columnId="right-column"
             initialItems={[
               {
+                id: 'tasks',
+                content: (
+                  <div className={styles.widgetBox}>
+                    <div className={styles.widgetHeader}>
+                      <h3>My Tasks</h3>
+                      <button 
+                        className={styles.newTabButton} 
+                        title="Add New Task"
+                        type="button"
+                        onClick={startAddingTask}
+                      >
+                        <PlusIcon size={20} />
+                      </button>
+                    </div>
+                    <div className={styles.tasksContainer}>
+                      {/* Active Tasks */}
+                      <div className={styles.taskSection}>
+                        {tasks.filter(task => !task.completed).length === 0 && !isAddingTask ? (
+                          <div className={styles.emptyTasksMessage}>
+                            <div className={styles.emptyTasksIcon}>✓</div>
+                            <p>You&apos;ve completed everything in your plan!</p>
+                            <button 
+                              className={styles.addTaskButton}
+                              onClick={startAddingTask}
+                            >
+                              Add a new task
+                            </button>
+                          </div>
+                        ) : (
+                          <ul className={styles.taskList}>
+                            {tasks
+                              .filter(task => !task.completed)
+                              // Sort tasks by deadline (nearest at top)
+                              .sort((a, b) => {
+                                // Tasks without deadlines go to the bottom
+                                if (!a.deadline && !b.deadline) return 0;
+                                if (!a.deadline) return 1;
+                                if (!b.deadline) return -1;
+                                
+                                // Safer approach: use try-catch to prevent any runtime errors
+                                try {
+                                  // Convert to timestamps with error handling
+                                  let aTime, bTime;
+                                  
+                                  try {
+                                    aTime = a.deadline instanceof Date ? 
+                                      a.deadline.getTime() : 
+                                      new Date(a.deadline).getTime();
+                                  } catch (e) {
+                                    // If there's an error, put this task at the bottom
+                                    return 1;
+                                  }
+                                  
+                                  try {
+                                    bTime = b.deadline instanceof Date ? 
+                                      b.deadline.getTime() : 
+                                      new Date(b.deadline).getTime();
+                                  } catch (e) {
+                                    // If there's an error, put this task at the bottom
+                                    return -1;
+                                  }
+                                  
+                                  // Additional validation
+                                  if (isNaN(aTime)) return 1;
+                                  if (isNaN(bTime)) return -1;
+                                  
+                                  // Sort by date
+                                  return aTime - bTime;
+                                } catch (e) {
+                                  // Last resort fallback if anything goes wrong
+                                  console.error('Error sorting tasks:', e);
+                                  return 0;
+                                }
+                              })
+                              .map(task => (
+                                <li key={task.id} className={`${styles.taskItem} ${styles.taskItemClickable}`}>
+                                  <button 
+                                    className={styles.taskCheckbox} 
+                                    onClick={(e) => {
+                                      e.stopPropagation(); // Prevent task selection when clicking checkbox
+                                      toggleTaskCompletion(task.id);
+                                    }}
+                                    aria-label={`Mark ${task.text} as complete`}
+                                  >
+                                    <span className={styles.checkboxInner}></span>
+                                  </button>
+                                  <div 
+                                    className={styles.taskContent}
+                                    onClick={() => setSelectedTaskId(task.id)}
+                                  >
+                                    <span className={styles.taskText}>{task.text}</span>
+                                    {task.deadline && (
+                                      <span className={`${styles.taskDeadline} 
+                                        ${isDeadlineUrgent(task.deadline) ? styles.urgentDeadline : ''}
+                                        ${isDeadlineSoon(task.deadline) ? styles.soonDeadline : ''}
+                                        ${isDeadlineNormal(task.deadline) ? styles.normalDeadline : ''}`}>
+                                        {formatDeadline(task.deadline)}
+                                      </span>
+                                    )}
+                                  </div>
+                                </li>
+                              ))}
+                            
+                            {isAddingTask && (
+                              <li className={styles.taskItem}>
+                                <button className={styles.taskCheckbox}>
+                                  <span className={styles.checkboxInner}></span>
+                                </button>
+                                <input
+                                  ref={newTaskInputRef}
+                                  className={styles.newTaskInput}
+                                  type="text"
+                                  placeholder="Type a new task..."
+                                  value={newTaskText}
+                                  onChange={(e) => setNewTaskText(e.target.value)}
+                                  onBlur={saveNewTask}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      saveNewTask();
+                                    } else if (e.key === 'Escape') {
+                                      cancelAddingTask();
+                                    }
+                                  }}
+                                />
+                              </li>
+                            )}
+                          </ul>
+                        )}         
+                      </div>
+                      
+                      {/* Completed Tasks */}
+                      {tasks.some(task => task.completed) && (
+                        <div className={styles.completedTasksSection}>
+                          <button 
+                            className={styles.completedTasksHeader} 
+                            onClick={() => {
+                              const completedSection = document.querySelector(`.${styles.completedTasksList}`);
+                              if (completedSection) {
+                                completedSection.scrollIntoView({ behavior: 'smooth' });
+                              }
+                            }}
+                          >
+                            Completed ({tasks.filter(task => task.completed).length})
+                          </button>
+                          <div className={styles.completedTasksList}>
+                            <ul className={styles.taskList}>
+                              {tasks
+                                .filter(task => task.completed)
+                                .map(task => (
+                                  <li key={task.id} className={`${styles.taskItem} ${styles.completedTask} ${styles.taskItemClickable}`}>
+                                    <button 
+                                      className={`${styles.taskCheckbox} ${styles.checked}`}
+                                      onClick={(e) => {
+                                        e.stopPropagation(); // Prevent task selection when clicking checkbox
+                                        toggleTaskCompletion(task.id);
+                                      }}
+                                      aria-label={`Mark ${task.text} as incomplete`}
+                                    >
+                                      <span className={`${styles.checkboxInner} ${styles.checked}`}>
+                                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                          <path d="M3 6L5 8L9 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        </svg>
+                                      </span>
+                                    </button>
+                                    <div 
+                                      className={styles.taskContent}
+                                      onClick={() => setSelectedTaskId(task.id)}
+                                    >
+                                      <span className={styles.taskText}>{task.text}</span>
+                                      {task.deadline && (
+                                        <span className={`${styles.taskDeadline} 
+                                          ${isDeadlineUrgent(task.deadline) ? styles.urgentDeadline : ''}
+                                          ${isDeadlineSoon(task.deadline) ? styles.soonDeadline : ''}
+                                          ${isDeadlineNormal(task.deadline) ? styles.normalDeadline : ''}`}>
+                                          {formatDeadline(task.deadline)}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </li>
+                                ))}
+                            </ul>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              },
+              {
                 id: 'chat',
                 content: (
-                  <div className={`${styles.chatbox} ${styles.fullHeightChat}`}>
-                    <div className={`${styles.widgetHeader} ${styles.clickableHeader}`} style={{ justifyContent: 'flex-end' }}>
-                      <h3 
-                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
-                        onClick={() => {
-                          // Toggle chat visibility
-                          const chatBody = document.getElementById('chatBodyContainer');
-                          const chatInput = document.querySelector(`.${styles.chatInputContainer}`);
-                          const chatTabs = document.querySelector(`.${styles.chatTabs}`);
-                          if (chatBody) {
-                            const isVisible = (chatBody as HTMLElement).style.display !== 'none';
-                            (chatBody as HTMLElement).style.display = isVisible ? 'none' : 'block';
-                            if (chatInput) {
-                              (chatInput as HTMLElement).style.display = isVisible ? 'none' : 'flex';
-                            }
-                            if (chatTabs) {
-                              (chatTabs as HTMLElement).style.display = isVisible ? 'none' : 'flex';
-                            }
-                          }
-                        }}
+                  <div className={styles.chatbox}>
+                    <div className={styles.widgetHeader}>
+                      <h3>Chat</h3>
+                      <button 
+                        className={styles.newTabButton} 
+                        title="New Chat Tab"
+                        type="button"
+                        onClick={() => createNewChatTab()}
                       >
-                        Chat
-                        <span style={{ display: 'flex', alignItems: 'center' }}>
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="15 6 9 12 15 18"></polyline>
-                          </svg>
-                        </span>
-                      </h3>
+                        <svg width="18" height="18" viewBox="0 0 24 24">
+                          <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
+                          <path d="M12 8V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                          <path d="M8 12H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                      </button>
                     </div>
                     {chatTabs.length > 0 && (
                       <>
                         <div className={styles.chatTabs}>
-                          {/* New Chat Tab button as first tab */}
-                          <button 
-                            className={styles.newChatTab}
-                            title="New Chat Tab"
-                            onClick={() => createNewChatTab()}
-                          >
-                            <PlusIcon />
-                          </button>
                           {chatTabs.map((tab) => (
                             <button 
                               key={tab.id}
@@ -2572,14 +2108,6 @@ This marketing plan provides a comprehensive framework for achieving our busines
                                   ...t,
                                   active: t.id === tab.id
                                 })));
-                                
-                                // Update the current agent if this tab has an agentId
-                                if (tab.agentId) {
-                                  const agent = userAgents.find(a => a.id === tab.agentId);
-                                  if (agent) {
-                                    setCurrentAgent(agent);
-                                  }
-                                }
                               }}
                               onDoubleClick={(e) => {
                                 e.preventDefault();
@@ -2614,9 +2142,13 @@ This marketing plan provides a comprehensive framework for achieving our busines
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   
-                                  // Remove this chat from the processes list completely
+                                  // Update the status of this chat in the processes list to 'completed'
                                   setProcesses(prevProcesses => 
-                                    prevProcesses.filter(p => p.id !== tab.id)
+                                    prevProcesses.map(p => 
+                                      p.id === tab.id 
+                                        ? { ...p, status: 'completed' as const } 
+                                        : p
+                                    )
                                   );
                                   
                                   // Remove from chat tabs
@@ -2666,20 +2198,7 @@ This marketing plan provides a comprehensive framework for achieving our busines
                               <div key={i} className={msg.sender === 'user' ? styles.userMsg : styles.botMsg}>
                                 {msg.sender === 'bot' && (
                                   <div className={styles.botHeader}>
-                                    {tab.agentId ? (
-                                      (() => {
-                                        const agent = userAgents.find(a => a.id === tab.agentId);
-                                        return agent ? (
-                                          <>
-                                            {agent.avatar} {agent.name}
-                                          </>
-                                        ) : (
-                                          <>🤖 Workspace Manager</>
-                                        );
-                                      })()
-                                    ) : (
-                                      <>🤖 Workspace Manager</>
-                                    )}
+                                    🤖 MindExtension AI
                                   </div>
                                 )}
                                 {/* Show thinking section for bot messages if available */}
@@ -2704,20 +2223,7 @@ This marketing plan provides a comprehensive framework for achieving our busines
                             {tab.isProcessing && (
                               <div className={`${styles.botMsg} ${styles.typingMsg}`}>
                                 <div className={styles.botHeader}>
-                                  {tab.agentId ? (
-                                    (() => {
-                                      const agent = userAgents.find(a => a.id === tab.agentId);
-                                      return agent ? (
-                                        <>
-                                          {agent.avatar} {agent.name}
-                                        </>
-                                      ) : (
-                                        <>🤖 Workspace Manager</>
-                                      );
-                                    })()
-                                  ) : (
-                                    <>🤖 Workspace Manager</>
-                                  )}
+                                  🤖 MindExtension AI
                                 </div>
                                 {/* Separate typing indicators for maximum visibility */}
                                 <div className={styles.processingIndicator}>
@@ -2740,10 +2246,134 @@ This marketing plan provides a comprehensive framework for achieving our busines
                                 if (e.key === 'Enter' && e.currentTarget.value.trim()) {
                                   const activeTab = chatTabs.find(tab => tab.active);
                                   if (activeTab) {
+                                    // Add user message
                                     const userMsg = e.currentTarget.value.trim();
-                                    handleSendMessage(userMsg, activeTab);
+                                    const newMessages = [
+                                      ...activeTab.messages,
+                                      { sender: 'user' as const, content: userMsg }
+                                    ];
+
+                                    // Update the active tab with user message and set as processing
+                                    setChatTabs(prevTabs => 
+                                      prevTabs.map(tab => {
+                                        if (tab.id === activeTab.id) {
+                                          return { ...tab, messages: newMessages, isProcessing: true };
+                                        }
+                                        return tab;
+                                      })
+                                    );
+                                    
+                                    // Scroll to bottom after user sends a message
+                                    setTimeout(() => {
+                                      const chatContainer = document.getElementById('chatBodyContainer');
+                                      if (chatContainer) {
+                                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                                      }
+                                    }, 50);
+                                    
+                                    // Send message to AI agent
+                                    const chatSessionId = activeTab.sessionId || generateUUID();
+                                    
+                                    // Ensure the processing state is visible
+                                    setTimeout(() => {
+                                      // Double-check that the tab is still in processing state
+                                      setChatTabs(tabs => {
+                                        return tabs.map(tab => tab.id === activeTab.id && !tab.isProcessing ? 
+                                          { ...tab, isProcessing: true } : tab);
+                                      });
+                                    }, 100);
+                                    
+                                    // Call the AI agent API
+                                    sendMessageToAIAgent(userMsg, chatSessionId)
+                                      .then(response => {
+                                        console.log('AI agent response:', response);
+                                        
+                                        // Add bot message with response from the AI agent
+                                        setChatTabs(prevTabs => {
+                                          return prevTabs.map(tab => {
+                                            if (tab.id === activeTab.id) {
+                                              const botReply = {
+                                                sender: 'bot' as const, 
+                                                content: response,
+                                                thinking: `Processing user input: "${userMsg}"\n\nAnalyzing context...\n\nIdentifying key points:\n1. User is asking about: ${userMsg}\n2. Relevant context: Dashboard environment\n\nFormulating response based on available information...`
+                                              };
+                                              return { 
+                                                ...tab, 
+                                                sessionId: chatSessionId, // Store sessionId for conversation continuity
+                                                messages: [...tab.messages, botReply],
+                                                isProcessing: false 
+                                              };
+                                            }
+                                            return tab;
+                                          });
+                                        });
+                                        
+                                        // Scroll to the bottom after message is added
+                                        setTimeout(() => {
+                                          const chatContainer = document.getElementById('chatBodyContainer');
+                                          if (chatContainer) {
+                                            chatContainer.scrollTop = chatContainer.scrollHeight;
+                                          }
+                                        }, 100);
+                                        
+                                        // Update process status to completed
+                                        setProcesses(prevProcesses => 
+                                          prevProcesses.map(process => 
+                                            process.id === activeTab.id ? 
+                                              { ...process, status: 'completed' as const } : 
+                                              process
+                                          )
+                                        );
+                                      })
+                                      .catch(error => {
+                                        console.error('Error calling AI agent:', error);
+                                        
+                                        // Update chat with error message
+                                        setChatTabs(prevTabs => 
+                                          prevTabs.map(tab => {
+                                            if (tab.id === activeTab.id) {
+                                              return { 
+                                                ...tab, 
+                                                isProcessing: false,
+                                                messages: [
+                                                  ...tab.messages,
+                                                  { sender: 'bot' as const, content: 'Sorry, there was an error connecting to the AI agent.' }
+                                                ]
+                                              };
+                                            }
+                                            return tab;
+                                          })
+                                        );
+                                        
+                                        // Scroll to bottom even on error response
+                                        setTimeout(() => {
+                                          const chatContainer = document.getElementById('chatBodyContainer');
+                                          if (chatContainer) {
+                                            chatContainer.scrollTop = chatContainer.scrollHeight;
+                                          }
+                                        }, 100);
+                                        
+                                        // Update status to failed
+                                        setProcesses(prevProcesses => 
+                                          prevProcesses.map(process => 
+                                            process.id === activeTab.id ? 
+                                              { ...process, status: 'failed' as const } : 
+                                              process
+                                          )
+                                        );
+                                      });
+                                    
                                     // Clear input
                                     e.currentTarget.value = '';
+                                    
+                                    // Update status in Active Processes to in progress
+                                    setProcesses(prevProcesses => 
+                                      prevProcesses.map(process => 
+                                        process.id === activeTab.id 
+                                          ? { ...process, status: 'inProgress' as const } 
+                                          : process
+                                      )
+                                    );
                                   }
                                 }
                               }}
@@ -2824,7 +2454,12 @@ This marketing plan provides a comprehensive framework for achieving our busines
                   </div>
                 )}
                 
-
+                {task.assignee && (
+                  <div className={styles.taskMetaItem}>
+                    <span className={styles.taskMetaLabel}>Assignee</span>
+                    <span className={styles.taskMetaValue}>{task.assignee}</span>
+                  </div>
+                )}
                 
                 {task.priority && (
                   <div className={styles.taskMetaItem}>
@@ -2960,19 +2595,6 @@ This marketing plan provides a comprehensive framework for achieving our busines
                     Post
                   </button>
                 </div>
-              </div>
-
-              <div className={styles.taskDetailSection} style={{ display: 'flex', justifyContent: 'center' }}>
-                <button
-                  className={styles.removeTaskButton}
-                  onClick={() => deleteTask(task.id)}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M3 6H5H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  Remove Task
-                </button>
               </div>
             </>
           );

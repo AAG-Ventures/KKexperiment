@@ -3,6 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './marketplace.module.css';
+import Link from 'next/link';
+import Image from 'next/image';
+import { Search } from 'lucide-react';
 
 // Agent type (consistent with other components)
 type Agent = {
@@ -247,37 +250,32 @@ const AgentMarketplace: React.FC = () => {
   useEffect(() => {
     let results = [...MARKETPLACE_AGENTS];
     
-    // Apply search filter
+    // Apply search filtering
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       results = results.filter(agent => 
         agent.name.toLowerCase().includes(query) || 
         agent.description.toLowerCase().includes(query) ||
         agent.author.toLowerCase().includes(query) ||
-        agent.tags?.some(tag => tag.toLowerCase().includes(query)) ||
-        agent.capabilities.some(cap => cap.toLowerCase().includes(query))
+        agent.capabilities.some(capability => capability.toLowerCase().includes(query)) ||
+        (agent.tags && agent.tags.some(tag => tag.toLowerCase().includes(query)))
       );
     }
-    
-    // Apply category filter
+
+    // Apply category filtering
     if (selectedCategory !== 'All') {
       results = results.filter(agent => agent.category === selectedCategory);
     }
-    
-    // Apply price filter
-    switch(priceFilter) {
-      case 'free':
-        results = results.filter(agent => !agent.price || agent.price === 0);
-        break;
-      case 'under10':
-        results = results.filter(agent => agent.price && agent.price < 10);
-        break;
-      case 'under20':
-        results = results.filter(agent => agent.price && agent.price < 20);
-        break;
-      case 'premium':
-        results = results.filter(agent => agent.price && agent.price >= 20);
-        break;
+
+    // Apply price filtering
+    if (priceFilter === 'free') {
+      results = results.filter(agent => !agent.price || agent.price === 0);
+    } else if (priceFilter === 'paid') {
+      results = results.filter(agent => agent.price && agent.price > 0);
+    } else if (priceFilter === 'under10') {
+      results = results.filter(agent => agent.price && agent.price < 10);
+    } else if (priceFilter === 'under20') {
+      results = results.filter(agent => agent.price && agent.price < 20);
     }
     
     // Apply sorting
@@ -319,11 +317,44 @@ const AgentMarketplace: React.FC = () => {
       .slice(0, 4);
   };
   
+  // State for agent detail modal
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const [showAgentDetails, setShowAgentDetails] = useState(false);
+
   // Handle agent selection
   const handleAgentSelect = (agent: Agent) => {
     console.log('Selected agent:', agent.name);
-    // Here you would navigate to agent detail page
-    // router.push(`/marketplace/agent/${agent.id}`);
+    setSelectedAgent(agent);
+    setShowAgentDetails(true);
+  };
+  
+  // Handle adding agent to user's agents list
+  const handleAddAgent = (agent: Agent) => {
+    // In a real app, this would call an API endpoint to add the agent to the user's account
+    console.log('Adding agent to My Agents:', agent.name);
+    
+    // Store in localStorage for demo purposes
+    const existingAgents = localStorage.getItem('user_agents');
+    let userAgents = existingAgents ? JSON.parse(existingAgents) : [];
+    
+    // Check if agent already exists in user's agents
+    if (!userAgents.some((a: Agent) => a.id === agent.id)) {
+      // Add agent to user's agents
+      userAgents.push({
+        ...agent,
+        status: 'online',
+        lastActive: new Date(),
+        createdAt: new Date()
+      });
+      localStorage.setItem('user_agents', JSON.stringify(userAgents));
+      
+      // Show a success message
+      alert(`${agent.name} has been added to your agents!`);
+      // Close the agent details modal
+      setShowAgentDetails(false);
+    } else {
+      alert('This agent is already in your collection.');
+    }
   };
   
   // Handle back navigation
@@ -332,24 +363,129 @@ const AgentMarketplace: React.FC = () => {
   };
   
   return (
-    <div className={styles.marketplace}>
-      {/* Top bar with search and filters */}
-      <div className={styles.marketplaceHeader}>
-        <div className={styles.headerTop}>
-          <button className={styles.backButton} onClick={handleBackToHome}>
-            ← Back to Dashboard
-          </button>
-          <h1>Agents Marketplace</h1>
+    <div className={styles.marketplaceContainer}>
+      {/* Header with back button and logo */}
+      <header className={styles.marketplaceHeader}>
+        <div className={styles.headerLeft}>
+          <Link href="/" className={styles.backLink}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 12H5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 19L5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Back to Dashboard
+          </Link>
+          <h1 className={styles.marketplaceTitle}>Agent Marketplace</h1>
         </div>
-        <div className={styles.searchContainer}>
+        <div className={styles.headerRight}>
+          <div className={styles.mindExtensionLogo}>
+            <span>🧠</span> Mind Extension AI
+          </div>
+        </div>
+      </header>
+
+      {/* Search bar - moved to below header */}
+      <div className={styles.searchContainer}>
+        <div className={styles.searchInputWrapper}>
+          <Search size={18} className={styles.searchIcon} />
           <input
             type="text"
-            placeholder="Search agents..."
+            placeholder="Search agents by name, author, tags, or capabilities..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={styles.searchInput}
           />
         </div>
+        {searchQuery && (
+          <div className={styles.searchResults}>
+            <p className={styles.searchResultsCount}>
+              {filteredAgents.length} results for "{searchQuery}"
+            </p>
+          </div>
+        )}
+      </div>
+      
+      {/* Agent Details Modal */}
+      {showAgentDetails && selectedAgent && (
+        <div className={styles.agentDetailModal}>
+          <div className={styles.agentDetailContent}>
+            <button 
+              className={styles.closeButton}
+              onClick={() => setShowAgentDetails(false)}
+            >
+              &times;
+            </button>
+            
+            <div className={styles.agentDetailHeader}>
+              <div className={styles.agentDetailAvatar}>{selectedAgent.avatar}</div>
+              <div>
+                <h2>{selectedAgent.name}</h2>
+                <div className={styles.agentRating}>
+                  <span className={styles.ratingStars}>
+                    {'★'.repeat(Math.floor(selectedAgent.rating || 0))}
+                    {'☆'.repeat(5 - Math.floor(selectedAgent.rating || 0))}
+                  </span>
+                  <span>{selectedAgent.rating?.toFixed(1)}</span>
+                </div>
+                <p className={styles.agentAuthor}>By {selectedAgent.author}</p>
+              </div>
+              <button 
+                className={styles.addAgentButton}
+                onClick={() => handleAddAgent(selectedAgent)}
+              >
+                Add to My Agents
+              </button>
+            </div>
+            
+            <p className={styles.agentDetailDescription}>{selectedAgent.description}</p>
+            
+            <div className={styles.agentDetailSection}>
+              <h3>Capabilities</h3>
+              <ul className={styles.agentCapabilities}>
+                {selectedAgent.capabilities.map(capability => (
+                  <li key={capability}>{capability}</li>
+                ))}
+              </ul>
+            </div>
+            
+            {selectedAgent.tags && (
+              <div className={styles.agentDetailSection}>
+                <h3>Tags</h3>
+                <div className={styles.agentTags}>
+                  {selectedAgent.tags.map(tag => (
+                    <span key={tag} className={styles.agentTag}>{tag}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            <div className={styles.agentDetailFooter}>
+              <div className={styles.agentStats}>
+                <div>
+                  <strong>{selectedAgent.downloads?.toLocaleString()}</strong>
+                  <span>Downloads</span>
+                </div>
+                <div>
+                  <strong>{selectedAgent.price ? `$${selectedAgent.price.toFixed(2)}` : 'Free'}</strong>
+                  <span>Price</span>
+                </div>
+                <div>
+                  <strong>{new Date(selectedAgent.createdAt || new Date()).toLocaleDateString()}</strong>
+                  <span>Added</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className={styles.searchContainer}>
+        <input
+          type="text"
+          placeholder="Search agents..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className={styles.searchInput}
+        />
       </div>
       
       {/* Filters sidebar */}
@@ -550,6 +686,80 @@ const AgentMarketplace: React.FC = () => {
           </section>
         </main>
       </div>
+    
+      {/* Agent Details Modal */}
+      {showAgentDetails && selectedAgent && (
+        <div className={styles.agentDetailModal}>
+          <div className={styles.agentDetailContent}>
+            <button 
+              className={styles.closeButton}
+              onClick={() => setShowAgentDetails(false)}
+            >
+              &times;
+            </button>
+            
+            <div className={styles.agentDetailHeader}>
+              <div className={styles.agentDetailAvatar}>{selectedAgent.avatar}</div>
+              <div>
+                <h2>{selectedAgent.name}</h2>
+                <div className={styles.agentRating}>
+                  <span className={styles.ratingStars}>
+                    {'★'.repeat(Math.floor(selectedAgent.rating || 0))}
+                    {'☆'.repeat(5 - Math.floor(selectedAgent.rating || 0))}
+                  </span>
+                  <span>{selectedAgent.rating?.toFixed(1)}</span>
+                </div>
+                <p className={styles.agentAuthor}>By {selectedAgent.author}</p>
+              </div>
+              <button 
+                className={styles.addAgentButton}
+                onClick={() => handleAddAgent(selectedAgent)}
+              >
+                Add to My Agents
+              </button>
+            </div>
+            
+            <p className={styles.agentDetailDescription}>{selectedAgent.description}</p>
+            
+            <div className={styles.agentDetailSection}>
+              <h3>Capabilities</h3>
+              <ul className={styles.agentCapabilities}>
+                {selectedAgent.capabilities.map(capability => (
+                  <li key={capability}>{capability}</li>
+                ))}
+              </ul>
+            </div>
+            
+            {selectedAgent.tags && (
+              <div className={styles.agentDetailSection}>
+                <h3>Tags</h3>
+                <div className={styles.agentTags}>
+                  {selectedAgent.tags.map(tag => (
+                    <span key={tag} className={styles.agentTag}>{tag}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            <div className={styles.agentDetailFooter}>
+              <div className={styles.agentStats}>
+                <div>
+                  <strong>{selectedAgent.downloads?.toLocaleString()}</strong>
+                  <span>Downloads</span>
+                </div>
+                <div>
+                  <strong>{selectedAgent.price ? `$${selectedAgent.price.toFixed(2)}` : 'Free'}</strong>
+                  <span>Price</span>
+                </div>
+                <div>
+                  <strong>{new Date(selectedAgent.createdAt || new Date()).toLocaleDateString()}</strong>
+                  <span>Added</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1129,7 +1129,7 @@
 }
 
 .processList {
-  padding: 0;
+  padding: 0 12px;
   margin: 8px 0 0 0;
   display: flex;
   flex-direction: column;
@@ -1748,12 +1748,12 @@
   height: auto;
   max-height: 300px;
   padding: 4px 16px 16px 16px;
-  overflow-y: hidden;
+  overflow-y: auto;
 }
 
 .fileExplorer.tasksContainer {
   margin-top: 10px;
-  max-height: 320px;
+  max-height: 400px;
   overflow-y: auto;
   padding: 0 2px;
 }
@@ -1889,6 +1889,7 @@
 /* Removed old chat header stylings as we're using standardized widget header */
 .processList {
   margin-top: 12px;
+  padding: 0 12px;
   overflow-y: auto;
 }
 
