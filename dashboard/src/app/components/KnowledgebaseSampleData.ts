@@ -18,6 +18,7 @@ export const knowledgebaseData = [
             children: [
               { id: 'project-alpha', name: 'Project Alpha', type: 'document' as const },
               { id: 'project-beta', name: 'Project Beta', type: 'document' as const },
+              { id: 'versioning-sample', name: 'Versioning Sample', type: 'code' as const },
               { 
                 id: 'project-gamma', 
                 name: 'Project Gamma', 

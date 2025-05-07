@@ -1,0 +1,89 @@
+.fileListContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+.fileItem {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  position: relative;
+}
+
+.fileItem:hover {
+  background-color: var(--background-tertiary);
+}
+
+.hasChanges {
+  animation: fadeBackground 3s infinite alternate;
+}
+
+@keyframes fadeBackground {
+  0% {
+    background-color: rgba(var(--brand-primary-rgb), 0.02);
+  }
+  100% {
+    background-color: rgba(var(--brand-primary-rgb), 0.08);
+  }
+}
+
+.fileStatus {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 0.75rem;
+}
+
+.fileStatus.unchanged {
+  display: none;
+}
+
+.fileStatus.modified {
+  background-color: rgb(16, 185, 129);
+  box-shadow: 0 0 5px rgba(16, 185, 129, 0.6);
+}
+
+.fileStatus.added {
+  background-color: rgb(59, 130, 246);
+  box-shadow: 0 0 5px rgba(59, 130, 246, 0.6);
+}
+
+.fileStatus.deleted {
+  background-color: rgb(239, 68, 68);
+  box-shadow: 0 0 5px rgba(239, 68, 68, 0.6);
+}
+
+.fileIcon {
+  margin-right: 0.5rem;
+  color: var(--foreground-secondary);
+}
+
+.fileName {
+  font-weight: 500;
+  color: var(--foreground-primary);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filePath {
+  color: var(--foreground-tertiary);
+  font-size: 0.8rem;
+  margin-right: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 40%;
+}
+
+.fileModified {
+  color: var(--foreground-tertiary);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}

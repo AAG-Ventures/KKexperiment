@@ -1,0 +1,210 @@
+.fileVersionsWrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--background-primary);
+  color: var(--foreground-primary);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: var(--background-secondary);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.backLink {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--foreground-secondary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.backLink:hover {
+  color: var(--brand-primary);
+}
+
+.main {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.fileInfoHeader {
+  margin-bottom: 2rem;
+}
+
+.fileTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.fileTitle h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.filePath {
+  margin: 0;
+  color: var(--foreground-secondary);
+  font-size: 0.9rem;
+}
+
+.versionsContainer {
+  margin-bottom: 3rem;
+}
+
+.versionsContainer h3 {
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--foreground-primary);
+}
+
+.fileVersions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* File indicator section - can be added to knowledgebase */
+.fileListItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.fileListItem:hover {
+  background-color: var(--background-tertiary);
+}
+
+.fileStatus {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  margin-right: 0.25rem;
+}
+
+.fileStatus.modified {
+  background-color: rgb(16, 185, 129);
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+}
+
+.fileStatus.deleted {
+  background-color: rgb(239, 68, 68);
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+}
+
+.fileStatus.added {
+  background-color: rgb(59, 130, 246);
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.6);
+}
+
+.fileName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modifiedTime {
+  font-size: 0.8rem;
+  color: var(--foreground-tertiary);
+}
+
+/* For the FilesList component to demonstrate indicators */
+.filesListSection {
+  margin-top: 3rem;
+}
+
+.filesListSection h3 {
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--foreground-primary);
+}
+
+.filesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 800px;
+  border: 1px solid var(--border-light);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  background-color: var(--background-secondary);
+}
+
+.filesListDescription {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: var(--foreground-secondary);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.legendItem::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+}
+
+.legendModified {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: rgb(16, 185, 129);
+}
+
+.legendModified::before {
+  background-color: rgb(16, 185, 129);
+  box-shadow: 0 0 5px rgba(16, 185, 129, 0.6);
+}
+
+.legendAdded {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: rgb(59, 130, 246);
+}
+
+.legendAdded::before {
+  background-color: rgb(59, 130, 246);
+  box-shadow: 0 0 5px rgba(59, 130, 246, 0.6);
+}
+
+.legendDeleted {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: rgb(239, 68, 68);
+}
+
+.legendDeleted::before {
+  background-color: rgb(239, 68, 68);
+  box-shadow: 0 0 5px rgba(239, 68, 68, 0.6);
+}

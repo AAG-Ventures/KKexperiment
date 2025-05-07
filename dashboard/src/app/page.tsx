@@ -5,6 +5,8 @@ import Link from "next/link";
 import FileContent from './components/FileContent';
 import MarkdownViewer from './components/MarkdownViewer';
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { FileDiff } from './components/file-diff/FileDiff';
+import { FileList } from './components/file-list/FileList';
 import styles from "./page.module.css";
 import AddModal from "./components/AddModal";
 import { DraggableWidgetContainer } from "./components/DraggableWidgetContainer";
@@ -170,6 +172,9 @@ export default function Dashboard() {
     { id: 'marketing-plan', title: 'MarketingPlan.md' }
   ]);
   const [activeTabId, setActiveTabId] = useState('dashboard');
+  
+  // Version history state for versioning sample
+  const [selectedVersionIndex, setSelectedVersionIndex] = useState(0);
   
   // Initialize with empty states to prevent server  // Initialize chat and processes state
   const [chatTabs, setChatTabs] = useState<ChatTab[]>([]);
@@ -1848,6 +1853,27 @@ Formulating response based on available information...`
                             onFileDrop={handleFileDrop}
                             onSelect={(item) => {
                               console.log('Selected:', item.name);
+                              
+                              // Special handling for versioning sample file
+                              if (!isFolder(item) && item.id === 'versioning-sample') {
+                                console.log('Opening file versioning sample');
+                                
+                                // Check if versioning-sample tab already exists
+                                const versioningTabExists = openTabs.some(tab => tab.id === 'versioning-sample');
+                                
+                                if (!versioningTabExists) {
+                                  // Add new versioning tab
+                                  setOpenTabs(prev => [...prev, {
+                                    id: 'versioning-sample',
+                                    title: 'Versioning Sample'
+                                  }]);
+                                }
+                                
+                                // Switch to versioning tab
+                                setActiveTabId('versioning-sample');
+                                return;
+                              }
+                              
                               // If it's a topic folder, set it as root
                               if (isFolder(item) && 
                                  (item.id.includes('work') || 
@@ -2153,6 +2179,202 @@ Formulating response based on available information...`
               </div>
               <div className={styles.fileViewerContent}>
                 <FileContent file={selectedFile} />
+              </div>
+            </div>
+          ) : activeTabId === 'versioning-sample' ? (
+            /* Show File Versioning Sample */
+            <div className={styles.fileViewerContainer}>
+              <div className={styles.fileViewerHeader}>
+                <h2>File Versioning Sample</h2>
+                <div className={styles.fileViewerActions}>
+                  <button 
+                    className={styles.fileViewerButton}
+                    onClick={() => {
+                      // Remove the versioning tab
+                      setOpenTabs(prev => prev.filter(tab => tab.id !== 'versioning-sample'));
+                      // Go back to Dashboard tab
+                      setActiveTabId('dashboard');
+                    }}
+                  >
+                    Close file
+                  </button>
+                </div>
+              </div>
+              
+              <div className={styles.fileViewerContent}>
+                {/* File Versioning Content */}
+                <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+                  {/* Sample Diff Data */}
+                  {(() => {
+                    // File versions history
+                    const fileVersions = [
+                      {
+                        version: 'v3 (current)',
+                        timestamp: new Date(),
+                        author: 'AI Assistant',
+                        changes: 'Added dark theme support and made showSidebar optional',
+                        diffLines: [
+                          { type: 'unchanged', content: 'import React from "react";', lineNumber: 1, oldLineNumber: 1 },
+                          { type: 'unchanged', content: 'import styles from "./dashboard.module.css";', lineNumber: 2, oldLineNumber: 2 },
+                          { type: 'unchanged', content: '', lineNumber: 3, oldLineNumber: 3 },
+                          { type: 'unchanged', content: 'interface DashboardProps {', lineNumber: 4, oldLineNumber: 4 },
+                          { type: 'unchanged', content: '  title: string;', lineNumber: 5, oldLineNumber: 5 },
+                          { type: 'removed', content: '  showSidebar: boolean;', lineNumber: 6, oldLineNumber: 6 },
+                          { type: 'added', content: '  showSidebar?: boolean;', lineNumber: 6 },
+                          { type: 'added', content: '  theme?: "light" | "dark";', lineNumber: 7 },
+                          { type: 'unchanged', content: '}', lineNumber: 8, oldLineNumber: 7 },
+                          { type: 'unchanged', content: '', lineNumber: 9, oldLineNumber: 8 },
+                          { type: 'unchanged', content: 'const Dashboard: React.FC<DashboardProps> = ({', lineNumber: 10, oldLineNumber: 9 },
+                          { type: 'unchanged', content: '  title,', lineNumber: 11, oldLineNumber: 10 },
+                          { type: 'removed', content: '  showSidebar', lineNumber: 12, oldLineNumber: 11 },
+                          { type: 'added', content: '  showSidebar = true,', lineNumber: 12 },
+                          { type: 'added', content: '  theme = "dark"', lineNumber: 13 },
+                          { type: 'unchanged', content: '}) => {', lineNumber: 14, oldLineNumber: 12 },
+                          { type: 'unchanged', content: '  return (', lineNumber: 15, oldLineNumber: 13 },
+                          { type: 'unchanged', content: '    <div className={styles.dashboard}>', lineNumber: 16, oldLineNumber: 14 },
+                          { type: 'unchanged', content: '      <header className={styles.header}>', lineNumber: 17, oldLineNumber: 15 },
+                          { type: 'unchanged', content: '        <h1>{title}</h1>', lineNumber: 18, oldLineNumber: 16 },
+                          { type: 'unchanged', content: '      </header>', lineNumber: 19, oldLineNumber: 17 },
+                          { type: 'unchanged', content: '      <main className={styles.main}>', lineNumber: 20, oldLineNumber: 18 },
+                          { type: 'removed', content: '        {showSidebar && <div className={styles.sidebar}>Sidebar</div>}', lineNumber: 21, oldLineNumber: 19 },
+                          { type: 'added', content: '        {showSidebar && <div className={`${styles.sidebar} ${styles[theme]}`}>Sidebar</div>}', lineNumber: 21 },
+                          { type: 'unchanged', content: '        <div className={styles.content}>Content</div>', lineNumber: 22, oldLineNumber: 20 },
+                          { type: 'unchanged', content: '      </main>', lineNumber: 23, oldLineNumber: 21 },
+                          { type: 'unchanged', content: '    </div>', lineNumber: 24, oldLineNumber: 22 },
+                          { type: 'unchanged', content: '  );', lineNumber: 25, oldLineNumber: 23 },
+                        ]
+                      },
+                      {
+                        version: 'v2',
+                        timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+                        author: 'Jane Developer',
+                        changes: 'Improved header styling and added content container',
+                        diffLines: [
+                          { type: 'unchanged', content: 'import React from "react";', lineNumber: 1, oldLineNumber: 1 },
+                          { type: 'unchanged', content: 'import styles from "./dashboard.module.css";', lineNumber: 2, oldLineNumber: 2 },
+                          { type: 'unchanged', content: '', lineNumber: 3, oldLineNumber: 3 },
+                          { type: 'unchanged', content: 'interface DashboardProps {', lineNumber: 4, oldLineNumber: 4 },
+                          { type: 'unchanged', content: '  title: string;', lineNumber: 5, oldLineNumber: 5 },
+                          { type: 'unchanged', content: '  showSidebar: boolean;', lineNumber: 6, oldLineNumber: 6 },
+                          { type: 'unchanged', content: '}', lineNumber: 7, oldLineNumber: 7 },
+                          { type: 'unchanged', content: '', lineNumber: 8, oldLineNumber: 8 },
+                          { type: 'unchanged', content: 'const Dashboard: React.FC<DashboardProps> = ({', lineNumber: 9, oldLineNumber: 9 },
+                          { type: 'unchanged', content: '  title,', lineNumber: 10, oldLineNumber: 10 },
+                          { type: 'unchanged', content: '  showSidebar', lineNumber: 11, oldLineNumber: 11 },
+                          { type: 'unchanged', content: '}) => {', lineNumber: 12, oldLineNumber: 12 },
+                          { type: 'unchanged', content: '  return (', lineNumber: 13, oldLineNumber: 13 },
+                          { type: 'unchanged', content: '    <div className={styles.dashboard}>', lineNumber: 14, oldLineNumber: 14 },
+                          { type: 'removed', content: '      <div className={styles.header}>', lineNumber: 15, oldLineNumber: 15 },
+                          { type: 'added', content: '      <header className={styles.header}>', lineNumber: 15 },
+                          { type: 'unchanged', content: '        <h1>{title}</h1>', lineNumber: 16, oldLineNumber: 16 },
+                          { type: 'removed', content: '      </div>', lineNumber: 17, oldLineNumber: 17 },
+                          { type: 'added', content: '      </header>', lineNumber: 17 },
+                          { type: 'added', content: '      <main className={styles.main}>', lineNumber: 18 },
+                          { type: 'unchanged', content: '        {showSidebar && <div className={styles.sidebar}>Sidebar</div>}', lineNumber: 19, oldLineNumber: 18 },
+                          { type: 'added', content: '        <div className={styles.content}>Content</div>', lineNumber: 20 },
+                          { type: 'added', content: '      </main>', lineNumber: 21 },
+                          { type: 'unchanged', content: '    </div>', lineNumber: 22, oldLineNumber: 19 },
+                          { type: 'unchanged', content: '  );', lineNumber: 23, oldLineNumber: 20 },
+                        ]
+                      },
+                      {
+                        version: 'v1 (initial)',
+                        timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+                        author: 'John Coder',
+                        changes: 'Initial implementation',
+                        diffLines: [
+                          { type: 'added', content: 'import React from "react";', lineNumber: 1 },
+                          { type: 'added', content: 'import styles from "./dashboard.module.css";', lineNumber: 2 },
+                          { type: 'added', content: '', lineNumber: 3 },
+                          { type: 'added', content: 'interface DashboardProps {', lineNumber: 4 },
+                          { type: 'added', content: '  title: string;', lineNumber: 5 },
+                          { type: 'added', content: '  showSidebar: boolean;', lineNumber: 6 },
+                          { type: 'added', content: '}', lineNumber: 7 },
+                          { type: 'added', content: '', lineNumber: 8 },
+                          { type: 'added', content: 'const Dashboard: React.FC<DashboardProps> = ({', lineNumber: 9 },
+                          { type: 'added', content: '  title,', lineNumber: 10 },
+                          { type: 'added', content: '  showSidebar', lineNumber: 11 },
+                          { type: 'added', content: '}) => {', lineNumber: 12 },
+                          { type: 'added', content: '  return (', lineNumber: 13 },
+                          { type: 'added', content: '    <div className={styles.dashboard}>', lineNumber: 14 },
+                          { type: 'added', content: '      <div className={styles.header}>', lineNumber: 15 },
+                          { type: 'added', content: '        <h1>{title}</h1>', lineNumber: 16 },
+                          { type: 'added', content: '      </div>', lineNumber: 17 },
+                          { type: 'added', content: '        {showSidebar && <div className={styles.sidebar}>Sidebar</div>}', lineNumber: 18 },
+                          { type: 'added', content: '    </div>', lineNumber: 19 },
+                          { type: 'added', content: '  );', lineNumber: 20 },
+                          { type: 'added', content: '};', lineNumber: 21 },
+                          { type: 'added', content: '', lineNumber: 22 },
+                          { type: 'added', content: 'export default Dashboard;', lineNumber: 23 },
+                        ]
+                      }
+                    ];
+
+                    // Using the component-level state instead of a local state
+
+                    return (
+                      <div>
+                        <div style={{ marginBottom: '1.5rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                            <h3 style={{ margin: 0 }}>dashboard.tsx</h3>
+                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                              <span style={{ fontSize: '0.9rem', color: 'var(--foreground-secondary)' }}>
+                                Showing changes from {fileVersions[selectedVersionIndex].version}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <FileDiff 
+                            fileName="dashboard.tsx"
+                            filePath="src/app/components/dashboard/dashboard.tsx"
+                            timestamp={fileVersions[selectedVersionIndex].timestamp}
+                            author={fileVersions[selectedVersionIndex].author}
+                            diffLines={fileVersions[selectedVersionIndex].diffLines as any}
+                            previousVersion={fileVersions[selectedVersionIndex].version}
+                          />
+                        </div>
+
+                        <div style={{ marginTop: '2rem' }}>
+                          <h3 style={{ marginBottom: '1rem' }}>Version History</h3>
+                          <div style={{ border: '1px solid var(--border-light)', borderRadius: '0.5rem', overflow: 'hidden' }}>
+                            {fileVersions.map((version, index) => (
+                              <div 
+                                key={index}
+                                style={{
+                                  padding: '1rem',
+                                  borderBottom: index < fileVersions.length - 1 ? '1px solid var(--border-light)' : 'none',
+                                  backgroundColor: selectedVersionIndex === index ? 'var(--background-tertiary)' : 'var(--background-secondary)',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center'
+                                }}
+                                onClick={() => setSelectedVersionIndex(index)}
+                              >
+                                <div>
+                                  <div style={{ fontWeight: selectedVersionIndex === index ? 'bold' : 'normal' }}>
+                                    {version.version}
+                                  </div>
+                                  <div style={{ fontSize: '0.9rem', color: 'var(--foreground-secondary)', marginTop: '0.25rem' }}>
+                                    {version.changes}
+                                  </div>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                  <div style={{ fontSize: '0.9rem' }}>
+                                    {version.author}
+                                  </div>
+                                  <div style={{ fontSize: '0.8rem', color: 'var(--foreground-tertiary)', marginTop: '0.25rem' }}>
+                                    {version.timestamp.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' })}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
               </div>
             </div>
           ) : activeTabId === 'marketing-plan' ? (
