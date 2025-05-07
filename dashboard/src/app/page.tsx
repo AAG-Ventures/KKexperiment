@@ -17,19 +17,40 @@ import { knowledgebaseData } from './components/KnowledgebaseSampleData';
 import { useRouter } from 'next/navigation';
 
 // Helper function to format dates
-const formatDate = (date: Date) => {
+const formatDate = (date: Date | string | number) => {
   if (!date) return '';
+  
+  // Ensure we're working with a Date object
+  let dateObj: Date;
+  try {
+    if (date instanceof Date) {
+      dateObj = date;
+    } else if (typeof date === 'string' || typeof date === 'number') {
+      dateObj = new Date(date);
+    } else {
+      return ''; // Invalid date format
+    }
+    
+    // Check if date is valid
+    if (isNaN(dateObj.getTime())) {
+      return ''; // Invalid date
+    }
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return ''; // Return empty string on error
+  }
+  
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
   
-  const isToday = date.toDateString() === today.toDateString();
-  const isTomorrow = date.toDateString() === tomorrow.toDateString();
+  const isToday = dateObj.toDateString() === today.toDateString();
+  const isTomorrow = dateObj.toDateString() === tomorrow.toDateString();
   
   if (isToday) return 'Today';
   if (isTomorrow) return 'Tomorrow';
   
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
 // Type definitions
@@ -2142,176 +2163,6 @@ This marketing plan provides a comprehensive framework for achieving our busines
                   </div>
                 </div>
                 
-                {/* My Tasks Widget */}
-                <div className={styles.widgetBox} style={{maxWidth: '350px', margin: '24px auto 0'}}>
-                  <div className={styles.widgetHeader}>
-                    <h3>My Tasks</h3>
-                    {!isNotificationPanelOpen && (
-                      <button 
-                        className={styles.newTabButton} 
-                        title="Add New Task"
-                        type="button"
-                        onClick={startAddingTask}
-                      >
-                        <PlusIcon size={20} />
-                      </button>
-                    )}
-                  </div>
-                  <div className={styles.tasksContainer}>
-                    {/* Active Tasks */}
-                    <div className={styles.taskSection}>
-                      {tasks.filter(task => !task.completed).length === 0 && !isAddingTask ? (
-                        <div className={styles.emptyTasksMessage}>
-                          <div className={styles.emptyTasksIcon}>✓</div>
-                          <p>You've completed everything in your plan!</p>
-                          <button 
-                            className={styles.addTaskButton}
-                            onClick={startAddingTask}
-                          >
-                            Add a new task
-                          </button>
-                        </div>
-                      ) : (
-                        <ul className={styles.taskList}>
-                          {tasks
-                            .filter(task => !task.completed)
-                            // Sort tasks by deadline (nearest at top)
-                            .sort((a, b) => {
-                              // Tasks without deadlines go to the bottom
-                              if (!a.deadline && !b.deadline) return 0;
-                              if (!a.deadline) return 1;
-                              if (!b.deadline) return -1;
-                              
-                              // Safer approach: use try-catch to prevent any runtime errors
-                              try {
-                                // Convert to timestamps with error handling
-                                let aTime, bTime;
-                                
-                                try {
-                                  aTime = a.deadline instanceof Date ? 
-                                    a.deadline.getTime() : 
-                                    new Date(a.deadline).getTime();
-                                } catch (e) {
-                                  // If there's an error, put this task at the bottom
-                                  return 1;
-                                }
-                                
-                                try {
-                                  bTime = b.deadline instanceof Date ? 
-                                    b.deadline.getTime() : 
-                                    new Date(b.deadline).getTime();
-                                } catch (e) {
-                                  // If there's an error, put this task at the bottom
-                                  return -1;
-                                }
-                                
-                                // Additional validation
-                                if (isNaN(aTime)) return 1;
-                                if (isNaN(bTime)) return -1;
-                                
-                                // Sort by date
-                                return aTime - bTime;
-                              } catch (e) {
-                                // Last resort fallback if anything goes wrong
-                                console.error('Error sorting tasks:', e);
-                                return 0;
-                              }
-                            })
-                            .map(task => (
-                              <li key={task.id} className={`${styles.taskItem} ${styles.taskItemClickable}`}>
-                                <button 
-                                  className={styles.taskCheckbox} 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleTaskCompletion(task.id);
-                                  }}
-                                  aria-label={task.completed ? 'Mark as incomplete' : 'Mark as complete'}
-                                >
-                                  {task.completed && <span className={styles.checkIcon} />}
-                                </button>
-
-                                <div className={styles.taskContent} onClick={() => setSelectedTaskId(task.id)}>
-                                  <span className={styles.taskText}>{task.text}</span>
-                                  
-                                  {task.deadline && (
-                                    <span 
-                                      className={`${styles.taskDeadline} 
-                                        ${isDeadlineUrgent(task.deadline) ? styles.urgentDeadline : ''}
-                                        ${isDeadlineSoon(task.deadline) ? styles.soonDeadline : ''}
-                                        ${isDeadlineNormal(task.deadline) ? styles.normalDeadline : ''}`
-                                      }
-                                    >
-                                      <CalendarIcon size={12} />
-                                      <span>{formatDate(task.deadline)}</span>
-                                    </span>
-                                  )}
-                                </div>
-                              </li>
-                            ))
-                          }
-                          {isAddingTask && (
-                            <li className={`${styles.taskItem} ${styles.newTaskItem}`}>
-                              <form onSubmit={(e) => { e.preventDefault(); saveNewTask(); }}>
-                                <input
-                                  type="text"
-                                  ref={newTaskInputRef}
-                                  className={styles.newTaskInput}
-                                  placeholder="What needs to be done?"
-                                  value={newTaskText}
-                                  onChange={(e) => setNewTaskText(e.target.value)}
-                                  autoFocus
-                                />
-                                <div className={styles.newTaskActions}>
-                                  <div className={styles.taskPrioritySelector}>
-                                    <button 
-                                      type="button"
-                                      className={`${styles.priorityOption} ${newTaskPriority === 'low' ? styles.selectedPriority : ''}`}
-                                      onClick={() => setNewTaskPriority('low')}
-                                    >
-                                      Low
-                                    </button>
-                                    <button 
-                                      type="button"
-                                      className={`${styles.priorityOption} ${newTaskPriority === 'medium' ? styles.selectedPriority : ''}`}
-                                      onClick={() => setNewTaskPriority('medium')}
-                                    >
-                                      Medium
-                                    </button>
-                                    <button 
-                                      type="button"
-                                      className={`${styles.priorityOption} ${newTaskPriority === 'high' ? styles.selectedPriority : ''}`}
-                                      onClick={() => setNewTaskPriority('high')}
-                                    >
-                                      High
-                                    </button>
-                                  </div>
-                                  <div className={styles.taskFormControls}>
-                                    <button
-                                      type="button"
-                                      className={styles.taskDate}
-                                      onClick={() => setDatePickerVisible(prev => !prev)}
-                                    >
-                                      {newTaskDeadline ? formatDate(newTaskDeadline) : 'Add date'}
-                                    </button>
-                                    <button type="submit" className={styles.addTaskSubmit}>Add</button>
-                                    <button 
-                                      type="button" 
-                                      className={styles.cancelTaskButton}
-                                      onClick={cancelAddingTask}
-                                    >
-                                      Cancel
-                                    </button>
-                                  </div>
-                                </div>
-                              </form>
-                            </li>
-                          )}
-                        </ul>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
                 {/* Recent Activity Card */}
                 <div className={`${styles.card} ${styles.cardActivity}`}>
                   <div className={styles.widgetHeader}>
@@ -2371,7 +2222,316 @@ This marketing plan provides a comprehensive framework for achieving our busines
                   </div>
                 </div>
 
-
+                {/* My Tasks Card */}
+                <div className={`${styles.card} ${styles.cardTasks}`}>
+                  <div className={styles.widgetHeader}>
+                    <h3>My Tasks</h3>
+                    {!isNotificationPanelOpen && (
+                      <button 
+                        className={styles.newTabButton} 
+                        title="Add New Task"
+                        type="button"
+                        onClick={startAddingTask}
+                      >
+                        <PlusIcon size={20} />
+                      </button>
+                    )}
+                  </div>
+                  <div className={styles.tasksContainer}>
+                    {/* Active Tasks */}
+                    <div className={styles.taskSection}>
+                      {tasks.filter(task => !task.completed).length === 0 && !isAddingTask ? (
+                        <div className={styles.emptyTasksMessage}>
+                          <div className={styles.emptyTasksIcon}>✓</div>
+                          <p>You&apos;ve completed everything in your plan!</p>
+                          <button 
+                            className={styles.addTaskButton}
+                            onClick={startAddingTask}
+                          >
+                            Add a new task
+                          </button>
+                        </div>
+                      ) : (
+                        <ul className={styles.taskList}>
+                          {tasks
+                            .filter(task => !task.completed)
+                            // Sort tasks by deadline (nearest at top)
+                            .sort((a, b) => {
+                              // Tasks without deadlines go to the bottom
+                              if (!a.deadline && !b.deadline) return 0;
+                              if (!a.deadline) return 1;
+                              if (!b.deadline) return -1;
+                              
+                              // Safer approach: use try-catch to prevent any runtime errors
+                              try {
+                                // Convert to timestamps with error handling
+                                let aTime, bTime;
+                                
+                                try {
+                                  aTime = a.deadline instanceof Date ? 
+                                    a.deadline.getTime() : 
+                                    new Date(a.deadline).getTime();
+                                } catch (e) {
+                                  // If there's an error, put this task at the bottom
+                                  return 1;
+                                }
+                                
+                                try {
+                                  bTime = b.deadline instanceof Date ? 
+                                    b.deadline.getTime() : 
+                                    new Date(b.deadline).getTime();
+                                } catch (e) {
+                                  // If there's an error, put this task at the bottom
+                                  return -1;
+                                }
+                                
+                                // Additional validation
+                                if (isNaN(aTime)) return 1;
+                                if (isNaN(bTime)) return -1;
+                                
+                                // Sort by date
+                                return aTime - bTime;
+                              } catch (e) {
+                                // Last resort fallback if anything goes wrong
+                                console.error('Error sorting tasks:', e);
+                                return 0;
+                              }
+                            })
+                            .map(task => (
+                              <li key={task.id} className={`${styles.taskItem} ${styles.taskItemClickable}`}>
+                                <button 
+                                  className={styles.taskCheckbox} 
+                                  onClick={(e) => {
+                                    e.stopPropagation(); // Prevent task selection when clicking checkbox
+                                    toggleTaskCompletion(task.id);
+                                  }}
+                                  aria-label={`Mark ${task.text} as complete`}
+                                >
+                                  <span className={styles.checkboxInner}></span>
+                                </button>
+                                <div 
+                                  className={styles.taskContent}
+                                  onClick={() => setSelectedTaskId(task.id)}
+                                >
+                                  <span className={styles.taskText}>{task.text}</span>
+                                  {task.deadline && (
+                                    <span className={`${styles.taskDeadline} 
+                                      ${isDeadlineUrgent(task.deadline) ? styles.urgentDeadline : ''}
+                                      ${isDeadlineSoon(task.deadline) ? styles.soonDeadline : ''}
+                                      ${isDeadlineNormal(task.deadline) ? styles.normalDeadline : ''}`}>
+                                      {formatDeadline(task.deadline)}
+                                    </span>
+                                  )}
+                                </div>
+                              </li>
+                            ))}
+                          
+                          {isAddingTask && (
+                            <>
+                              <li className={styles.taskItem}>
+                                <button className={styles.taskCheckbox}>
+                                  <span className={styles.checkboxInner}></span>
+                                </button>
+                                <div className={styles.newTaskContainer}>
+                                  <input
+                                    ref={newTaskInputRef}
+                                    className={styles.newTaskInput}
+                                    type="text"
+                                    placeholder="Type a new task..."
+                                    value={newTaskText}
+                                    onChange={(e) => setNewTaskText(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' && !showPrioritySelector) {
+                                        if (newTaskText.trim()) {
+                                          // If task text exists and deadline is already set (from calendar)
+                                          // skip the date picker and go straight to priority selection
+                                          if (newTaskDeadline) {
+                                            setShowPrioritySelector(true);
+                                          } else {
+                                            // Otherwise, show date picker
+                                            setDatePickerVisible(true);
+                                            setDatePickerTaskId('new');
+                                          }
+                                        } else {
+                                          cancelAddingTask();
+                                        }
+                                      } else if (e.key === 'Escape') {
+                                        cancelAddingTask();
+                                      }
+                                    }}
+                                  />
+                                  {newTaskText.trim() && (
+                                    <div className={styles.newTaskActions}>
+                                      <div className={styles.taskMetaItem}>
+                                        <span className={styles.taskMetaLabel}>Due Date</span>
+                                        <span 
+                                          className={`${styles.taskMetaValue} ${styles.clickableDate} ${newTaskDeadline ? (
+                                            `${isDeadlineUrgent(newTaskDeadline) ? styles.urgentDeadline : ''}
+                                            ${isDeadlineSoon(newTaskDeadline) ? styles.soonDeadline : ''}
+                                            ${isDeadlineNormal(newTaskDeadline) ? styles.normalDeadline : ''}`
+                                          ) : ''}`}
+                                          onClick={() => {
+                                            setDatePickerVisible(true);
+                                            setDatePickerTaskId('new');
+                                          }}
+                                          style={{ 
+                                            cursor: 'pointer',
+                                            position: 'relative',
+                                            textDecoration: 'underline',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '4px'
+                                          }}
+                                        >
+                                          {newTaskDeadline ? (
+                                            <>
+                                              {formatDeadline(newTaskDeadline)}
+                                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                <path d="M16 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                <path d="M8 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                <path d="M3 10H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                              </svg>
+                                            </>
+                                          ) : (
+                                            <>
+                                              <span className={styles.dueDatePlaceholder}>Click to set</span>
+                                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                <path d="M16 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                <path d="M8 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                <path d="M3 10H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                              </svg>
+                                            </>
+                                          )}
+                                        </span>
+                                      </div>
+                                      
+                                      {showPrioritySelector ? (
+                                        <div className={styles.prioritySelector}>
+                                          <span className={styles.taskMetaLabel}>Priority</span>
+                                          <div className={styles.priorityOptions}>
+                                            <button 
+                                              className={`${styles.priorityOption} ${styles.lowPriority} ${newTaskPriority === 'low' ? styles.selectedPriority : ''}`}
+                                              onClick={() => {
+                                                setTaskPriority('low');
+                                                saveNewTask();
+                                              }}
+                                            >
+                                              Low
+                                            </button>
+                                            <button 
+                                              className={`${styles.priorityOption} ${styles.mediumPriority} ${newTaskPriority === 'medium' ? styles.selectedPriority : ''}`}
+                                              onClick={() => {
+                                                setTaskPriority('medium');
+                                                saveNewTask();
+                                              }}
+                                            >
+                                              Medium
+                                            </button>
+                                            <button 
+                                              className={`${styles.priorityOption} ${styles.highPriority} ${newTaskPriority === 'high' ? styles.selectedPriority : ''}`}
+                                              onClick={() => {
+                                                setTaskPriority('high');
+                                                saveNewTask();
+                                              }}
+                                            >
+                                              High
+                                            </button>
+                                          </div>
+                                          <div className={styles.prioritySelectorActions}>
+                                            <button 
+                                              className={styles.cancelButton}
+                                              onClick={() => {
+                                                setNewTaskPriority('medium'); // Reset to default
+                                                setShowPrioritySelector(false);
+                                              }}
+                                            >
+                                              Cancel
+                                            </button>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <div className={styles.newTaskActionButtons}>
+                                          <button
+                                            className={styles.cancelButton}
+                                            onClick={cancelAddingTask}
+                                          >
+                                            Cancel
+                                          </button>
+                                          <button
+                                            className={styles.addButton}
+                                            onClick={() => setShowPrioritySelector(true)}
+                                          >
+                                            Next
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </li>
+                            </>
+                          )}
+                        </ul>
+                      )}
+                      {/* Completed Tasks */}
+                      {tasks.some(task => task.completed) && (
+                        <div className={styles.completedTasksSection}>
+                          <button 
+                            className={styles.completedTasksHeader} 
+                            onClick={() => {
+                              const completedSection = document.querySelector(`.${styles.completedTasksList}`);
+                              if (completedSection) {
+                                (completedSection as HTMLElement).scrollIntoView({ behavior: 'smooth' });
+                              }
+                            }}
+                          >
+                            Completed ({tasks.filter(task => task.completed).length})
+                          </button>
+                          <div className={styles.completedTasksList}>
+                            <ul className={styles.taskList}>
+                              {tasks
+                                .filter(task => task.completed)
+                                .map(task => (
+                                  <li key={task.id} className={`${styles.taskItem} ${styles.completedTask} ${styles.taskItemClickable}`}>
+                                    <button 
+                                      className={`${styles.taskCheckbox} ${styles.checked}`}
+                                      onClick={(e) => {
+                                        e.stopPropagation(); // Prevent task selection when clicking checkbox
+                                        toggleTaskCompletion(task.id);
+                                      }}
+                                      aria-label={`Mark ${task.text} as incomplete`}
+                                    >
+                                      <span className={`${styles.checkboxInner} ${styles.checked}`}>
+                                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                          <path d="M3 6L5 8L9 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        </svg>
+                                      </span>
+                                    </button>
+                                    <div 
+                                      className={styles.taskContent}
+                                      onClick={() => setSelectedTaskId(task.id)}
+                                    >
+                                      <span className={styles.taskText}>{task.text}</span>
+                                      {task.deadline && (
+                                        <span className={`${styles.taskDeadline} 
+                                          ${isDeadlineUrgent(task.deadline) ? styles.urgentDeadline : ''}
+                                          ${isDeadlineSoon(task.deadline) ? styles.soonDeadline : ''}
+                                          ${isDeadlineNormal(task.deadline) ? styles.normalDeadline : ''}`}>
+                                          {formatDeadline(task.deadline)}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </li>
+                                ))}
+                            </ul>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
               </div>
             </>
@@ -2425,352 +2585,57 @@ This marketing plan provides a comprehensive framework for achieving our busines
           )}
         </main>
 
-        {/* Right Widgets */}
         <section className={styles.widgets}>
           <DraggableWidgetContainer
             columnId="right-column"
             initialItems={[
               {
-                id: 'tasks',
-                content: (
-                  <div className={styles.widgetBox}>
-                    <div className={styles.widgetHeader}>
-                      <h3>My Tasks</h3>
-                      {!isNotificationPanelOpen && (
-                        <button 
-                          className={styles.newTabButton} 
-                          title="Add New Task"
-                          type="button"
-                          onClick={startAddingTask}
-                        >
-                          <PlusIcon size={20} />
-                        </button>
-                      )}
-                    </div>
-                    <div className={styles.tasksContainer}>
-                      {/* Active Tasks */}
-                      <div className={styles.taskSection}>
-                        {tasks.filter(task => !task.completed).length === 0 && !isAddingTask ? (
-                          <div className={styles.emptyTasksMessage}>
-                            <div className={styles.emptyTasksIcon}>✓</div>
-                            <p>You&apos;ve completed everything in your plan!</p>
-                            <button 
-                              className={styles.addTaskButton}
-                              onClick={startAddingTask}
-                            >
-                              Add a new task
-                            </button>
-                          </div>
-                        ) : (
-                          <ul className={styles.taskList}>
-                            {tasks
-                              .filter(task => !task.completed)
-                              // Sort tasks by deadline (nearest at top)
-                              .sort((a, b) => {
-                                // Tasks without deadlines go to the bottom
-                                if (!a.deadline && !b.deadline) return 0;
-                                if (!a.deadline) return 1;
-                                if (!b.deadline) return -1;
-                                
-                                // Safer approach: use try-catch to prevent any runtime errors
-                                try {
-                                  // Convert to timestamps with error handling
-                                  let aTime, bTime;
-                                  
-                                  try {
-                                    aTime = a.deadline instanceof Date ? 
-                                      a.deadline.getTime() : 
-                                      new Date(a.deadline).getTime();
-                                  } catch (e) {
-                                    // If there's an error, put this task at the bottom
-                                    return 1;
-                                  }
-                                  
-                                  try {
-                                    bTime = b.deadline instanceof Date ? 
-                                      b.deadline.getTime() : 
-                                      new Date(b.deadline).getTime();
-                                  } catch (e) {
-                                    // If there's an error, put this task at the bottom
-                                    return -1;
-                                  }
-                                  
-                                  // Additional validation
-                                  if (isNaN(aTime)) return 1;
-                                  if (isNaN(bTime)) return -1;
-                                  
-                                  // Sort by date
-                                  return aTime - bTime;
-                                } catch (e) {
-                                  // Last resort fallback if anything goes wrong
-                                  console.error('Error sorting tasks:', e);
-                                  return 0;
-                                }
-                              })
-                              .map(task => (
-                                <li key={task.id} className={`${styles.taskItem} ${styles.taskItemClickable}`}>
-                                  <button 
-                                    className={styles.taskCheckbox} 
-                                    onClick={(e) => {
-                                      e.stopPropagation(); // Prevent task selection when clicking checkbox
-                                      toggleTaskCompletion(task.id);
-                                    }}
-                                    aria-label={`Mark ${task.text} as complete`}
-                                  >
-                                    <span className={styles.checkboxInner}></span>
-                                  </button>
-                                  <div 
-                                    className={styles.taskContent}
-                                    onClick={() => setSelectedTaskId(task.id)}
-                                  >
-                                    <span className={styles.taskText}>{task.text}</span>
-                                    {task.deadline && (
-                                      <span className={`${styles.taskDeadline} 
-                                        ${isDeadlineUrgent(task.deadline) ? styles.urgentDeadline : ''}
-                                        ${isDeadlineSoon(task.deadline) ? styles.soonDeadline : ''}
-                                        ${isDeadlineNormal(task.deadline) ? styles.normalDeadline : ''}`}>
-                                        {formatDeadline(task.deadline)}
-                                      </span>
-                                    )}
-                                  </div>
-                                </li>
-                              ))}
-                            
-                            {isAddingTask && (
-                              <>
-                                <li className={styles.taskItem}>
-                                  <button className={styles.taskCheckbox}>
-                                    <span className={styles.checkboxInner}></span>
-                                  </button>
-                                  <div className={styles.newTaskContainer}>
-                                    <input
-                                      ref={newTaskInputRef}
-                                      className={styles.newTaskInput}
-                                      type="text"
-                                      placeholder="Type a new task..."
-                                      value={newTaskText}
-                                      onChange={(e) => setNewTaskText(e.target.value)}
-                                      onKeyDown={(e) => {
-                                        if (e.key === 'Enter' && !showPrioritySelector) {
-                                          if (newTaskText.trim()) {
-                                            // If task text exists and deadline is already set (from calendar)
-                                            // skip the date picker and go straight to priority selection
-                                            if (newTaskDeadline) {
-                                              setShowPrioritySelector(true);
-                                            } else {
-                                              // Otherwise, show date picker
-                                              setDatePickerVisible(true);
-                                              setDatePickerTaskId('new');
-                                            }
-                                          } else {
-                                            cancelAddingTask();
-                                          }
-                                        } else if (e.key === 'Escape') {
-                                          cancelAddingTask();
-                                        }
-                                      }}
-                                    />
-                                    {newTaskText.trim() && (
-                                      <div className={styles.newTaskActions}>
-                                        <div className={styles.taskMetaItem}>
-                                          <span className={styles.taskMetaLabel}>Due Date</span>
-                                          <span 
-                                            className={`${styles.taskMetaValue} ${styles.clickableDate} ${newTaskDeadline ? (
-                                              `${isDeadlineUrgent(newTaskDeadline) ? styles.urgentDeadline : ''}
-                                              ${isDeadlineSoon(newTaskDeadline) ? styles.soonDeadline : ''}
-                                              ${isDeadlineNormal(newTaskDeadline) ? styles.normalDeadline : ''}`
-                                            ) : ''}`}
-                                            onClick={() => {
-                                              setDatePickerVisible(true);
-                                              setDatePickerTaskId('new');
-                                            }}
-                                            style={{ 
-                                              cursor: 'pointer',
-                                              position: 'relative',
-                                              textDecoration: 'underline',
-                                              display: 'inline-flex',
-                                              alignItems: 'center',
-                                              gap: '4px'
-                                            }}
-                                          >
-                                            {newTaskDeadline ? (
-                                              <>
-                                                {formatDeadline(newTaskDeadline)}
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                  <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                                  <path d="M16 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                                  <path d="M8 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                                  <path d="M3 10H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                                </svg>
-                                              </>
-                                            ) : (
-                                              <>
-                                                <span className={styles.dueDatePlaceholder}>Click to set</span>
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                  <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                                  <path d="M16 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                                  <path d="M8 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                                  <path d="M3 10H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                                </svg>
-                                              </>
-                                            )}
-                                          </span>
-                                        </div>
-                                        {newTaskPriority && (
-                                          <div className={`${styles.taskPriorityBadge} ${styles[`priority${newTaskPriority.charAt(0).toUpperCase() + newTaskPriority.slice(1)}`]}`}>
-                                            {newTaskPriority.charAt(0).toUpperCase() + newTaskPriority.slice(1)}
-                                          </div>
-                                        )}
-                                        <button 
-                                          className={styles.newTaskSaveButton}
-                                          onClick={saveNewTask}
-                                          type="button"
-                                        >
-                                          Save
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
-                                </li>
-                                
-                                {/* Date picker for new task */}
-                                {datePickerVisible && datePickerTaskId === 'new' && (
-                                  <div className={styles.newTaskDatePicker}>
-                                    <DatePicker
-                                      selectedDate={newTaskDeadline || new Date()}
-                                      onDateChange={setNewTaskDate}
-                                      onClose={() => {
-                                        setDatePickerVisible(false);
-                                        setDatePickerTaskId(null);
-                                      }}
-                                    />
-                                  </div>
-                                )}
-                                
-                                {/* Priority selector for new task */}
-                                {showPrioritySelector && (
-                                  <li className={styles.prioritySelectorContainer}>
-                                    <div className={styles.prioritySelector}>
-                                      <div className={styles.prioritySelectorHeader}>Select task priority:</div>
-                                      <div className={styles.priorityOptions}>
-                                        <button 
-                                          className={`${styles.priorityOption} ${styles.priorityHigh}`}
-                                          onClick={() => setTaskPriority('high' as TaskPriority)}
-                                        >
-                                          High
-                                        </button>
-                                        <button 
-                                          className={`${styles.priorityOption} ${styles.priorityMedium}`}
-                                          onClick={() => setTaskPriority('medium' as TaskPriority)}
-                                        >
-                                          Medium
-                                        </button>
-                                        <button 
-                                          className={`${styles.priorityOption} ${styles.priorityLow}`}
-                                          onClick={() => setTaskPriority('low' as TaskPriority)}
-                                        >
-                                          Low
-                                        </button>
-                                        <button 
-                                          className={styles.priorityOption}
-                                          onClick={() => {
-                                            setNewTaskPriority(null);
-                                            setShowPrioritySelector(false);
-                                          }}
-                                        >
-                                          None
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </li>
-                                )}
-                              </>
-                            )}
-                          </ul>
-                        )}         
-                      </div>
-                      
-                      {/* Completed Tasks */}
-                      {tasks.some(task => task.completed) && (
-                        <div className={styles.completedTasksSection}>
-                          <button 
-                            className={styles.completedTasksHeader} 
-                            onClick={() => {
-                              const completedSection = document.querySelector(`.${styles.completedTasksList}`);
-                              if (completedSection) {
-                                completedSection.scrollIntoView({ behavior: 'smooth' });
-                              }
-                            }}
-                          >
-                            Completed ({tasks.filter(task => task.completed).length})
-                          </button>
-                          <div className={styles.completedTasksList}>
-                            <ul className={styles.taskList}>
-                              {tasks
-                                .filter(task => task.completed)
-                                .map(task => (
-                                  <li key={task.id} className={`${styles.taskItem} ${styles.completedTask} ${styles.taskItemClickable}`}>
-                                    <button 
-                                      className={`${styles.taskCheckbox} ${styles.checked}`}
-                                      onClick={(e) => {
-                                        e.stopPropagation(); // Prevent task selection when clicking checkbox
-                                        toggleTaskCompletion(task.id);
-                                      }}
-                                      aria-label={`Mark ${task.text} as incomplete`}
-                                    >
-                                      <span className={`${styles.checkboxInner} ${styles.checked}`}>
-                                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                          <path d="M3 6L5 8L9 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                        </svg>
-                                      </span>
-                                    </button>
-                                    <div 
-                                      className={styles.taskContent}
-                                      onClick={() => setSelectedTaskId(task.id)}
-                                    >
-                                      <span className={styles.taskText}>{task.text}</span>
-                                      {task.deadline && (
-                                        <span className={`${styles.taskDeadline} 
-                                          ${isDeadlineUrgent(task.deadline) ? styles.urgentDeadline : ''}
-                                          ${isDeadlineSoon(task.deadline) ? styles.soonDeadline : ''}
-                                          ${isDeadlineNormal(task.deadline) ? styles.normalDeadline : ''}`}>
-                                          {formatDeadline(task.deadline)}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </li>
-                                ))}
-                            </ul>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )
-              },
-
-              {
                 id: 'chat',
                 content: (
-                  <div className={styles.chatbox}>
-                    <div className={styles.widgetHeader}>
-                      <h3>Chat</h3>
-                      <button 
-                        className={styles.newTabButton} 
-                        title="New Chat Tab"
-                        type="button"
-                        onClick={() => createNewChatTab()}
+                  <div className={`${styles.chatbox} ${styles.fullHeightChat}`}>
+                    <div className={`${styles.widgetHeader} ${styles.clickableHeader}`}>
+                      <h3 
+                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                        onClick={() => {
+                          // Toggle chat visibility
+                          const chatBody = document.getElementById('chatBodyContainer');
+                          const chatInput = document.querySelector(`.${styles.chatInputContainer}`);
+                          const chatTabs = document.querySelector(`.${styles.chatTabs}`);
+                          if (chatBody) {
+                            const isVisible = (chatBody as HTMLElement).style.display !== 'none';
+                            (chatBody as HTMLElement).style.display = isVisible ? 'none' : 'block';
+                            if (chatInput) {
+                              (chatInput as HTMLElement).style.display = isVisible ? 'none' : 'flex';
+                            }
+                            if (chatTabs) {
+                              (chatTabs as HTMLElement).style.display = isVisible ? 'none' : 'flex';
+                            }
+                          }
+                        }}
                       >
-                        <svg width="18" height="18" viewBox="0 0 24 24">
-                          <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
-                          <path d="M12 8V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                          <path d="M8 12H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                        </svg>
-                      </button>
+                        <span style={{ display: 'flex', alignItems: 'center' }}>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                          </svg>
+                        </span>
+                        Chat
+                      </h3>
                     </div>
                     {chatTabs.length > 0 && (
                       <>
                         <div className={styles.chatTabs}>
+                          {/* New Chat Tab button as first tab */}
+                          <button 
+                            className={styles.newChatTab}
+                            title="New Chat Tab"
+                            onClick={() => createNewChatTab()}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24">
+                              <path d="M12 5V19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                              <path d="M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                            </svg>
+                            <span>New Chat</span>
+                          </button>
                           {chatTabs.map((tab) => (
                             <button 
                               key={tab.id}

@@ -1871,21 +1871,15 @@
   display: flex;
   flex-direction: column;
   position: relative; /* For absolute positioning of chat input */
-  padding: 16px 16px 0 16px; /* Add consistent padding like other widgets */
+  padding: 0; /* Remove padding to maximize space */
   /* Ensure there's always room for the input */
-  padding-bottom: 70px;
-  /* Appropriate minimum height */
-  min-height: 250px;
-  /* When added to DraggableWidgetContainer, make it grow but not too much */
-  flex-grow: 1;
-  /* Allow it to shrink when space is limited */
-  flex-shrink: 1;
-  /* Dynamically adjust to available space with smaller max-height */
-  max-height: calc(100vh - 300px);
-  /* Use percentage-based height for better responsiveness - reduced */
-  height: 50vh;
-  /* Only push to bottom when there's room */
-  margin-top: 16px; 
+  flex: 1;
+  /* Allow it to fill the container */
+  max-height: none;
+  min-height: calc(100vh - 160px);
+  height: 100%;
+  /* Remove margin to align with knowledgebase */
+  margin: 0; 
   /* Ensure scrolling works inside the chat if content overflows */
   overflow-y: auto;
 }
@@ -1960,6 +1954,34 @@
   background-color: rgba(131, 61, 255, 0.05);
 }
 
+.newChatTab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--foreground-secondary);
+  padding: 7px 12px;
+  margin-right: 2px;
+  border-radius: 4px 4px 0 0;
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  position: relative;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.newChatTab:hover {
+  background-color: rgba(16, 185, 129, 0.08);
+  color: var(--brand-primary);
+}
+
+.newChatTab svg {
+  margin-right: 2px;
+}
+
 .closeTab {
   margin-left: 5px;
   font-size: 16px;
@@ -1998,19 +2020,41 @@
 .chatBody {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  /* Allow it to use the full container height but leave more room for input */
-  height: calc(100% - 110px);
-  /* Don't restrict with a max-height */
-  max-height: none;
+  padding: 8px 6px; /* Minimize padding to maximize space */
   box-sizing: border-box;
-  margin-bottom: 16px; /* More space before input */
+  margin-bottom: 8px; /* Smaller space before input */
   /* Show a scrollbar when needed */
   scrollbar-width: thin;
-  /* Add smooth scrolling behavior */
-  scroll-behavior: smooth;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+.fullHeightChat {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  height: calc(100vh - 145px) !important; /* Adjusted to match knowledgebase height */
+  margin-top: 0 !important;
+  padding: 0 !important;
+}
+
+.sendButton {
+  background: var(--brand-primary);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-right: 8px;
+  transition: all 0.2s;
+}
+
+.sendButton:hover {
+  background: var(--brand-dark);
+  transform: scale(1.05);
 }
 
 /* Chat messages styling */
@@ -2146,9 +2190,29 @@ details[open] .thinkingSummary::before {
 
 .chatInputWrapper {
   display: flex;
-  position: relative;
-  width: 100%;
   align-items: center;
+  width: 100%;
+  position: relative;
+}
+
+.sendButton {
+  background: var(--brand-primary);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-right: 8px;
+  transition: all 0.2s;
+}
+
+.sendButton:hover {
+  background: var(--brand-dark);
+  transform: scale(1.05);
 }
 
 .chatInput {
