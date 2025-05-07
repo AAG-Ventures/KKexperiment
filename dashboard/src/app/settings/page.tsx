@@ -105,6 +105,13 @@ export default function SettingsPage() {
     // Here you would make an API call to add the credits
   };
   
+  // Handle saving profile data
+  const handleSaveProfile = () => {
+    // Here you would make an API call to save profile data
+    console.log('Saving profile data...');
+    showSavedNotification('Profile updated successfully!');
+  };
+  
   // Handle adding a new payment method
   const handleAddPayment = () => {
     setShowAddPayment(!showAddPayment);
@@ -173,7 +180,7 @@ export default function SettingsPage() {
             <section className={styles.settingsSection} id="profile">
               <div className={styles.sectionHeader}>
                 <h2>Profile</h2>
-                <button className={styles.actionButton}>Save</button>
+                <button className={styles.actionButton} onClick={handleSaveProfile}>Save</button>
               </div>
               
               <div className={styles.profileContentLayout}>
@@ -314,7 +321,7 @@ export default function SettingsPage() {
                     <label htmlFor="freeSub">
                       <div className={styles.subscriptionDetails}>
                         <h4>Free Trial</h4>
-                        <p className={styles.price}><span>$0</span>/month</p>
+                        <p className={styles.price}><span>$0</span>/week</p>
                         <p>Try the platform for free</p>
                         <ul className={styles.planFeatures}>
                           <li>Limited AI Agent access</li>
@@ -337,7 +344,7 @@ export default function SettingsPage() {
                     <label htmlFor="basicSub">
                       <div className={styles.subscriptionDetails}>
                         <h4>Basic Plan</h4>
-                        <p className={styles.price}><span>$15</span>/month</p>
+                        <p className={styles.price}><span>$7</span>/month</p>
                         <p>Access to the full platform and features</p>
                         <ul className={styles.planFeatures}>
                           <li>Basic AI Agent access</li>
@@ -360,7 +367,7 @@ export default function SettingsPage() {
                     <label htmlFor="premiumSub">
                       <div className={styles.subscriptionDetails}>
                         <h4>Premium Plan</h4>
-                        <p className={styles.price}><span>$29</span>/month</p>
+                        <p className={styles.price}><span>$22</span>/month</p>
                         <p>Premium developer tools and resources</p>
                         <ul className={styles.planFeatures}>
                           <li>Advanced AI Agent access</li>
@@ -613,7 +620,7 @@ export default function SettingsPage() {
         
         {/* Notification Toast */}
         {saveNotification && (
-          <div className={styles.notification}>
+          <div className={`${styles.notification} ${saveNotification.includes('Profile') ? styles.success : ''}`}>
             {saveNotification}
           </div>
         )}

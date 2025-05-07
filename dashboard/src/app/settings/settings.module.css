@@ -1432,6 +1432,31 @@
   z-index: 1000;
 }
 
+.notification.success {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: rgb(16, 185, 129);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+/* Section-specific notification styles */
+.settingsSection .notification {
+  position: relative;
+  bottom: auto;
+  right: auto;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-base);
+  box-shadow: var(--shadow-sm);
+  animation: fadeIn 0.3s ease-out;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.success {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: rgb(16, 185, 129);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
 /* Referral Program Styles */
 .referralInfo {
   display: flex;
