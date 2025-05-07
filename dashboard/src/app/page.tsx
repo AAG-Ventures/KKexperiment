@@ -176,6 +176,12 @@ export default function Dashboard() {
   const [currentAgent, setCurrentAgent] = useState<Agent | null>(null); // Track current agent for chat
   const [processes, setProcesses] = useState<Process[]>([]);
   
+  // State for resizable chat/dashboard
+  const [isDragging, setIsDragging] = useState(false);
+  const defaultChatWidth = 350; // Default/minimum width of chat section
+  const [chatWidth, setChatWidth] = useState(defaultChatWidth);
+  const dragDividerRef = useRef<HTMLDivElement>(null);
+  
   // Initialize agents state
   const [userAgents, setUserAgents] = useState<Agent[]>([  
     {
@@ -277,6 +283,59 @@ export default function Dashboard() {
   // Chat tab input reference
   const renameInputRef = useRef<HTMLInputElement>(null);
   
+  // Handle divider dragging
+  useEffect(() => {
+    // Skip if not dragging
+    if (!isDragging) return;
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging && dragDividerRef.current) {
+        const containerRect = dragDividerRef.current.parentElement?.getBoundingClientRect();
+        if (containerRect) {
+          // Get current position - only allow expanding, not shrinking below default
+          const currentMouseX = e.clientX;
+          const dividerPosition = window.innerWidth - defaultChatWidth;
+          
+          // Only allow expanding (dragging left), not shrinking below default
+          if (currentMouseX <= dividerPosition) {
+            // Calculate new width based on mouse position
+            const newWidth = Math.max(
+              defaultChatWidth, // Min width (default width)
+              Math.min(
+                window.innerWidth - 270, // Max width (window width minus left sidebar)
+                window.innerWidth - currentMouseX + 3 // Position plus offset
+              )
+            );
+            setChatWidth(newWidth);
+          } else {
+            // Reset to default if trying to make it smaller
+            setChatWidth(defaultChatWidth);
+          }
+        }
+      }
+    };
+    
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+    
+    // Add event listeners
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    
+    // Set cursor style for entire document while dragging
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none'; // Prevent text selection while dragging
+    
+    return () => {
+      // Clean up
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isDragging]);
+
   // Effect to run only client-side
   useEffect(() => {
     // For demo purposes, clear localStorage tasks to show our updated task list
@@ -2007,7 +2066,7 @@ Formulating response based on available information...`
           </div>
 
         {/* Main Content */}
-        <main className={`${styles.mainContent} ${isSidebarCollapsed ? styles.mainContentExpanded : ''}`}>
+        <main className={`${styles.mainContent} ${isSidebarCollapsed ? styles.mainContentExpanded : ''}`} style={{ flex: 1 }}>
           {/* Tabs Bar */}
           <div style={{
             display: 'flex',
@@ -2551,7 +2610,17 @@ This marketing plan provides a comprehensive framework for achieving our busines
           )}
         </main>
 
-        <section className={styles.widgets}>
+        <section className={styles.widgets} style={{ width: `${chatWidth}px` }}>
+          {/* Draggable resize divider */}
+          <div 
+            className={`${styles.resizeDivider} ${isDragging ? styles.dragging : ''}`} 
+            ref={dragDividerRef}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+            title="Drag to expand chat"
+          />
           <DraggableWidgetContainer
             columnId="right-column"
             initialItems={[
