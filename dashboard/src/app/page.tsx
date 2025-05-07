@@ -277,8 +277,11 @@ export default function Dashboard() {
   // Chat tab input reference
   const renameInputRef = useRef<HTMLInputElement>(null);
   
-  // Initialize chat state client-side only
+  // Effect to run only client-side
   useEffect(() => {
+    // For demo purposes, clear localStorage tasks to show our updated task list
+    localStorage.removeItem('dashboard_tasks');
+    
     // Initialize tasks from localStorage if available
     const savedTasks = localStorage.getItem('dashboard_tasks');
     if (savedTasks) {
@@ -773,41 +776,77 @@ Formulating response based on available information...`
           completed: false, 
           deadline: inThreeDays,
           description: '',
-
           priority: 'medium' as TaskPriority,
           attachments: [],
           comments: []
         },
         { 
           id: '3', 
-          text: 'Connect Slack', 
+          text: 'Create Onboarding Guide visuals', 
           completed: false, 
           deadline: may12,
-          description: '',
-          assignee: 'Tomas',
-          priority: 'low' as TaskPriority,
+          description: 'Create visual guides and tutorials for new users',
+          priority: 'high' as TaskPriority,
           attachments: [],
           comments: []
         },
         { 
           id: '4', 
-          text: 'Review marketing plan', 
+          text: 'Create Marketing plan', 
           completed: false, 
           deadline: may19,
           description: '',
-
           priority: 'medium' as TaskPriority,
           attachments: [],
           comments: []
         },
         { 
           id: '5', 
-          text: 'Connect calendar', 
+          text: 'Train onboarding Agent', 
+          completed: false, 
+          deadline: may12,
+          description: 'Develop training materials and datasets for the Onboarding Guide agent',
+          priority: 'medium' as TaskPriority,
+          attachments: [],
+          comments: []
+        },
+        { 
+          id: '6', 
+          text: 'Make chat size adjustable', 
+          completed: false, 
+          deadline: may19,
+          description: 'Implement draggable resizing for the chat interface',
+          priority: 'low' as TaskPriority,
+          attachments: [],
+          comments: []
+        },
+        { 
+          id: '7', 
+          text: 'Update Agents Marketplace', 
           completed: false, 
           deadline: june30,
-          description: '',
-          assignee: 'Marius',
-          priority: 'low' as TaskPriority,
+          description: 'Enhance the marketplace with new features and agents',
+          priority: 'medium' as TaskPriority,
+          attachments: [],
+          comments: []
+        },
+        { 
+          id: '8', 
+          text: 'Create Workflow builder', 
+          completed: false, 
+          deadline: june30,
+          description: 'Develop a visual workflow builder for automating tasks',
+          priority: 'high' as TaskPriority,
+          attachments: [],
+          comments: []
+        },
+        { 
+          id: '9', 
+          text: 'Implement login', 
+          completed: false, 
+          deadline: inThreeDays,
+          description: 'Add authentication and user management',
+          priority: 'high' as TaskPriority,
           attachments: [],
           comments: []
         },
@@ -1846,10 +1885,7 @@ Formulating response based on available information...`
                                   }
                                 }}
                               >
-                                <span 
-                                  className={`${styles.statusIndicator} ${styles[`status${agent.status === 'online' ? 'InProgress' : agent.status === 'busy' ? 'Pending' : 'Completed'}`]}`}
-                                  title={agent.status.charAt(0).toUpperCase() + agent.status.slice(1)}
-                                ></span>
+
                                 <div className={styles.processDetails}>
                                   <div className={styles.processName}>
                                     <span style={{ marginRight: '8px' }}>{agent.avatar}</span>

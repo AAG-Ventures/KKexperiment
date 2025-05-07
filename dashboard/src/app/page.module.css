@@ -1762,10 +1762,9 @@
   list-style: none;
   padding: 0 4px 0 0;
   margin: 0;
-  overflow-y: hidden; /* Changed from auto to hide scrollbar */
+  overflow-y: auto; /* Changed back to auto to allow scrolling */
   height: 100%;
-  scrollbar-width: none; /* Remove scrollbar completely */
-  -ms-overflow-style: none; /* IE and Edge */
+  max-height: 350px; /* Set a maximum height to ensure scrolling */
 }
 
 /* Hide webkit scrollbar completely */
