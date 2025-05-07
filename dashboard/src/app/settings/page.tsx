@@ -5,12 +5,14 @@ import connectStyles from "./connect.module.css";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { CreditCardIcon, DollarSignIcon, AlertCircleIcon, CheckCircleIcon, Copy, Share2, UserCircle, PlusIcon, Link2, CheckCircle, Plug, Sun, Moon } from "lucide-react";
+import { CreditCardIcon, DollarSignIcon, AlertCircleIcon, CheckCircleIcon, Copy, Share2, UserCircle, PlusIcon, Link2, CheckCircle, Plug, Sun, Moon, Minus, Plus } from "lucide-react";
 
 export default function SettingsPage() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [saveNotification, setSaveNotification] = useState<string | null>(null);
-  const [subscription, setSubscription] = useState<"free" | "basic" | "premium">("free");
+  const [subscription, setSubscription] = useState<"free" | "basic" | "premium">("basic");
+  const [additionalCredits, setAdditionalCredits] = useState<number>(1000);
+  const [availableCredits, setAvailableCredits] = useState<number>(1850);
   const [showAddPayment, setShowAddPayment] = useState(false);
   const [paymentSuccessMsg, setPaymentSuccessMsg] = useState<string | null>(null);
   const [referralLink, setReferralLink] = useState('');
@@ -88,6 +90,21 @@ export default function SettingsPage() {
     showSavedNotification("Subscription updated successfully!");
   };
   
+  // Handle additional credits adjustment
+  const adjustCredits = (amount: number) => {
+    const newAmount = additionalCredits + amount;
+    if (newAmount >= 1000) {
+      setAdditionalCredits(newAmount);
+    }
+  };
+  
+  // Handle adding credits
+  const addCredits = () => {
+    showSavedNotification(`Added ${additionalCredits} credits successfully!`);
+    console.log(`Adding ${additionalCredits} credits to account.`);
+    // Here you would make an API call to add the credits
+  };
+  
   // Handle adding a new payment method
   const handleAddPayment = () => {
     setShowAddPayment(!showAddPayment);
@@ -155,27 +172,17 @@ export default function SettingsPage() {
           <div className={styles.settingsHalf}>
             <section className={styles.settingsSection} id="profile">
               <div className={styles.sectionHeader}>
-                <h2>Profile & Privacy</h2>
+                <h2>Profile</h2>
                 <button className={styles.actionButton}>Save</button>
               </div>
               
               <div className={styles.profileContentLayout}>
                 <div className={styles.profileFormSection}>
                   <div className={styles.settingItem}>
-                    <label>Display Name</label>
-                    <input type="text" defaultValue="User Name" />
+                    <input type="text" defaultValue="User Name" placeholder="Display Name" />
                   </div>
                   <div className={styles.settingItem}>
-                    <label>Email</label>
-                    <input type="email" defaultValue="user@example.com" />
-                  </div>
-                  <div className={styles.settingItem}>
-                    <label>Privacy Level</label>
-                    <select defaultValue="standard">
-                      <option value="private">Private - Restrict all data sharing</option>
-                      <option value="standard">Standard - Share only necessary data</option>
-                      <option value="open">Open - Allow analytics and improvements</option>
-                    </select>
+                    <input type="email" defaultValue="user@example.com" placeholder="Email" />
                   </div>
                 </div>
                 
@@ -285,10 +292,10 @@ export default function SettingsPage() {
           </div>
         </div>
         
-        {/* Row 2: Subscription (1/2) and Referral Program (1/2) */}
+        {/* Row 2: Subscription (60%) and Referral Program (40%) */}
         <div className={styles.settingsRow}>
-          {/* Subscription - 1/2 width */}
-          <div className={styles.settingsHalf}>
+          {/* Subscription - 60% width */}
+          <div className={styles.settingsHalf} style={{ flex: '6' }}>
             <section className={styles.settingsSection} id="subscription">
               <div className={styles.sectionHeader}>
                 <h2>Subscription & Billing</h2>
@@ -367,9 +374,51 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <div className={styles.planNoteContainer}>
-                  <p className={styles.planNote}>Additional 1000 credits: $1</p>
                   <p className={styles.planNote}>Your current billing cycle: May 6, 2025 - June 6, 2025</p>
                 </div>
+                
+                {/* Additional Credits Section */}
+                <div className={styles.additionalCreditsSection}>
+                  <div className={styles.creditsSectionHeader}>
+                    <div className={styles.creditsHeaderLeft}>
+                      <h3>Need More Credits?</h3>
+                      <div className={styles.availableCredits}>
+                        <span className={styles.availableCreditsValue}>{availableCredits.toLocaleString()}</span>
+                        <span className={styles.availableCreditsLabel}>credits left</span>
+                      </div>
+                    </div>
+                    <div className={styles.creditsContainer}>
+                    <div className={styles.creditsCounter}>
+                      <button 
+                        className={styles.counterButton} 
+                        onClick={() => adjustCredits(-1000)}
+                        disabled={additionalCredits <= 1000}
+                      >
+                        <Minus size={16} />
+                      </button>
+                      <div className={styles.creditsAmount}>
+                        <span>{additionalCredits.toLocaleString()}</span>
+                        <span className={styles.creditsLabel}>credits</span>
+                      </div>
+                      <button 
+                        className={styles.counterButton} 
+                        onClick={() => adjustCredits(1000)}
+                      >
+                        <Plus size={16} />
+                      </button>
+                    </div>
+                    <div className={styles.creditsPricing}>
+                      <span className={styles.creditsPrice}>${(additionalCredits / 1000 * 5).toFixed(2)}</span>
+                    </div>
+                    <button 
+                      className={styles.addCreditsButton} 
+                      onClick={addCredits}
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+              </div>
               </div>
               
               <div className={styles.billingSection}>
@@ -418,8 +467,8 @@ export default function SettingsPage() {
             </section>
           </div>
           
-          {/* Referral Program - 1/2 width */}
-          <div className={styles.settingsHalf}>
+          {/* Referral Program - 40% width */}
+          <div className={styles.settingsHalf} style={{ flex: '4' }}>
             <section 
               className={styles.settingsSection} 
               id="referrals" 

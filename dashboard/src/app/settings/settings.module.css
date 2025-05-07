@@ -391,6 +391,12 @@
   border-bottom: none;
 }
 
+.planFeatures {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style-type: none;
+}
+
 .settingItem {
   margin-bottom: 1.25rem;
   display: flex;
@@ -648,10 +654,11 @@
 }
 
 .subscriptionOptions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
   margin-bottom: 2rem;
+  width: 100%;
 }
 
 .subscriptionOption {
@@ -661,7 +668,9 @@
   overflow: hidden;
   transition: all var(--transition-fast);
   background-color: var(--background-secondary);
-  padding: 1.5rem;
+  padding: 1rem;
+  flex: 1;
+  min-width: 0;
 }
 
 .subscriptionOption:hover {
@@ -699,21 +708,21 @@
 }
 
 .subscriptionDetails {
-  padding-right: 1.5rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.75rem;
+  padding-right: 1rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
 }
 
 .subscriptionDetails h4 {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   color: var(--foreground-primary);
 }
 
 .price {
   font-size: var(--font-size-md);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   color: var(--foreground-primary);
 }
 
@@ -735,10 +744,10 @@
 .subscriptionFeatures li, .planFeatures li {
   display: flex;
   align-items: flex-start;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-  font-size: 0.85rem;
-  line-height: 1.4;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.8rem;
+  line-height: 1.2;
 }
 
 .subscriptionFeatures li svg, .planFeatures li svg {
@@ -765,6 +774,7 @@
   flex-direction: column;
   gap: 0.5rem;
   margin-top: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .planNote {
@@ -873,11 +883,13 @@
 
 .defaultBadge {
   background-color: var(--brand-primary);
-  color: var(--background-primary);
-  font-size: var(--font-size-xs);
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--radius-pill);
-  font-weight: var(--font-weight-medium);
+  color: white;
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .addPaymentButton {
@@ -1903,6 +1915,131 @@
   padding-top: 1.5rem;
   padding-bottom: 1.5rem !important;
   border-top: none;
+}
+
+/* Additional Credits Styles */
+.additionalCreditsSection {
+  margin-top: 1rem;
+  padding: 1.5rem;
+  background-color: var(--background-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+}
+
+.creditsSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.creditsHeaderLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.availableCredits {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+}
+
+.availableCreditsValue {
+  font-weight: var(--font-weight-bold);
+  color: var(--success);
+  font-size: var(--font-size-sm);
+}
+
+.availableCreditsLabel {
+  font-size: var(--font-size-xs);
+  color: var(--foreground-secondary);
+}
+
+.additionalCreditsSection h3 {
+  font-size: var(--font-size-md);
+  margin-bottom: 0;
+  color: var(--foreground-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.creditsContainer {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.creditsCounter {
+  display: flex;
+  align-items: center;
+  background-color: var(--background-tertiary);
+  border-radius: var(--radius-md);
+  padding: 0.5rem;
+  border: 1px solid var(--border-light);
+}
+
+.counterButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--background-primary);
+  border: 1px solid var(--border-light);
+  color: var(--foreground-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.counterButton:hover {
+  background-color: var(--brand-primary-light);
+  color: var(--brand-primary);
+}
+
+.counterButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.creditsAmount {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 1rem;
+  min-width: 100px;
+}
+
+.creditsAmount span:first-child {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--foreground-primary);
+}
+
+.creditsLabel {
+  font-size: var(--font-size-xs);
+  color: var(--foreground-secondary);
+}
+
+.creditsPricing {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--brand-primary);
+}
+
+.addCreditsButton {
+  padding: 0.5rem 1.5rem;
+  background-color: var(--brand-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.addCreditsButton:hover {
+  background-color: var(--brand-primary-hover);
 }
 
 #notifications .sectionHeader {
