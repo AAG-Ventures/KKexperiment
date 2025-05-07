@@ -10,7 +10,7 @@ import { CreditCardIcon, DollarSignIcon, AlertCircleIcon, CheckCircleIcon, Copy,
 export default function SettingsPage() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [saveNotification, setSaveNotification] = useState<string | null>(null);
-  const [subscription, setSubscription] = useState<"user" | "builder">("user");
+  const [subscription, setSubscription] = useState<"free" | "basic" | "premium">("free");
   const [showAddPayment, setShowAddPayment] = useState(false);
   const [paymentSuccessMsg, setPaymentSuccessMsg] = useState<string | null>(null);
   const [referralLink, setReferralLink] = useState('');
@@ -82,8 +82,9 @@ export default function SettingsPage() {
   };
   
   // Handle subscription change
-  const handleSubscriptionChange = (newSubscription: "user" | "builder") => {
-    setSubscription(newSubscription);
+  const handleSubscriptionChange = (type: "free" | "basic" | "premium") => {
+    console.log(`Changed subscription to: ${type}`);
+    setSubscription(type);
     showSavedNotification("Subscription updated successfully!");
   };
   
@@ -293,49 +294,73 @@ export default function SettingsPage() {
                 <h2>Subscription & Billing</h2>
               </div>
               <div className={styles.subscriptionStatus}>
-                <h3>Current Plan</h3>
+                <h3>Plans</h3>
                 <div className={styles.subscriptionOptions}>
-                  <div className={`${styles.subscriptionOption} ${subscription === 'user' ? styles.activeSubscription : ''}`}>
+                  <div className={`${styles.subscriptionOption} ${subscription === 'free' ? styles.activeSubscription : ''}`}>
                     <input 
                       type="radio" 
-                      id="userSub" 
+                      id="freeSub" 
                       name="subscription" 
-                      checked={subscription === "user"}
-                      onChange={() => handleSubscriptionChange("user")}
+                      checked={subscription === "free"}
+                      onChange={() => handleSubscriptionChange("free")}
                     />
-                    <label htmlFor="userSub">
+                    <label htmlFor="freeSub">
                       <div className={styles.subscriptionDetails}>
-                        <h4>User Subscription</h4>
+                        <h4>Free Trial</h4>
+                        <p className={styles.price}><span>$0</span>/month</p>
+                        <p>Try the platform for free</p>
+                        <ul className={styles.planFeatures}>
+                          <li>Limited AI Agent access</li>
+                          <li>Basic knowledge base storage (1GB)</li>
+                          <li>Up to 3 concurrent processes</li>
+                          <li>100 credits</li>
+                        </ul>
+                      </div>
+                    </label>
+                  </div>
+
+                  <div className={`${styles.subscriptionOption} ${subscription === 'basic' ? styles.activeSubscription : ''}`}>
+                    <input 
+                      type="radio" 
+                      id="basicSub" 
+                      name="subscription" 
+                      checked={subscription === "basic"}
+                      onChange={() => handleSubscriptionChange("basic")}
+                    />
+                    <label htmlFor="basicSub">
+                      <div className={styles.subscriptionDetails}>
+                        <h4>Basic Plan</h4>
                         <p className={styles.price}><span>$15</span>/month</p>
                         <p>Access to the full platform and features</p>
                         <ul className={styles.planFeatures}>
                           <li>Basic AI Agent access</li>
                           <li>Standard knowledge base storage (5GB)</li>
                           <li>Up to 10 concurrent processes</li>
-                          <li>1289/3000 credits available</li>
+                          <li>3000 credits</li>
                         </ul>
                       </div>
                     </label>
                   </div>
 
-                  <div className={`${styles.subscriptionOption} ${subscription === 'builder' ? styles.activeSubscription : ''}`}>
+                  <div className={`${styles.subscriptionOption} ${subscription === 'premium' ? styles.activeSubscription : ''}`}>
                     <input 
                       type="radio" 
-                      id="builderSub" 
+                      id="premiumSub" 
                       name="subscription" 
-                      checked={subscription === "builder"}
-                      onChange={() => handleSubscriptionChange("builder")}
+                      checked={subscription === "premium"}
+                      onChange={() => handleSubscriptionChange("premium")}
                     />
-                    <label htmlFor="builderSub">
+                    <label htmlFor="premiumSub">
                       <div className={styles.subscriptionDetails}>
-                        <h4>Builder Subscription</h4>
-                        <p className={styles.price}><span>$20</span>/month</p>
+                        <h4>Premium Plan</h4>
+                        <p className={styles.price}><span>$29</span>/month</p>
                         <p>Premium developer tools and resources</p>
                         <ul className={styles.planFeatures}>
                           <li>Advanced AI Agent access</li>
                           <li>Extended knowledge base storage (20GB)</li>
+                          <li>Unlimited concurrent processes</li>
                           <li>Priority support</li>
-                          <li>4000 credits</li>
+                          <li>10,000 credits</li>
                         </ul>
                       </div>
                     </label>
