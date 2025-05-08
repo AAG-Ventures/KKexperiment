@@ -1,0 +1,141 @@
+.onboardingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9998; /* High z-index to overlay everything else */
+  pointer-events: none; /* Allow clicks to pass through by default */
+}
+
+.blurOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 1;
+  pointer-events: auto; /* Capture clicks on overlay */
+}
+
+.highlight {
+  position: absolute;
+  z-index: 2;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
+  border-radius: var(--radius-md);
+  pointer-events: none;
+  animation: pulse 2s infinite;
+}
+
+.stepModal {
+  position: absolute;
+  width: 400px;
+  background-color: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 1.5rem;
+  z-index: 3;
+  pointer-events: auto; /* Allow interaction with modal */
+  border: 1px solid var(--border-light);
+}
+
+.stepModal h3 {
+  margin-top: 0;
+  color: var(--foreground-primary);
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.stepModal p {
+  color: var(--foreground-secondary);
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.modalButtons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.skipButton {
+  background: none;
+  border: none;
+  color: var(--foreground-secondary);
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.skipButton:hover {
+  background-color: var(--background-tertiary);
+}
+
+.nextButton {
+  background: var(--brand-primary);
+  color: white;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nextButton:hover {
+  background-color: var(--brand-hover);
+}
+
+.stepIndicator {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+  gap: 8px;
+}
+
+.stepDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--foreground-muted);
+  transition: all 0.2s ease;
+}
+
+.stepDot.active {
+  background-color: var(--brand-primary);
+  transform: scale(1.25);
+}
+
+/* Animation for pulsing highlight */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
+  }
+}
+
+/* Shake animation for draggable elements */
+.shakeAnimation {
+  animation: shake 1.5s ease infinite;
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-2px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(2px);
+  }
+}

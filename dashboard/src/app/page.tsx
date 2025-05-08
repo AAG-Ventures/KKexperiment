@@ -17,6 +17,7 @@ import CalendarWidget from './components/CalendarWidget';
 import { knowledgebaseData } from './components/KnowledgebaseSampleData';
 // Import explicitly for client component
 import { useRouter } from 'next/navigation';
+import OnboardingModal from './components/Onboarding/OnboardingModal';
 
 // Helper function to format dates
 const formatDate = (date: Date | string | number) => {
@@ -1672,6 +1673,8 @@ Formulating response based on available information...`
 
   return (
     <div className={styles.dashboardWrapper} ref={dashboardRef}>
+      {/* Onboarding Modal */}
+      <OnboardingModal />
       {/* Top Bar */}
       <header className={styles.topBar}>
         <div className={styles.logoArea}>
@@ -2475,9 +2478,9 @@ This marketing plan provides a comprehensive framework for achieving our busines
             <>
               <h2 className={styles.pageTitle}>Dashboard Overview</h2>
               
-              <div className={styles.cardGrid}>
+              <div className={styles.cardGrid} data-onboarding-target="card-grid">
                 {/* Calendar Card */}
-                <div className={`${styles.card} ${styles.cardCalendar}`}>
+                <div className={`${styles.card} ${styles.cardCalendar}`} data-onboarding-target="calendar-card">
                   <div className={styles.widgetHeader}>
                     <h3>Calendar</h3>
                     <span className={styles.widgetIcon}>📅</span>
