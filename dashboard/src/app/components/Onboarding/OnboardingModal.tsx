@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import styles from '../../page.module.css';
+import ChatOnboardingStep from './ChatOnboardingStep';
 
 interface OnboardingStep {
   title: string;
@@ -33,7 +34,7 @@ const onboardingSteps: OnboardingStep[] = [
 ];
 
 const OnboardingModal: React.FC = () => {
-  // IMPORTANT: All state hooks must be defined up front at the top level of the component
+  // State hooks defined at the top level of the component
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [elementPositions, setElementPositions] = useState<Array<{
@@ -42,6 +43,12 @@ const OnboardingModal: React.FC = () => {
     animation: 'pulse' | 'shake' | 'bounce' | 'glow';
     color: string;
   }>>([]);
+  
+  // User data from chat step
+  const [userData, setUserData] = useState<{ name: string; occupation: string } | null>(null);
+  
+  // Flag to check if we're in the chat step or regular onboarding steps
+  const [showChatStep, setShowChatStep] = useState<boolean>(true);
 
   // Check if onboarding has been completed before
   useEffect(() => {
@@ -51,7 +58,12 @@ const OnboardingModal: React.FC = () => {
     }
   }, []);
   
-  // Handler functions must also be defined before any conditional returns
+  // Handle chat step completion
+  const handleChatComplete = (data: { name: string; occupation: string }) => {
+    setUserData(data);
+    setShowChatStep(false);
+  };
+  
   // Handle Next button click
   const handleNext = () => {
     if (currentStep < onboardingSteps.length - 1) {
@@ -361,56 +373,52 @@ const OnboardingModal: React.FC = () => {
     );
   };
 
-  // If onboarding is not shown, don't render anything
-  if (!showOnboarding) {
-    return null;
-  }
-  
-  // Render the modal
-  return (
-    <>
-      {/* Render step-specific animation overlays */}
-      {renderStepAnimations()}
 
-      {/* Semi-transparent overlay - only for the first step */}
-      {currentStep === 0 && (
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            backdropFilter: 'blur(2px)',
-            zIndex: 9998,
-            pointerEvents: 'auto', // This captures clicks on the overlay
-          }}
-          onClick={(e) => e.stopPropagation()} // Prevent clicks from passing through
+
+  const handleNextStep = () => {
+    if (currentStep < onboardingSteps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      completeOnboarding();
+    }
+  };
+  
+  const handlePrevStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  // Render appropriate content based on current step
+  const renderContent = () => {
+    // Show chat step first
+    if (showChatStep) {
+      return (
+        <ChatOnboardingStep 
+          onComplete={handleChatComplete}
+          stepNumber={1}
+          totalSteps={onboardingSteps.length + 1}
         />
-      )}
-      
-      {/* Onboarding modal */}
-      <div
-        style={{
-          position: 'fixed',
-          zIndex: 9999,
-          width: '360px',
-          padding: '24px',
-          backgroundColor: 'var(--background-primary)',
-          boxShadow: '0 8px 30px rgba(0, 0, 0, 0.5)',
-          borderRadius: '8px',
-          border: '1px solid var(--border-light)',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          maxWidth: '90vw',
-          pointerEvents: 'auto', // Ensure the modal captures all clicks
-        }}
-        onClick={(e) => e.stopPropagation()} // Prevent clicks from reaching elements below
-      >
+      );
+    }
+    
+    // Show regular onboarding steps after chat
+    return (
+      <div className={styles.onboardingContent}>
         {/* Step indicator dots */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', gap: '8px' }}>
+          {/* Render chat step dot */}
+          <div
+            style={{
+              width: '12px',
+              height: '12px',
+              borderRadius: '50%',
+              backgroundColor: 'transparent',
+              border: `2px solid var(--foreground-muted)`,
+              transition: 'all 0.2s ease',
+            }}
+          />
+          {/* Render dots for each regular step */}
           {onboardingSteps.map((_, index) => (
             <div
               key={index}
@@ -426,50 +434,22 @@ const OnboardingModal: React.FC = () => {
           ))}
         </div>
         
-        <h2 style={{ 
-          margin: '0 0 16px 0', 
-          fontWeight: '600', 
-          fontSize: '24px',
-          color: 'var(--foreground-primary)'
-        }}>
-          {onboardingSteps[currentStep].title}
-        </h2>
+        <div className={styles.onboardingHeader}>
+          <h2 style={{ 
+            margin: '0 0 16px 0', 
+            fontWeight: '600', 
+            fontSize: '24px',
+            color: 'var(--foreground-primary)'
+          }}>{onboardingSteps[currentStep].title}</h2>
+        </div>
         
         <p style={{ 
           margin: '0 0 24px 0', 
           lineHeight: '1.5',
           color: 'var(--foreground-secondary)' 
-        }}>
-          {onboardingSteps[currentStep].content}
-        </p>
+        }}>{onboardingSteps[currentStep].content}</p>
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <button
-            onClick={handleSkip}
-            style={{
-              background: 'none',
-              border: '1px solid transparent',
-              color: 'var(--foreground-secondary)',
-              cursor: 'pointer',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              transition: 'all 0.2s ease',
-              fontWeight: 500,
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(10, 246, 187, 0.08)';
-              e.currentTarget.style.borderColor = 'rgba(10, 246, 187, 0.2)';
-              e.currentTarget.style.color = 'var(--foreground-primary)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.borderColor = 'transparent';
-              e.currentTarget.style.color = 'var(--foreground-secondary)';
-            }}
-          >
-            Skip
-          </button>
-          
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
           <button
             onClick={handleNext}
             style={{
@@ -492,9 +472,64 @@ const OnboardingModal: React.FC = () => {
               e.currentTarget.style.boxShadow = '0 2px 10px rgba(10, 246, 187, 0.3)';
             }}
           >
-            {currentStep === onboardingSteps.length - 1 ? 'Finish' : 'Next'}
+            {currentStep < onboardingSteps.length - 1 ? 'Next' : 'Get Started'}
           </button>
         </div>
+      </div>
+    );
+    
+
+  };
+
+  // If onboarding is not shown, don't render anything
+  if (!showOnboarding) {
+    return null;
+  }
+  
+  // Render the modal
+  return (
+    <>
+      {/* Render step-specific animation overlays - only for regular onboarding steps */}
+      {!showChatStep && renderStepAnimations()}
+
+      {/* Semi-transparent overlay - only for chat step */}
+      {showChatStep && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(2px)',
+            zIndex: 9998,
+            pointerEvents: 'auto', // Capture clicks during chat step
+          }}
+          onClick={(e) => e.stopPropagation()} // Prevent clicks from passing through
+        />
+      )}
+      
+      {/* Onboarding modal */}
+      <div
+        style={{
+          position: 'fixed',
+          zIndex: 9999,
+          width: showChatStep ? '450px' : '360px',
+          padding: '24px',
+          backgroundColor: 'var(--background-primary)',
+          boxShadow: '0 8px 30px rgba(0, 0, 0, 0.5)',
+          borderRadius: '8px',
+          border: '1px solid var(--border-light)',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          maxWidth: '90vw',
+          pointerEvents: 'auto', // Ensure the modal captures all clicks
+        }}
+        onClick={(e) => e.stopPropagation()} // Prevent clicks from reaching elements below
+      >
+        {renderContent()}
       </div>
     </>
   );

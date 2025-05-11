@@ -1202,7 +1202,56 @@
   overflow-y: auto;
 }
 
-/* Analytics Card Styles */
+@keyframes typingAnimation {
+  0% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  
+  100% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.typingIndicator span {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--foreground-muted);
+  margin: 0 2px;
+  animation: typingAnimation 1s infinite ease-in-out alternate;
+}
+
+.typingIndicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typingIndicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
 .statsRow {
   display: flex;
   justify-content: space-between;

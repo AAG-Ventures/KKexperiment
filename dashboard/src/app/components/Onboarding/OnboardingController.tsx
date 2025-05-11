@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { OnboardingGuide, OnboardingStep } from './OnboardingGuide';
+import ChatOnboardingModal from './ChatOnboardingModal';
 
 // Define onboarding steps based on the user's requirements
 const onboardingSteps: OnboardingStep[] = [
@@ -43,8 +44,11 @@ interface OnboardingControllerProps {
 }
 
 export const OnboardingController: React.FC<OnboardingControllerProps> = () => {
+  // Set to true by default to ensure the chat onboarding appears
+  const [showChatOnboarding, setShowChatOnboarding] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingComplete, setOnboardingComplete] = useState(true); // Default to true until we check localStorage
+  const [userData, setUserData] = useState<{ name: string; occupation: string; interests: string } | null>(null);
 
   useEffect(() => {
     // Check if user has completed onboarding before
@@ -54,12 +58,28 @@ export const OnboardingController: React.FC<OnboardingControllerProps> = () => {
     // Show onboarding after a small delay to ensure dashboard has fully loaded
     const timer = setTimeout(() => {
       if (!hasCompletedOnboarding) {
-        setShowOnboarding(true);
+        // Show chat onboarding first
+        setShowChatOnboarding(true);
       }
     }, 1000);
     
     return () => clearTimeout(timer);
   }, []);
+  
+  // Handle completion of chat onboarding
+  const handleChatOnboardingComplete = (data: { name: string; occupation: string; interests: string }) => {
+    // Save user data
+    setUserData(data);
+    
+    // Save name to localStorage (can be used elsewhere in the app)
+    localStorage.setItem('user_name', data.name);
+    
+    // Hide chat onboarding
+    setShowChatOnboarding(false);
+    
+    // Show regular onboarding steps
+    setShowOnboarding(true);
+  };
 
   const handleOnboardingComplete = () => {
     localStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
@@ -76,12 +96,21 @@ export const OnboardingController: React.FC<OnboardingControllerProps> = () => {
   // Function to reset onboarding (for testing purposes)
   const resetOnboarding = () => {
     localStorage.removeItem(ONBOARDING_STORAGE_KEY);
+    localStorage.removeItem('user_name');
     setOnboardingComplete(false);
-    setShowOnboarding(true);
+    setUserData(null);
+    setShowOnboarding(false);
+    setShowChatOnboarding(true);
   };
 
   return (
     <>
+      {/* Show ChatOnboardingModal before the main onboarding flow */}
+      <ChatOnboardingModal
+        isVisible={showChatOnboarding}
+        onComplete={handleChatOnboardingComplete}
+      />
+      
       <OnboardingGuide 
         steps={onboardingSteps}
         isActive={showOnboarding}
@@ -89,22 +118,24 @@ export const OnboardingController: React.FC<OnboardingControllerProps> = () => {
         onSkip={handleOnboardingSkip}
       />
       
-      {/* Only show this button when in development, for testing */}
-      {process.env.NODE_ENV === 'development' && (
+      {/* Reset button for testing */}
+      {
         <button 
           onClick={resetOnboarding}
           style={{
             position: 'fixed',
-            bottom: '10px',
-            right: '10px',
+            bottom: '20px',
+            right: '20px',
             zIndex: 9999,
-            background: '#333',
+            background: 'var(--brand-primary)',
             color: 'white',
             border: 'none',
             borderRadius: '4px',
-            padding: '5px 10px',
+            padding: '8px 16px',
             cursor: 'pointer',
-            fontSize: '12px',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
           }}
         >
           Reset Onboarding
