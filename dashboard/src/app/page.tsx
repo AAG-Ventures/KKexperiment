@@ -21,6 +21,7 @@ import OnboardingModal from './components/Onboarding/OnboardingModal';
 import ShareModal from './components/ShareModal';
 import Notifications, { Notification as NotificationType } from './components/Notifications'; // Use alias for Notification type if local one is hard to remove or named Notification
 import Header from './components/Header';
+import ChatSidebar from './components/ChatSidebar';
 
 // Helper function to format dates
 const formatDate = (date: Date | string | number) => {
@@ -2891,247 +2892,21 @@ This marketing plan provides a comprehensive framework for achieving our busines
             }}
             title="Drag to expand chat"
           />
-          <DraggableWidgetContainer
-            columnId="right-column"
-            initialItems={[
-              {
-                id: 'chat',
-                content: (
-                  <div className={`${styles.chatbox} ${styles.fullHeightChat}`}>
-                    <div className={`${styles.widgetHeader} ${styles.clickableHeader}`} style={{ justifyContent: 'flex-end' }}>
-                      <h3 
-                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
-                        onClick={() => {
-                          // Toggle chat visibility
-                          const chatBody = document.getElementById('chatBodyContainer');
-                          const chatInput = document.querySelector(`.${styles.chatInputContainer}`);
-                          const chatTabs = document.querySelector(`.${styles.chatTabs}`);
-                          if (chatBody) {
-                            const isVisible = (chatBody as HTMLElement).style.display !== 'none';
-                            (chatBody as HTMLElement).style.display = isVisible ? 'none' : 'block';
-                            if (chatInput) {
-                              (chatInput as HTMLElement).style.display = isVisible ? 'none' : 'flex';
-                            }
-                            if (chatTabs) {
-                              (chatTabs as HTMLElement).style.display = isVisible ? 'none' : 'flex';
-                            }
-                          }
-                        }}
-                      >
-                        Chat
-                        <span style={{ display: 'flex', alignItems: 'center' }}>
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="15 6 9 12 15 18"></polyline>
-                          </svg>
-                        </span>
-                      </h3>
-                    </div>
-                    {chatTabs.length > 0 && (
-                      <>
-                        <div className={styles.chatTabs}>
-                          {/* New Chat Tab button as first tab */}
-                          <button 
-                            className={styles.newChatTab}
-                            title="New Chat Tab"
-                            onClick={() => createNewChatTab()}
-                          >
-                            <PlusIcon />
-                          </button>
-                          {chatTabs.map((tab) => (
-                            <button 
-                              key={tab.id}
-                              className={tab.active ? styles.activeTab : styles.chatTab}
-                              onClick={() => {
-                                // Make this tab active
-                                setChatTabs(prevTabs => prevTabs.map(t => ({
-                                  ...t,
-                                  active: t.id === tab.id
-                                })));
-                                
-                                // Update the current agent if this tab has an agentId
-                                if (tab.agentId) {
-                                  const agent = userAgents.find(a => a.id === tab.agentId);
-                                  if (agent) {
-                                    setCurrentAgent(agent);
-                                  }
-                                }
-                              }}
-                              onDoubleClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                startTabRename(tab.id);
-                              }}
-                            >
-                              {tab.isRenaming ? (
-                                <input
-                                  ref={renameInputRef}
-                                  className={styles.tabRenameInput}
-                                  type="text"
-                                  defaultValue={tab.title}
-                                  onClick={(e) => e.stopPropagation()}
-                                  onMouseDown={(e) => e.stopPropagation()}
-                                  onBlur={(e) => {
-                                    saveTabRename(tab.id, e.target.value);
-                                  }}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                      saveTabRename(tab.id, e.currentTarget.value);
-                                    } else if (e.key === 'Escape') {
-                                      cancelTabRename();
-                                    }
-                                  }}
-                                />
-                              ) : (
-                                tab.title
-                              )}
-                              <span 
-                                className={styles.closeTab}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  
-                                  // Remove this chat from the processes list completely
-                                  setProcesses(prevProcesses => 
-                                    prevProcesses.filter(p => p.id !== tab.id)
-                                  );
-                                  
-                                  // Remove from chat tabs
-                                  const newTabs = chatTabs.filter(t => t.id !== tab.id);
-                                  
-                                  if (newTabs.length === 0) {
-                                    // Close all tabs and create a new one
-                                    const newId = generateUUID();
-                                    const newSessionId = generateUUID(); // Create a unique session ID for this chat
-                                    setChatTabs([{
-                                      id: newId,
-                                      title: `Chat ${1}`,
-                                      messages: [{ sender: 'bot' as const, content: 'Hi! How can I help you today?' }],
-                                      active: true,
-                                      isProcessing: false,
-                                      sessionId: newSessionId // Store the session ID for conversation continuity
-                                    }]);
-                                    
-                                    // Add new tab to Active Processes
-                                    setProcesses(prev => [
-                                      ...prev,
-                                      {
-                                        id: newId,
-                                        name: `Chat ${1}`,
-                                        type: 'chat',
-                                        status: 'inProgress'
-                                      }
-                                    ]);
-                                  } else {
-                                    // Set first tab as active if we're removing the active tab
-                                    if (tab.active) {
-                                      newTabs[0].active = true;
-                                    }
-                                    setChatTabs(newTabs);
-                                  }
-                                }}
-                              >
-                                ×
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                        
-                        {chatTabs.map((tab) => tab.active && (
-                          <div key={tab.id} className={styles.chatBody} id="chatBodyContainer">
-                            {tab.messages.map((msg, i) => (
-                              <div key={i} className={msg.sender === 'user' ? styles.userMsg : styles.botMsg}>
-                                {msg.sender === 'bot' && (
-                                  <div className={styles.botHeader}>
-                                    {tab.agentId ? (
-                                      (() => {
-                                        const agent = userAgents.find(a => a.id === tab.agentId);
-                                        return agent ? (
-                                          <>
-                                            {agent.avatar} {agent.name}
-                                          </>
-                                        ) : (
-                                          <>🤖 Workspace Manager</>
-                                        );
-                                      })()
-                                    ) : (
-                                      <>🤖 Workspace Manager</>
-                                    )}
-                                  </div>
-                                )}
-                                {/* Show thinking section for bot messages if available */}
-                                {msg.sender === 'bot' && msg.thinking && (
-                                  <div className={styles.thinkingContainer}>
-                                    <details className={styles.thinkingDetails}>
-                                      <summary className={styles.thinkingSummary}>
-                                        <span className={styles.thinkingText}>Thought process</span>
-                                      </summary>
-                                      <div className={styles.thinkingContent}>
-                                        {msg.thinking}
-                                      </div>
-                                    </details>
-                                  </div>
-                                )}
-                                
-                                <div className={styles.messageContent}>{msg.content}</div>
-                              </div>
-                            ))}
-                            
-                            {/* Messenger-style typing indicator */}
-                            {tab.isProcessing && (
-                              <div className={`${styles.botMsg} ${styles.typingMsg}`}>
-                                <div className={styles.botHeader}>
-                                  {tab.agentId ? (
-                                    (() => {
-                                      const agent = userAgents.find(a => a.id === tab.agentId);
-                                      return agent ? (
-                                        <>
-                                          {agent.avatar} {agent.name}
-                                        </>
-                                      ) : (
-                                        <>🤖 Workspace Manager</>
-                                      );
-                                    })()
-                                  ) : (
-                                    <>🤖 Workspace Manager</>
-                                  )}
-                                </div>
-                                {/* Separate typing indicators for maximum visibility */}
-                                <div className={styles.processingIndicator}>
-                                  <span className={styles.typingDot}></span>
-                                  <span className={styles.typingDot}></span>
-                                  <span className={styles.typingDot}></span>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                        
-                        {/* Chat input container */}
-                        <div className={styles.chatInputContainer}>
-                          <div className={styles.chatInputWrapper}>
-                            <input 
-                              className={styles.chatInput} 
-                              placeholder="Type a message..." 
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                                  const activeTab = chatTabs.find(tab => tab.active);
-                                  if (activeTab) {
-                                    const userMsg = e.currentTarget.value.trim();
-                                    handleSendMessage(userMsg, activeTab);
-                                    // Clear input
-                                    e.currentTarget.value = '';
-                                  }
-                                }
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )
-              }
-            ]}
-          />
+          <div className={styles.rightColumnWidgets} style={{ width: chatWidth + 'px', height: '100%' }}>
+            <ChatSidebar 
+              chatTabs={chatTabs}
+              setChatTabs={setChatTabs}
+              userAgents={userAgents}
+              setCurrentAgent={setCurrentAgent}
+              setProcesses={setProcesses}
+              generateUUID={generateUUID}
+              handleSendMessage={handleSendMessage}
+              createNewChatTab={createNewChatTab}
+              startTabRename={startTabRename}
+              saveTabRename={saveTabRename}
+              cancelTabRename={cancelTabRename}
+            />
+          </div>
         </section>
       </div>
 
