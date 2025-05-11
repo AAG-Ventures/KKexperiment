@@ -20,6 +20,7 @@ import { useRouter } from 'next/navigation';
 import OnboardingModal from './components/Onboarding/OnboardingModal';
 import ShareModal from './components/ShareModal';
 import Notifications, { Notification as NotificationType } from './components/Notifications'; // Use alias for Notification type if local one is hard to remove or named Notification
+import Header from './components/Header';
 
 // Helper function to format dates
 const formatDate = (date: Date | string | number) => {
@@ -1808,59 +1809,13 @@ Formulating response based on available information...`
       {/* Onboarding Modal */}
       <OnboardingModal />
       {/* Top Bar */}
-      <header className={styles.topBar}>
-        <div className={styles.logoArea}>
-          <Image 
-            src="https://mindextension.me/logo.webp" 
-            alt="Mind Extension Logo" 
-            width={200} 
-            height={70} 
-            priority
-            style={{
-              objectFit: 'contain',
-              maxHeight: '48px',
-              width: 'auto'
-            }} 
-            className={styles.logo}
-          />
-        </div>
-        <div className={styles.spacer}></div>
-        <div className={styles.topBarRight}>
-          <div className={styles.iconGroup}>
-            <button 
-              className={styles.iconButton} 
-              title="Notifications"
-              onClick={() => setIsNotificationPanelOpen(!isNotificationPanelOpen)}
-            >
-              <BellIcon size={20} />
-              {unreadCount > 0 && (
-                <span className={styles.notificationBadge}>{unreadCount}</span>
-              )}
-            </button>
-            
-            {/* Profile Icon - Without text */}
-            <div className={styles.profileIconOnly}>
-              <Link 
-                href="/settings" 
-                title="Profile & Settings"
-                passHref
-              >
-                <UserIcon size={22} />
-              </Link>
-            </div>
-          </div>
-          
-          {/* Notification Panel Popup */}
-          {isNotificationPanelOpen && (
-            <Notifications 
-              isOpen={isNotificationPanelOpen}
-              onClose={() => setIsNotificationPanelOpen(false)}
-              notificationsData={notifications}
-              setNotifications={setNotifications}
-            />
-          )}
-        </div>
-      </header>
+      <Header
+        isNotificationPanelOpen={isNotificationPanelOpen}
+        setIsNotificationPanelOpen={setIsNotificationPanelOpen}
+        unreadCount={unreadCount}
+        notifications={notifications}
+        setNotifications={setNotifications}
+      />
 
       {/* Main Layout */}
       <div className={`${styles.layout} ${isSidebarCollapsed ? styles.layoutCollapsed : ''}`}>
