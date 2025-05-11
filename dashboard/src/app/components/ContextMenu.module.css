@@ -1,0 +1,37 @@
+.contextMenu {
+  position: fixed;
+  background-color: #222;
+  border-radius: 6px;
+  padding: 4px 0;
+  min-width: 180px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 999999; /* Substantially increased z-index to be above all dashboard elements */
+  border: 1px solid #333;
+}
+
+.menuItem {
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s;
+  color: #f1f1f1;
+  font-size: 14px;
+}
+
+.menuItem:hover {
+  background-color: #333;
+}
+
+.itemIcon {
+  margin-right: 8px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+}
+
+.itemLabel {
+  white-space: nowrap;
+}

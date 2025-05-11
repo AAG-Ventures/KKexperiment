@@ -10,14 +10,15 @@ import { FileList } from './components/file-list/FileList';
 import styles from "./page.module.css";
 import AddModal from "./components/AddModal";
 import { DraggableWidgetContainer } from "./components/DraggableWidgetContainer";
-import FileExplorer, { isFolder, FileExplorerProps } from './components/FileExplorer';
+import FileExplorer, { isFolder, FileExplorerProps, FileOperations } from './components/FileExplorer';
 import { UploadIcon, FileIcon, SearchIcon, ShareIcon, FolderIcon, ChevronRightIcon, ChevronDownIcon, EditIcon, MessageIcon, ClockIcon, BellIcon, UserIcon, PlusIcon, SendIcon, HomeIcon, CheckIcon, CalendarIcon } from './components/Icons';
 import DatePicker from './components/DatePicker';
 import CalendarWidget from './components/CalendarWidget';
-import { knowledgebaseData } from './components/KnowledgebaseSampleData';
+import { knowledgebaseData as knowledgebaseInitialData } from './components/KnowledgebaseSampleData';
 // Import explicitly for client component
 import { useRouter } from 'next/navigation';
 import OnboardingModal from './components/Onboarding/OnboardingModal';
+import ShareModal from './components/ShareModal';
 
 // Helper function to format dates
 const formatDate = (date: Date | string | number) => {
@@ -285,6 +286,17 @@ export default function Dashboard() {
   
   // Track active topic in knowledgebase
   const [activeTopicId, setActiveTopicId] = useState<string | null>(null);
+  
+  // Track current preview file for knowledgebase
+  const [previewFile, setPreviewFile] = useState<any | null>(null);
+  
+  // State for knowledgebase data
+  const [knowledgebaseData, setKnowledgebaseData] = useState(knowledgebaseInitialData);
+  
+  // Global share modal state
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareFileName, setShareFileName] = useState('');
+  const [shareFileId, setShareFileId] = useState('');
   
   // Chat tab input reference
   const renameInputRef = useRef<HTMLInputElement>(null);
@@ -1319,6 +1331,176 @@ Formulating response based on available information...`
     setExpandedFolders(['topics']);
   };
   
+  // File operations handlers for knowledgebase
+  const handleViewFile = (file: any) => {
+    console.log('Viewing file:', file.name);
+    setPreviewFile(file);
+    
+    // Simple approach - click on the Marketing Plan tab directly
+    try {
+      // Click on the tab that has 'Marketing Plan' content
+      const marketingTab = Array.from(document.querySelectorAll('div')).
+        find(el => el.textContent?.includes('MarketingPlan.md'));
+        
+      if (marketingTab) {
+        console.log('Found Marketing Plan tab, clicking it');
+        (marketingTab as HTMLElement).click();
+      } else {
+        console.log('Marketing Plan tab not found, trying preview tab');
+        const previewTab = document.getElementById('preview-tab');
+        if (previewTab) previewTab.click();
+      }
+    } catch (error) {
+      console.error('Error clicking Marketing Plan tab:', error);
+    }
+  };
+  
+  const handleRenameFile = (fileId: string, newName: string) => {
+    console.log('Renaming file:', fileId, 'to', newName);
+    
+    // Find and rename the file in the knowledgebase data
+    const findAndRenameFile = (items: any[]) => {
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.id === fileId) {
+          item.name = newName;
+          return true;
+        }
+        if (isFolder(item) && item.children) {
+          if (findAndRenameFile(item.children)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+    
+    findAndRenameFile(knowledgebaseData);
+    
+    // Force re-render by creating a new reference
+    const knowledgebaseDataCopy = [...knowledgebaseData];
+    knowledgebaseData.length = 0;
+    knowledgebaseData.push(...knowledgebaseDataCopy);
+    
+    addNotification({
+      id: `rename-${Date.now()}`,
+      title: 'File Renamed',
+      message: `File renamed to "${newName}"`,
+      type: 'success',
+      timestamp: new Date(),
+      read: false
+    });
+  };
+  
+  // Global method to open the share modal
+  const openShareModal = (fileId: string) => {
+    // Find the file name
+    let fileName = '';
+    const findFileName = (items: any[]) => {
+      for (const item of items) {
+        if (item.id === fileId) {
+          fileName = item.name;
+          return true;
+        }
+        if (isFolder(item) && item.children) {
+          if (findFileName(item.children)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+    
+    findFileName(knowledgebaseData);
+    
+    // Set share modal data and open it
+    setShareFileId(fileId);
+    setShareFileName(fileName);
+    setShareModalOpen(true);
+  };
+  
+  const handleShareFile = (fileId: string, email: string) => {
+    console.log('Sharing file:', fileId, 'with', email);
+    
+    addNotification({
+      id: `share-${Date.now()}`,
+      title: 'File Shared',
+      message: `File "${shareFileName}" shared with ${email}`,
+      type: 'success',
+      timestamp: new Date(),
+      read: false
+    });
+    
+    // Close the modal
+    setShareModalOpen(false);
+  };
+  
+  const handleDeleteFile = (fileId: string) => {
+    console.log('Deleting file:', fileId);
+    
+    // Find and delete the file from knowledgebase data
+    let fileName = '';
+    let fileDeleted = false;
+    
+    // Direct deletion from top-level array
+    for (let i = 0; i < knowledgebaseData.length; i++) {
+      if (knowledgebaseData[i].id === fileId && !isFolder(knowledgebaseData[i])) {
+        fileName = knowledgebaseData[i].name;
+        knowledgebaseData.splice(i, 1);
+        fileDeleted = true;
+        break;
+      }
+    }
+    
+    // Recursive function to delete from nested folders
+    if (!fileDeleted) {
+      const findAndDeleteFile = (items: any[]) => {
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          if (item.id === fileId) {
+            fileName = item.name;
+            items.splice(i, 1);
+            fileDeleted = true;
+            return true;
+          }
+          if (isFolder(item) && item.children) {
+            if (findAndDeleteFile(item.children)) {
+              return true;
+            }
+          }
+        }
+        return false;
+      };
+      
+      // Check each top level item that has children
+      for (const item of knowledgebaseData) {
+        if (isFolder(item) && item.children) {
+          if (findAndDeleteFile(item.children)) {
+            break;
+          }
+        }
+      }
+    }
+    
+    // Reset preview file if the deleted file was being previewed
+    if (previewFile && previewFile.id === fileId) {
+      setPreviewFile(null);
+    }
+    
+    // Force state update by creating a deep copy and updating state
+    const knowledgebaseDataCopy = JSON.parse(JSON.stringify(knowledgebaseData));
+    setKnowledgebaseData(knowledgebaseDataCopy);
+    
+    addNotification({
+      id: `delete-${Date.now()}`,
+      title: 'File Deleted',
+      message: `File "${fileName}" deleted`,
+      type: 'success',
+      timestamp: new Date(),
+      read: false
+    });
+  };
+  
   // Function to handle file drops between folders in the knowledgebase
   const handleFileDrop = (fileId: string, targetFolderId: string) => {
     console.log(`Moving file ${fileId} to folder ${targetFolderId}`);
@@ -1854,6 +2036,12 @@ Formulating response based on available information...`
                             onBackToTopics={backToAllTopics}
                             onToggleFolder={toggleFolderExpansion}
                             onFileDrop={handleFileDrop}
+                            fileOperations={{
+                              onView: handleViewFile,
+                              onRename: handleRenameFile,
+                              onShare: openShareModal,
+                              onDelete: handleDeleteFile
+                            }}
                             onSelect={(item) => {
                               console.log('Selected:', item.name);
                               
@@ -3540,6 +3728,15 @@ This marketing plan provides a comprehensive framework for achieving our busines
           
         }}
       />
+
+      {/* Global share modal */}
+      {shareModalOpen && (
+        <ShareModal
+          fileName={shareFileName}
+          onClose={() => setShareModalOpen(false)}
+          onShare={(email) => handleShareFile(shareFileId, email)}
+        />
+      )}
     </div>
   );
 }

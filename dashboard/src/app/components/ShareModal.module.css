@@ -1,0 +1,121 @@
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999; /* Increased z-index to be higher than dashboard */
+}
+
+.modal {
+  background-color: #222;
+  border-radius: 8px;
+  padding: 24px;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  position: relative;
+  border: 1px solid #333;
+}
+
+.closeButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #9e9e9e;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.closeButton:hover {
+  color: #fff;
+}
+
+.title {
+  margin-top: 0;
+  margin-bottom: 24px;
+  font-size: 20px;
+  color: #f1f1f1;
+}
+
+.formGroup {
+  margin-bottom: 24px;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #aaa;
+}
+
+.emailInput {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 16px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background-color: #333;
+  color: #f1f1f1;
+  transition: border-color 0.2s;
+}
+
+.emailInput:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px rgba(var(--brand-rgb), 0.3);
+}
+
+.emailInput.invalid {
+  border-color: #f13000;
+}
+
+.errorMessage {
+  color: #f13000;
+  font-size: 14px;
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cancelButton, .shareButton {
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancelButton {
+  background-color: transparent;
+  border: 1px solid #444;
+  color: #f1f1f1;
+}
+
+.cancelButton:hover {
+  background-color: #333;
+}
+
+.shareButton {
+  background-color: var(--brand-primary);
+  border: none;
+  color: white;
+}
+
+.shareButton:hover {
+  background-color: var(--brand-hover);
+}

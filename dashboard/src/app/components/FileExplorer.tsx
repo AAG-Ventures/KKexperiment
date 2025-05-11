@@ -1,8 +1,10 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styles from './FileExplorer.module.css';
 import { FolderIcon, FileIcon, ChevronRightIcon, ChevronDownIcon } from '../components/Icons';
+import ContextMenu, { ContextMenuItem } from './ContextMenu';
+import ShareModal from './ShareModal';
 
 // Define types for our file structure
 type FileType = 'document' | 'spreadsheet' | 'presentation' | 'pdf' | 'image' | 'code' | 'other';
@@ -22,6 +24,14 @@ interface FolderItem {
 }
 
 type ExplorerItem = FileItem | FolderItem;
+
+// Interface for file operations
+export interface FileOperations {
+  onView?: (item: FileItem) => void;
+  onRename?: (itemId: string, newName: string) => void;
+  onShare?: (itemId: string) => void; // Now only needs fileId, email handled by global component
+  onDelete?: (itemId: string) => void;
+}
 
 // Utility to check if item is a folder
 export const isFolder = (item: ExplorerItem): item is FolderItem => {
@@ -71,30 +81,138 @@ interface FileItemProps {
   onSelect: (item: ExplorerItem) => void;
   selected: string | null;
   onFileDrop?: (fileId: string, targetFolderId: string) => void;
+  fileOperations?: FileOperations;
 }
 
-const File: React.FC<FileItemProps> = ({ file, onSelect, selected, onFileDrop }) => {
+const File: React.FC<FileItemProps> = ({ file, onSelect, selected, onFileDrop, fileOperations }) => {
   const isActive = selected === file.id;
   const fileClass = getFileClass(file.type);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [newFileName, setNewFileName] = useState(file.name);
+  const inputRef = useRef<HTMLInputElement>(null);
   
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData('fileId', file.id);
     e.dataTransfer.effectAllowed = 'move';
   };
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleRename = () => {
+    setIsRenaming(true);
+    // Focus the input after rendering
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        inputRef.current.select();
+      }
+    }, 10);
+  };
+
+  const handleRenameSubmit = () => {
+    if (newFileName.trim()) {
+      // Always update the name even if it's the same as before to trigger UI update
+      fileOperations?.onRename?.(file.id, newFileName);
+      // Update local file name to show the change immediately
+      file.name = newFileName;
+    }
+    setIsRenaming(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleRenameSubmit();
+    } else if (e.key === 'Escape') {
+      setNewFileName(file.name); // Reset to original
+      setIsRenaming(false);
+    }
+  };
+
+  const contextMenuItems: ContextMenuItem[] = [
+    {
+      label: 'View',
+      icon: '👁️',
+      onClick: () => fileOperations?.onView?.(file)
+    },
+    {
+      label: 'Rename',
+      icon: '✏️',
+      onClick: handleRename
+    },
+    {
+      label: 'Share',
+      icon: '🔗',
+      onClick: () => {
+        setContextMenu(null); // Close the context menu first
+        fileOperations?.onShare?.(file.id);
+      }
+    },
+    {
+      label: 'Delete',
+      icon: '🗑️',
+      onClick: () => {
+        // Delete immediately without confirmation
+        fileOperations?.onDelete?.(file.id);
+      }
+    }
+  ];
   
   return (
-    <div 
-      className={`${styles.fileRow} ${fileClass} ${isActive ? styles.active : ''}`}
-      onClick={() => onSelect(file)}
-      draggable
-      onDragStart={handleDragStart}
-    >
-      <div className={styles.fileIconWrapper}>
-        <FileIcon size={16} />
+    <>
+      <div 
+        className={`${styles.fileRow} ${fileClass} ${isActive ? styles.active : ''}`}
+        onClick={() => onSelect(file)}
+        onContextMenu={handleContextMenu}
+        draggable
+        onDragStart={handleDragStart}
+      >
+        <div className={styles.fileIconWrapper}>
+          <FileIcon size={16} />
+        </div>
+        
+        {isRenaming ? (
+          <input
+            ref={inputRef}
+            type="text"
+            className={styles.renameInput}
+            value={newFileName}
+            onChange={(e) => setNewFileName(e.target.value)}
+            onBlur={handleRenameSubmit}
+            onKeyDown={handleKeyDown}
+            onClick={(e) => e.stopPropagation()}
+            // Prevent dragging while renaming
+            onDragStart={(e) => e.preventDefault()}
+          />
+        ) : (
+          <span className={styles.name}>{file.name}</span>
+        )}
+        
+        {/* Context menu trigger button */}
+        <span 
+          className={styles.contextMenuTrigger} 
+          onClick={(e) => {
+            e.stopPropagation();
+            setContextMenu({ x: e.clientX, y: e.clientY });
+          }}
+        >
+          ⋮
+        </span>
       </div>
-      <span className={styles.name}>{file.name}</span>
-      <span className={styles.contextMenuTrigger}>⋮</span>
-    </div>
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <ContextMenu
+          items={contextMenuItems}
+          position={contextMenu}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
+    </>  
   );
 };
 
@@ -266,6 +384,7 @@ export interface FileExplorerProps {
   onBackToTopics?: () => void;
   onToggleFolder?: (folderId: string) => void;
   onFileDrop?: (fileId: string, targetFolderId: string) => void;
+  fileOperations?: FileOperations;
 }
 
 const FileExplorer: React.FC<FileExplorerProps> = ({ 
@@ -275,7 +394,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   activeTopicId = null,
   onBackToTopics = () => {},
   onToggleFolder = () => {},
-  onFileDrop = () => {}
+  onFileDrop = () => {},
+  fileOperations
 }) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   
@@ -326,6 +446,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                   onSelect={handleSelect} 
                   selected={selectedId}
                   onFileDrop={onFileDrop} 
+                  fileOperations={fileOperations}
                 />
               )}
             </div>
@@ -351,6 +472,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                     onSelect={handleSelect} 
                     selected={selectedId}
                     onFileDrop={onFileDrop} 
+                    fileOperations={fileOperations}
                   />
                 )}
               </div>

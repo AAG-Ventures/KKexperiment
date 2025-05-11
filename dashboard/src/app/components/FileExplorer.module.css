@@ -201,9 +201,31 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
 .fileRow:hover .contextMenuTrigger,
 .folderRow:hover .contextMenuTrigger {
+  opacity: 0.7;
+}
+
+.contextMenuTrigger:hover {
+  opacity: 1 !important;
+}
+
+/* Input field for renaming */
+.renameInput {
+  flex: 1;
+  background-color: #333;
+  border: 1px solid var(--brand-primary);
+  border-radius: 3px;
+  color: #fff;
+  padding: 4px 6px;
+  font-size: 0.95rem;
+  outline: none;
+  margin-right: 8px;
+}
+
+.contextMenuTrigger:hover {
   opacity: 1;
 }

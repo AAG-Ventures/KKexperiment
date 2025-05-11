@@ -272,19 +272,26 @@
   top: 100px; /* Position higher up instead of centered */
   right: -12px; /* Position on the right edge of sidebar */
   transform: none; /* Remove vertical centering */
-  width: 24px;
-  height: 24px;
+  width: 28px; /* Slightly larger */
+  height: 28px; /* Slightly larger */
   border-radius: 50%;
-  background-color: white;
-  color: rgba(131, 61, 255, 1);
-  border: 1px solid rgba(131, 61, 255, 0.5);
-  box-shadow: 0 0 8px rgba(131, 61, 255, 0.3);
+  background-color: var(--background-secondary); /* Use theme color */
+  color: var(--brand-primary); /* Use brand accent color */
+  border: 1px solid var(--brand-primary); /* Use brand accent color */
+  box-shadow: 0 0 8px rgba(var(--brand-rgb), 0.4); /* Use RGB brand color with alpha */
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100; /* Increase significantly to ensure visibility */
-  transition: all 0.3s ease;
+  z-index: 100; /* Ensure visibility */
+  transition: all 0.2s ease;
+}
+
+.sidebarToggle:hover {
+  background-color: var(--brand-primary); /* Change background to accent color on hover */
+  color: var(--background-secondary); /* Invert text color */
+  box-shadow: 0 0 12px rgba(var(--brand-rgb), 0.6); /* Enhanced glow effect */
+  transform: scale(1.05); /* Subtle scale effect */
 }
 
 .sidebarToggle svg {
