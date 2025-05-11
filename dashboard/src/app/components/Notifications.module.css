@@ -1,0 +1,136 @@
+/* /Users/kotryna/KKexperiment/dashboard/src/app/components/Notifications.module.css */
+
+.notificationPanel {
+  position: absolute;
+  top: 60px; /* Adjust as needed based on your header height */
+  right: 20px;
+  width: 350px;
+  max-height: 400px;
+  overflow-y: auto;
+  background-color: var(--background-secondary, #12121E); /* Updated */
+  border: 1px solid var(--border-medium, #475569); /* Updated */
+  border-radius: var(--radius-md, 0.5rem); /* Using global radius */
+  box-shadow: var(--shadow-lg, 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)); /* Using global shadow */
+  z-index: 2000; 
+  color: var(--foreground-primary, #f8fafc); /* Updated */
+}
+
+.notificationPanelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-light, #334155); /* Updated */
+}
+
+.notificationPanelHeader h3 {
+  margin: 0;
+  font-size: var(--font-size-md, 1.125rem); /* Using global font size */
+  font-weight: var(--font-weight-semibold, 600); /* Using global font weight */
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0 4px;
+  color: var(--foreground-tertiary, #cbd5e1); /* Updated */
+}
+
+.notificationList {
+  padding: 8px 0;
+}
+
+.notificationItem {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-light, #334155); /* Updated */
+  cursor: pointer;
+  transition: background-color var(--transition-fast, 0.15s ease);
+}
+
+.notificationItem:last-child {
+  border-bottom: none;
+}
+
+.notificationItem:hover {
+  background-color: var(--background-tertiary, #1A1A2E); /* Updated */
+}
+
+.notificationItem.unread {
+  background-color: var(--brand-primary-subtle, rgba(10, 246, 187, 0.08)); /* Updated to use a subtle brand color */
+}
+
+.notificationItem.unread:hover {
+  background-color: var(--brand-primary-subtle, rgba(10, 246, 187, 0.12)); /* Slightly more opaque on hover */
+}
+
+.notificationContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.notificationTitle {
+  font-weight: var(--font-weight-medium, 500); /* Updated */
+  margin-bottom: 4px;
+  font-size: var(--font-size-sm, 0.875rem); /* Updated */
+  color: var(--foreground-primary, #f8fafc); /* Ensure title color is distinct */
+}
+
+.notificationMessage {
+  font-size: var(--font-size-xs, 0.75rem); /* Updated */
+  color: var(--foreground-secondary, #e2e8f0); /* Updated */
+  margin-bottom: 6px;
+  line-height: var(--line-height-normal, 1.5);
+}
+
+.notificationTime {
+  font-size: 0.7rem; /* Slightly smaller for time */
+  color: var(--foreground-tertiary, #cbd5e1); /* Updated */
+  align-self: flex-end;
+}
+
+.emptyNotifications {
+  padding: 20px;
+  text-align: center;
+  color: var(--foreground-secondary, #e2e8f0); /* Updated */
+}
+
+.notificationPanelFooter {
+  padding: 10px 16px;
+  border-top: 1px solid var(--border-light, #334155); /* Updated */
+  text-align: center;
+}
+
+.markAllReadButton {
+  background-color: transparent;
+  color: var(--brand-primary, #0AF6BB); /* Updated */
+  border: none;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm, 0.25rem);
+  cursor: pointer;
+  font-weight: var(--font-weight-medium, 500);
+  transition: background-color var(--transition-fast, 0.15s ease);
+}
+
+.markAllReadButton:hover {
+  background-color: var(--background-tertiary, #1A1A2E); /* Updated */
+  /* color: var(--foreground-primary); Optional: change text color on hover if background is too similar */
+}
+
+/* Notification types styling - using global UI color variables */
+.notificationItem.info .notificationTitle {
+  color: var(--info, #60a5fa);
+}
+
+.notificationItem.success .notificationTitle {
+  color: var(--success, #34d399);
+}
+
+.notificationItem.warning .notificationTitle {
+  color: var(--warning, #fbbf24);
+}
+
+.notificationItem.error .notificationTitle {
+  color: var(--error, #f87171);
+}

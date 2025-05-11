@@ -19,6 +19,7 @@ import { knowledgebaseData as knowledgebaseInitialData } from './components/Know
 import { useRouter } from 'next/navigation';
 import OnboardingModal from './components/Onboarding/OnboardingModal';
 import ShareModal from './components/ShareModal';
+import Notifications, { Notification as NotificationType } from './components/Notifications'; // Use alias for Notification type if local one is hard to remove or named Notification
 
 // Helper function to format dates
 const formatDate = (date: Date | string | number) => {
@@ -111,14 +112,7 @@ type Agent = {
   author: string;
 };
 
-type Notification = {
-  id: string;
-  title: string;
-  message: string;
-  timestamp: Date;
-  read: boolean;
-  type: 'info' | 'warning' | 'success' | 'error';
-};
+type Notification = NotificationType;
 
 export default function Dashboard() {
   // Use useRouter hook to mark the component as client-side only
@@ -138,7 +132,6 @@ export default function Dashboard() {
   
   // Notification panel state
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
-  const notificationPanelRef = useRef<HTMLDivElement>(null);
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [newTaskText, setNewTaskText] = useState('');
   
@@ -399,7 +392,7 @@ export default function Dashboard() {
   }, [chatTabs.length]);
   
   // Initialize with empty array to prevent hydration mismatch
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<NotificationType[]>([]);
   
   // Initialize notifications on client-side only
   useEffect(() => {
@@ -441,27 +434,8 @@ export default function Dashboard() {
         }
       ]);
     }
-  }, [notifications.length]);
-  
-  // Add click outside handler for notification panel
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (notificationPanelRef.current && 
-          !notificationPanelRef.current.contains(event.target as Node) &&
-          !(event.target as Element).closest(`.${styles.iconButton}`)) {
-        setIsNotificationPanelOpen(false);
-      }
-    };
-    
-    if (isNotificationPanelOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isNotificationPanelOpen, styles.iconButton]);
-  
+  }, []);
+
   // Get unread notification count
   const unreadCount = useMemo(() => {
     return notifications.filter(notification => !notification.read).length;
@@ -936,8 +910,8 @@ Formulating response based on available information...`
       setProcesses(chatTabs.map(tab => ({
         id: tab.id,
         name: tab.title,
-        type: 'chat' as const,
-        status: 'completed' as const
+        type: 'chat',
+        status: 'completed'
       })));
     }
   }, []);
@@ -1062,6 +1036,14 @@ Formulating response based on available information...`
     );
     setTasks(updatedTasks);
     localStorage.setItem('dashboard_tasks', JSON.stringify(updatedTasks));
+    const taskToComplete = updatedTasks.find(task => task.id === id);
+    if (taskToComplete) {
+      addNotification({
+        title: 'Task Completed',
+        message: `You've completed the task: "${taskToComplete.text}"`,
+        type: 'success',
+      });
+    }
   };
   
   // Function to update task description
@@ -1124,6 +1106,14 @@ Formulating response based on available information...`
     if (selectedTaskId !== taskId) {
       setSelectedTaskId(taskId);
     }
+    const task = updatedTasks.find(task => task.id === taskId);
+    if (task) {
+      addNotification({
+        title: 'Task Deadline Updated',
+        message: `Deadline for task "${task.text}" set to ${formatDate(task.deadline || '')}.`,
+        type: 'info',
+      });
+    }
   };
   
   // Function to delete a task
@@ -1139,6 +1129,14 @@ Formulating response based on available information...`
       
       // Close the task detail panel
       setSelectedTaskId(null);
+      const taskToDelete = tasks.find(task => task.id === taskId);
+      if (taskToDelete) {
+        addNotification({
+          title: 'Task Deleted',
+          message: `Task "${taskToDelete.text}" has been deleted.`,
+          type: 'error',
+        });
+      }
     }
   };
 
@@ -1203,51 +1201,18 @@ Formulating response based on available information...`
     localStorage.setItem('dashboard_tasks', JSON.stringify(updatedTasks));
   };
   
-  // Handle marking a notification as read
-  const markNotificationAsRead = (id: string) => {
-    setNotifications(prev => prev.map(notification => 
-      notification.id === id ? { ...notification, read: true } : notification
-    ));
+  // Handle adding a new notification
+  const addNotification = (notification: Omit<NotificationType, 'id' | 'timestamp' | 'read'>) => {
+    const newNotification: NotificationType = {
+      ...notification,
+      id: Date.now().toString(), // Simple unique ID
+      timestamp: new Date(),
+      read: false,
+    };
+    setNotifications(prev => [newNotification, ...prev]);
   };
-  
-  // Add a new notification
-  const addNotification = (notification: Notification) => {
-    setNotifications(prev => [notification, ...prev]);
-  };
-  
-  // Function to format notification timestamp as relative time
-  const formatNotificationTime = (timestampInput: Date | string | number): string => {
-    // Return empty string during server-side rendering
-    if (typeof window === 'undefined') {
-      return '';
-    }
-    
-    // Ensure timestamp is a valid Date object
-    const timestamp = timestampInput instanceof Date ? timestampInput : new Date(timestampInput);
-    
-    // Check if the date is valid
-    if (isNaN(timestamp.getTime())) {
-      return 'Invalid date';
-    }
-    
-    // Only run time calculations on client
-    const now = new Date();
-    const diffMs = now.getTime() - timestamp.getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
-    if (diffMins < 60) {
-      return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
-    } else if (diffHours < 24) {
-      return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
-    } else {
-      return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
-    }
-  };
-  
-  // Function to start adding a new task
-  const startAddingTask = () => {
+
+  const handleAddTask = () => {
     setIsAddingTask(true);
     setNewTaskText('');
     setShowPrioritySelector(false);
@@ -1383,12 +1348,9 @@ Formulating response based on available information...`
     knowledgebaseData.push(...knowledgebaseDataCopy);
     
     addNotification({
-      id: `rename-${Date.now()}`,
       title: 'File Renamed',
       message: `File renamed to "${newName}"`,
       type: 'success',
-      timestamp: new Date(),
-      read: false
     });
   };
   
@@ -1423,12 +1385,9 @@ Formulating response based on available information...`
     console.log('Sharing file:', fileId, 'with', email);
     
     addNotification({
-      id: `share-${Date.now()}`,
       title: 'File Shared',
       message: `File "${shareFileName}" shared with ${email}`,
       type: 'success',
-      timestamp: new Date(),
-      read: false
     });
     
     // Close the modal
@@ -1492,12 +1451,9 @@ Formulating response based on available information...`
     setKnowledgebaseData(knowledgebaseDataCopy);
     
     addNotification({
-      id: `delete-${Date.now()}`,
       title: 'File Deleted',
       message: `File "${fileName}" deleted`,
       type: 'success',
-      timestamp: new Date(),
-      read: false
     });
   };
   
@@ -1585,11 +1541,8 @@ Formulating response based on available information...`
     
     // Show notification
     addNotification({
-      id: `notif-${Date.now()}`,
       title: 'File Moved',
       message: `${fileToMove.name} has been moved to ${targetFolder.name}`,
-      timestamp: new Date(),
-      read: false,
       type: 'success',
     });
   };
@@ -1781,12 +1734,9 @@ Formulating response based on available information...`
     
     // Show confirmation notification
     addNotification({
-      id: generateUUID(),
       title: 'Widget Added',
       message: `New ${widgetType} widget has been added to your dashboard`,
       type: 'success',
-      read: false,
-      timestamp: new Date()
     });
     
     handleCloseAddModal();
@@ -1902,61 +1852,12 @@ Formulating response based on available information...`
           
           {/* Notification Panel Popup */}
           {isNotificationPanelOpen && (
-            <div ref={notificationPanelRef} className={styles.notificationPanel} style={{zIndex: 2000}}>
-              <div className={styles.notificationPanelHeader}>
-                <h3>Notifications</h3>
-                <button 
-                  onClick={() => setIsNotificationPanelOpen(false)}
-                  className={styles.closeButton}
-                >
-                  ×
-                </button>
-              </div>
-              <div className={styles.notificationList}>
-                {notifications.length === 0 ? (
-                  <div className={styles.emptyNotifications}>No notifications</div>
-                ) : (
-                  // Show unread notifications or the 3 most recent
-                  (unreadCount > 0 ? 
-                    notifications.filter(n => !n.read) : 
-                    [...notifications].sort((a, b) => {
-                      // Ensure timestamps are proper Date objects
-                      const aTime = a.timestamp instanceof Date ? a.timestamp.getTime() : new Date(a.timestamp).getTime();
-                      const bTime = b.timestamp instanceof Date ? b.timestamp.getTime() : new Date(b.timestamp).getTime();
-                      return bTime - aTime;
-                    }).slice(0, 3)
-                  ).map(notification => (
-                    <div 
-                      key={notification.id}
-                      className={`${styles.notificationItem} ${!notification.read ? styles.unread : ''} ${styles[notification.type]}`}
-                      onClick={() => markNotificationAsRead(notification.id)}
-                    >
-                      <div className={styles.notificationContent}>
-                        <div className={styles.notificationTitle}>{notification.title}</div>
-                        <div className={styles.notificationMessage}>{notification.message}</div>
-                        <div className={styles.notificationTime}>
-                          {formatNotificationTime(notification.timestamp)}
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-              {notifications.length > 0 && (
-                <div className={styles.notificationPanelFooter}>
-                  <button 
-                    className={styles.markAllReadButton}
-                    onClick={() => {
-                      setNotifications(prevNotifications => 
-                        prevNotifications.map(n => ({ ...n, read: true }))
-                      );
-                    }}
-                  >
-                    Mark all as read
-                  </button>
-                </div>
-              )}
-            </div>
+            <Notifications 
+              isOpen={isNotificationPanelOpen}
+              onClose={() => setIsNotificationPanelOpen(false)}
+              notificationsData={notifications}
+              setNotifications={setNotifications}
+            />
           )}
         </div>
       </header>
@@ -2423,14 +2324,15 @@ Formulating response based on available information...`
                           { type: 'unchanged', content: '}) => {', lineNumber: 14, oldLineNumber: 12 },
                           { type: 'unchanged', content: '  return (', lineNumber: 15, oldLineNumber: 13 },
                           { type: 'unchanged', content: '    <div className={styles.dashboard}>', lineNumber: 16, oldLineNumber: 14 },
-                          { type: 'unchanged', content: '      <header className={styles.header}>', lineNumber: 17, oldLineNumber: 15 },
+                          { type: 'removed', content: '      <div className={styles.header}>', lineNumber: 17, oldLineNumber: 15 },
+                          { type: 'added', content: '      <header className={styles.header}>', lineNumber: 17 },
                           { type: 'unchanged', content: '        <h1>{title}</h1>', lineNumber: 18, oldLineNumber: 16 },
-                          { type: 'unchanged', content: '      </header>', lineNumber: 19, oldLineNumber: 17 },
-                          { type: 'unchanged', content: '      <main className={styles.main}>', lineNumber: 20, oldLineNumber: 18 },
-                          { type: 'removed', content: '        {showSidebar && <div className={styles.sidebar}>Sidebar</div>}', lineNumber: 21, oldLineNumber: 19 },
-                          { type: 'added', content: '        {showSidebar && <div className={`${styles.sidebar} ${styles[theme]}`}>Sidebar</div>}', lineNumber: 21 },
-                          { type: 'unchanged', content: '        <div className={styles.content}>Content</div>', lineNumber: 22, oldLineNumber: 20 },
-                          { type: 'unchanged', content: '      </main>', lineNumber: 23, oldLineNumber: 21 },
+                          { type: 'removed', content: '      </div>', lineNumber: 19, oldLineNumber: 17 },
+                          { type: 'added', content: '      </header>', lineNumber: 19 },
+                          { type: 'added', content: '      <main className={styles.main}>', lineNumber: 20 },
+                          { type: 'unchanged', content: '        {showSidebar && <div className={styles.sidebar}>Sidebar</div>}', lineNumber: 21, oldLineNumber: 18 },
+                          { type: 'added', content: '        <div className={styles.content}>Content</div>', lineNumber: 22 },
+                          { type: 'added', content: '      </main>', lineNumber: 23 },
                           { type: 'unchanged', content: '    </div>', lineNumber: 24, oldLineNumber: 22 },
                           { type: 'unchanged', content: '  );', lineNumber: 25, oldLineNumber: 23 },
                         ]
@@ -2682,7 +2584,7 @@ This marketing plan provides a comprehensive framework for achieving our busines
                         priority: task.priority,
                         completed: task.completed
                       }))}
-                      onSelectDate={(date: Date) => {
+                      onSelectDate={(date) => {
                         console.log('Date selected in calendar:', date);
                         // Set the selected date as the deadline for the new task
                         setNewTaskDeadline(date);
@@ -2698,7 +2600,7 @@ This marketing plan provides a comprehensive framework for achieving our busines
                           }
                         }, 100);
                       }}
-                      onSelectTask={(taskId: string) => {
+                      onSelectTask={(taskId) => {
                         // When a task is selected in the calendar, show its details
                         setSelectedTaskId(taskId);
                       }}
@@ -2774,7 +2676,7 @@ This marketing plan provides a comprehensive framework for achieving our busines
                         className={styles.newTabButton} 
                         title="Add New Task"
                         type="button"
-                        onClick={startAddingTask}
+                        onClick={handleAddTask}
                       >
                         <PlusIcon size={20} />
                       </button>
@@ -2789,7 +2691,7 @@ This marketing plan provides a comprehensive framework for achieving our busines
                           <p>You&apos;ve completed everything in your plan!</p>
                           <button 
                             className={styles.addTaskButton}
-                            onClick={startAddingTask}
+                            onClick={handleAddTask}
                           >
                             Add a new task
                           </button>
@@ -3356,6 +3258,7 @@ This marketing plan provides a comprehensive framework for achieving our busines
               
               <div className={styles.taskDetailSection}>
                 <h3 className={styles.taskDetailSectionTitle}>Description</h3>
+                
                 {task.description ? (
                   <div className={styles.taskDescription}>
                     {task.description}
@@ -3365,6 +3268,7 @@ This marketing plan provides a comprehensive framework for achieving our busines
                     No description provided yet.
                   </p>
                 )}
+                
                 <textarea
                   className={styles.taskDescriptionInput}
                   placeholder="Add or update description..."
@@ -3526,11 +3430,8 @@ This marketing plan provides a comprehensive framework for achieving our busines
           
           // Notify user
           addNotification({
-            id: `notif-${Date.now()}`,
             title: 'Agent Created',
             message: `Agent "${name}" was created successfully`,
-            timestamp: new Date(),
-            read: false,
             type: 'success',
           });
           
@@ -3641,12 +3542,9 @@ This marketing plan provides a comprehensive framework for achieving our busines
           
           // Show notification
           addNotification({
-            id: generateUUID(),
             title: 'Files Uploaded',
             message: `${files.length} file${files.length !== 1 ? 's' : ''} uploaded successfully`,
             type: 'success',
-            read: false,
-            timestamp: new Date()
           });
           
           // If there's at least one file, open it in the file viewer
@@ -3715,12 +3613,9 @@ This marketing plan provides a comprehensive framework for achieving our busines
           // Show a success notification
           const safeTopicName = typeof folderName === 'string' ? folderName : 'Untitled';
           addNotification({
-            id: generateUUID(),
             title: 'Folder Created',
             message: `New topic "${safeTopicName}" has been added to your knowledgebase`,
             type: 'success',
-            read: false,
-            timestamp: new Date()
           });
           
           // Close the add modal
