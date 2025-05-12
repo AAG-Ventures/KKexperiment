@@ -13,7 +13,7 @@
 .dragHandle {
   position: absolute;
   top: 8px;
-  right: 8px;
+  right: 23px;
   cursor: grab;
   padding: 8px;
   border-radius: 4px;

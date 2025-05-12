@@ -1160,6 +1160,19 @@
   position: relative;
 }
 
+.widgetHeaderContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.widgetHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .widgetHeader::after {
   content: '';
   position: absolute;

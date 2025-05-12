@@ -1,0 +1,73 @@
+/* Search button in the header */
+.searchButton {
+  background: none;
+  border: none;
+  color: var(--foreground-primary);
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.searchButton:hover {
+  opacity: 1;
+}
+
+/* Search bar that appears below the header */
+.searchBar {
+  width: 100%;
+  padding: 0 12px 4px;
+  background-color: var(--background-secondary);
+  border-bottom: 1px solid var(--border-light);
+  box-sizing: border-box;
+}
+
+.searchInputWrapper {
+  display: flex;
+  align-items: center;
+  background-color: transparent;
+  border: none;
+  padding: 2px 0;
+  width: 100%;
+}
+
+.searchIcon {
+  color: var(--foreground-tertiary);
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 2px 0;
+  color: var(--foreground-primary);
+  outline: none;
+  font-size: 12px;
+  width: 100%;
+}
+
+.searchInput::placeholder {
+  color: var(--foreground-tertiary);
+}
+
+.clearButton {
+  background: none;
+  border: none;
+  color: var(--foreground-tertiary);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.clearButton:hover {
+  opacity: 1;
+}

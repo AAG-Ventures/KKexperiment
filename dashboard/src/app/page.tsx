@@ -12,9 +12,13 @@ import AddModal from "./components/AddModal";
 import { DraggableWidgetContainer } from './components/DraggableWidgetContainer';
 import WorkspaceCreateModal from './components/workspace/WorkspaceCreateModal';
 import FileExplorer, { isFolder, FileExplorerProps, FileOperations } from './components/FileExplorer';
+// Import the ExplorerItem type from FileExplorer.tsx
+type ExplorerItem = any; // Using any as a fallback since we can't directly import the internal type
 import { UploadIcon, FileIcon, SearchIcon, ShareIcon, FolderIcon, ChevronRightIcon, ChevronDownIcon, EditIcon, MessageIcon, ClockIcon, BellIcon, UserIcon, PlusIcon, SendIcon, HomeIcon, CheckIcon, CalendarIcon } from './components/Icons';
 import DatePicker from './components/DatePicker';
 import CalendarWidget from './components/CalendarWidget';
+import { KnowledgebaseSearchBar, KnowledgebaseSearchButton } from './components/KnowledgebaseSearch';
+import { filterKnowledgebaseData } from './utils/knowledgebaseSearch';
 import { knowledgebaseData as knowledgebaseInitialData } from './components/KnowledgebaseSampleData';
 import ActiveProcesses, { initializeProcessesFromChats } from './components/ActiveProcesses';
 import MyAgents from './components/MyAgents';
@@ -241,10 +245,22 @@ export default function Dashboard() {
   const [activeTopicId, setActiveTopicId] = useState<string | null>(null);
   
   // Track current preview file for knowledgebase
-  const [previewFile, setPreviewFile] = useState<any | null>(null);
+  const [previewFile, setPreviewFile] = useState<ExplorerItem | null>(null);
   
   // State for knowledgebase data
   const [knowledgebaseData, setKnowledgebaseData] = useState(knowledgebaseInitialData);
+  
+  // State for knowledgebase search
+  const [isKnowledgebaseSearchActive, setIsKnowledgebaseSearchActive] = useState(false);
+  const [knowledgebaseSearchQuery, setKnowledgebaseSearchQuery] = useState('');
+  
+  // Filtered knowledgebase data based on search query
+  const filteredKnowledgebaseData = useMemo(() => {
+    if (!knowledgebaseSearchQuery.trim()) {
+      return knowledgebaseData;
+    }
+    return filterKnowledgebaseData(knowledgebaseData, knowledgebaseSearchQuery);
+  }, [knowledgebaseData, knowledgebaseSearchQuery]);
   
   // Global share modal state
   const [shareModalOpen, setShareModalOpen] = useState(false);
@@ -1814,12 +1830,33 @@ Formulating response based on available information...`
                             cursor: activeTopicId ? 'pointer' : 'default',
                           }}
                         >
-                          <h3>Knowledgebase</h3>
+                          <div className={styles.widgetHeaderContent}>
+                            <h3>Knowledgebase</h3>
+                            <div className={styles.widgetHeaderActions}>
+                              <KnowledgebaseSearchButton 
+                                onClick={() => {
+                                  setIsKnowledgebaseSearchActive(!isKnowledgebaseSearchActive);
+                                  if (isKnowledgebaseSearchActive) {
+                                    // Clear search when deactivating
+                                    setKnowledgebaseSearchQuery('');
+                                  }
+                                }}
+                              />
+                            </div>
+                          </div>
                         </div>
+                        {/* Search bar appears below header when search is active */}
+                        {isKnowledgebaseSearchActive && (
+                          <KnowledgebaseSearchBar
+                            searchQuery={knowledgebaseSearchQuery}
+                            onSearchChange={setKnowledgebaseSearchQuery}
+                            onClearSearch={() => setKnowledgebaseSearchQuery('')}
+                          />
+                        )}
                         {/* File Explorer Component */}
                         <div className={styles.fileExplorerContainer}>
                           <FileExplorer 
-                            data={knowledgebaseData}
+                            data={filteredKnowledgebaseData}
                             expandedFolders={expandedFolders}
                             activeTopicId={activeTopicId}
                             onBackToTopics={backToAllTopics}
