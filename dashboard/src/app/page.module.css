@@ -245,6 +245,7 @@
   flex-direction: column;
   gap: clamp(8px, 2vw, 16px);
   overflow-y: auto;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
   padding: 0 0 24px 0; /* Remove right padding to prevent issues with toggle button */
   mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1.0) 85%, transparent 100%);
   width: 270px;
@@ -252,6 +253,36 @@
   max-width: 270px;
   flex-shrink: 0;
   position: relative; /* Ensure proper positioning for the toggle button */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: transparent transparent; /* Firefox: thumb track */
+}
+
+/* Show scrollbars in Firefox only when hovering/scrolling */
+.leftColumn:hover,
+.leftColumn:focus,
+.leftColumn:active {
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent; /* Firefox: thumb track */
+}
+
+/* Webkit (Chrome, Safari, Edge) scrollbar styling */
+.leftColumn::-webkit-scrollbar {
+  width: 6px;
+}
+
+.leftColumn::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.leftColumn::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 6px;
+  transition: background-color 0.3s;
+}
+
+.leftColumn:hover::-webkit-scrollbar-thumb,
+.leftColumn:focus::-webkit-scrollbar-thumb,
+.leftColumn:active::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
 }
 
 .sidebar {
@@ -260,6 +291,7 @@
   border-right: 1px solid rgba(255, 255, 255, 0.06);
   height: calc(100vh - 60px);
   overflow-y: auto;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
   padding: 20px 16px; /* Increased padding */
   position: relative;
   z-index: 5;
@@ -267,6 +299,36 @@
   box-shadow: var(--shadow-lg);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: transparent transparent; /* Firefox: thumb track */
+}
+
+/* Show scrollbars in Firefox only when hovering/scrolling */
+.sidebar:hover,
+.sidebar:focus,
+.sidebar:active {
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent; /* Firefox: thumb track */
+}
+
+/* Webkit (Chrome, Safari, Edge) scrollbar styling */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 6px;
+  transition: background-color 0.3s;
+}
+
+.sidebar:hover::-webkit-scrollbar-thumb,
+.sidebar:focus::-webkit-scrollbar-thumb,
+.sidebar:active::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
 }
 
 .sidebarToggle {
@@ -1211,6 +1273,37 @@
   padding: 0 16px 16px 16px;
   height: calc(100% - 60px);
   overflow-y: auto;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: transparent transparent; /* Firefox: thumb track */
+}
+
+/* Show scrollbars in Firefox only when hovering/scrolling */
+.cardContent:hover,
+.cardContent:focus,
+.cardContent:active {
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent; /* Firefox: thumb track */
+}
+
+/* Webkit (Chrome, Safari, Edge) scrollbar styling */
+.cardContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cardContent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cardContent::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 6px;
+  transition: background-color 0.3s;
+}
+
+.cardContent:hover::-webkit-scrollbar-thumb,
+.cardContent:focus::-webkit-scrollbar-thumb,
+.cardContent:active::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
 }
 
 @keyframes typingAnimation {
@@ -1883,6 +1976,7 @@
   padding: 0;
   max-height: 100%;
   overflow-y: auto;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
   mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1.0) 95%, transparent 100%);
   width: 350px;
   min-width: 280px;
@@ -1890,12 +1984,36 @@
   flex-shrink: 0;
   transition: width 0.3s ease;
   position: relative;
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: transparent transparent; /* Firefox: thumb track */
 }
 
+/* Show scrollbars in Firefox only when hovering/scrolling */
+.widgets:hover,
+.widgets:focus,
+.widgets:active {
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent; /* Firefox: thumb track */
+}
+
+/* Webkit (Chrome, Safari, Edge) scrollbar styling */
 .widgets::-webkit-scrollbar {
-  display: none;
-  width: 0;
-  height: 0;
+  width: 6px;
+}
+
+.widgets::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.widgets::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 6px;
+  transition: background-color 0.3s;
+}
+
+.widgets:hover::-webkit-scrollbar-thumb,
+.widgets:focus::-webkit-scrollbar-thumb,
+.widgets:active::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
 }
 
 .widgetBox {
@@ -1976,6 +2094,37 @@
   max-height: 300px;
   padding: 4px 16px 16px 16px;
   overflow-y: auto;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: transparent transparent; /* Firefox: thumb track */
+}
+
+/* Show scrollbars in Firefox only when hovering/scrolling */
+.taskSection:hover,
+.taskSection:focus,
+.taskSection:active {
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent; /* Firefox: thumb track */
+}
+
+/* Webkit (Chrome, Safari, Edge) scrollbar styling */
+.taskSection::-webkit-scrollbar {
+  width: 6px;
+}
+
+.taskSection::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.taskSection::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 6px;
+  transition: background-color 0.3s;
+}
+
+.taskSection:hover::-webkit-scrollbar-thumb,
+.taskSection:focus::-webkit-scrollbar-thumb,
+.taskSection:active::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
 }
 
 .fileExplorer.tasksContainer {
@@ -1990,15 +2139,39 @@
   padding: 0 4px 0 0;
   margin: 0;
   overflow-y: auto; /* Changed back to auto to allow scrolling */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
   height: 100%;
   max-height: 350px; /* Set a maximum height to ensure scrolling */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: transparent transparent; /* Firefox: thumb track */
 }
 
-/* Hide webkit scrollbar completely */
+/* Show scrollbars in Firefox only when hovering/scrolling */
+.taskList:hover,
+.taskList:focus,
+.taskList:active {
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent; /* Firefox: thumb track */
+}
+
+/* Webkit (Chrome, Safari, Edge) scrollbar styling */
 .taskList::-webkit-scrollbar {
-  display: none;
-  width: 0;
-  height: 0;
+  width: 6px;
+}
+
+.taskList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.taskList::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 6px;
+  transition: background-color 0.3s;
+}
+
+.taskList:hover::-webkit-scrollbar-thumb,
+.taskList:focus::-webkit-scrollbar-thumb,
+.taskList:active::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
 }
 
 .taskItem {
