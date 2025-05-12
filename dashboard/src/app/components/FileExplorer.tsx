@@ -14,6 +14,7 @@ interface FileItem {
   name: string;
   type: FileType;
   icon?: string;
+  isNew?: boolean; // Flag to indicate if this is a newly created file that needs immediate renaming
 }
 
 interface FolderItem {
@@ -21,6 +22,7 @@ interface FolderItem {
   name: string;
   icon?: string;
   children: (FileItem | FolderItem)[];
+  isNew?: boolean; // Flag to indicate if this is a newly created folder that needs immediate renaming
 }
 
 type ExplorerItem = FileItem | FolderItem;
@@ -31,6 +33,8 @@ export interface FileOperations {
   onRename?: (itemId: string, newName: string) => void;
   onShare?: (itemId: string) => void; // Now only needs fileId, email handled by global component
   onDelete?: (itemId: string) => void;
+  onAddFile?: (folderId: string) => void;
+  onAddFolder?: (folderId: string) => void;
 }
 
 // Utility to check if item is a folder
@@ -88,7 +92,7 @@ const File: React.FC<FileItemProps> = ({ file, onSelect, selected, onFileDrop, f
   const isActive = selected === file.id;
   const fileClass = getFileClass(file.type);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
-  const [isRenaming, setIsRenaming] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(file.isNew || false);
   const [newFileName, setNewFileName] = useState(file.name);
   const inputRef = useRef<HTMLInputElement>(null);
   
@@ -113,6 +117,14 @@ const File: React.FC<FileItemProps> = ({ file, onSelect, selected, onFileDrop, f
       }
     }, 10);
   };
+  
+  // Auto-focus when isRenaming is true (for new files)
+  useEffect(() => {
+    if (isRenaming && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isRenaming]);
 
   const handleRenameSubmit = () => {
     if (newFileName.trim()) {
@@ -139,6 +151,16 @@ const File: React.FC<FileItemProps> = ({ file, onSelect, selected, onFileDrop, f
       icon: '👁️',
       onClick: () => fileOperations?.onView?.(file)
     },
+    ...(fileOperations?.onAddFile ? [{
+      label: 'Add File',
+      icon: '📄',
+      onClick: () => fileOperations.onAddFile?.(file.id)
+    }] : []),
+    ...(fileOperations?.onAddFolder ? [{
+      label: 'Add Folder',
+      icon: '📁',
+      onClick: () => fileOperations.onAddFolder?.(file.id)
+    }] : []),
     {
       label: 'Rename',
       icon: '✏️',
@@ -224,6 +246,7 @@ interface FolderProps {
   expandedFolders?: string[];
   onToggleFolder?: (folderId: string) => void;
   onFileDrop?: (fileId: string, targetFolderId: string) => void;
+  fileOperations?: FileOperations;
 }
 
 const Folder: React.FC<FolderProps> = ({ 
@@ -233,7 +256,8 @@ const Folder: React.FC<FolderProps> = ({
   defaultExpanded = false,
   expandedFolders = [],
   onToggleFolder,
-  onFileDrop
+  onFileDrop,
+  fileOperations
 }) => {
   // Check if this folder should be expanded based on expandedFolders prop
   const shouldBeExpanded = expandedFolders.includes(folder.id) || defaultExpanded;
@@ -241,6 +265,11 @@ const Folder: React.FC<FolderProps> = ({
   // Use state for internal tracking of expanded status
   // Always use external state for expansion status
   const [expanded, setExpanded] = useState(shouldBeExpanded);
+  
+  // Add rename functionality for folders
+  const [isRenaming, setIsRenaming] = useState(folder.isNew || false);
+  const [newFolderName, setNewFolderName] = useState(folder.name);
+  const inputRef = useRef<HTMLInputElement>(null);
   
   // Use effect to respond to external expansion requests
   useEffect(() => {
@@ -257,6 +286,51 @@ const Folder: React.FC<FolderProps> = ({
   }, [expandedFolders, folder.id, shouldBeExpanded]);
   
   const isActive = selected === folder.id;
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({ x: e.clientX, y: e.clientY });
+  };
+  
+  // Auto-focus when isRenaming is true (for new folders)
+  useEffect(() => {
+    if (isRenaming && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isRenaming]);
+  
+  const handleRename = () => {
+    setIsRenaming(true);
+    // Focus the input after rendering
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        inputRef.current.select();
+      }
+    }, 10);
+  };
+  
+  const handleRenameSubmit = () => {
+    if (newFolderName.trim()) {
+      // Always update the name even if it's the same as before to trigger UI update
+      fileOperations?.onRename?.(folder.id, newFolderName);
+      // Update local folder name to show the change immediately
+      folder.name = newFolderName;
+    }
+    setIsRenaming(false);
+  };
+  
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleRenameSubmit();
+    } else if (e.key === 'Escape') {
+      setNewFolderName(folder.name); // Reset to original
+      setIsRenaming(false);
+    }
+  };
   
   const toggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -293,10 +367,12 @@ const Folder: React.FC<FolderProps> = ({
       className={styles.folderItem}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
+      onContextMenu={handleContextMenu}
     >
       <div 
         className={`${styles.folderRow} ${isActive ? styles.active : ''} ${folder.id === 'topics' ? styles.topicsRow : ''}`}
         onClick={(e) => {
+          
           // Select the folder in all cases
           onSelect(folder);
           
@@ -337,9 +413,57 @@ const Folder: React.FC<FolderProps> = ({
         <span className={styles.icon}>
           <span className={styles.folderIcon}><FolderIcon size={16} /></span>
         </span>
-        <span className={styles.name}>{folder.name}</span>
-        <span className={styles.contextMenuTrigger}>⋮</span>
+        {isRenaming ? (
+          <input 
+            ref={inputRef}
+            className={styles.renameInput}
+            type="text"
+            value={newFolderName}
+            onChange={(e) => setNewFolderName(e.target.value)}
+            onBlur={handleRenameSubmit}
+            onKeyDown={handleKeyDown}
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on input
+          />
+        ) : (
+          <span className={styles.name}>{folder.name}</span>
+        )}
+        <span 
+          className={styles.contextMenuTrigger} 
+          onClick={(e) => {
+            e.stopPropagation();
+            setContextMenu({ x: e.clientX, y: e.clientY });
+          }}
+        >⋮</span>
       </div>
+      
+      {contextMenu && (
+        <ContextMenu
+          items={[
+            ...(fileOperations?.onAddFile ? [{
+              label: 'Add File',
+              icon: '📄',
+              onClick: () => fileOperations.onAddFile?.(folder.id)
+            }] : []),
+            ...(fileOperations?.onAddFolder ? [{
+              label: 'Add Folder',
+              icon: '📁',
+              onClick: () => fileOperations.onAddFolder?.(folder.id)
+            }] : []),
+            ...(fileOperations?.onRename ? [{
+              label: 'Rename',
+              icon: '✏️',
+              onClick: handleRename
+            }] : []),
+            ...(fileOperations?.onDelete ? [{
+              label: 'Delete',
+              icon: '🗑️',
+              onClick: () => fileOperations.onDelete?.(folder.id)
+            }] : [])
+          ]}
+          position={contextMenu}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
       
       {expanded && (
         <div className={styles.children}>
@@ -465,6 +589,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                     defaultExpanded={item.id === 'topics' || item.id === 'shared'}
                     onToggleFolder={onToggleFolder}
                     onFileDrop={onFileDrop}
+                    fileOperations={fileOperations}
                   />
                 ) : (
                   <File 

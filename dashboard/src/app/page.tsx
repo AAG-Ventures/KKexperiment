@@ -1325,12 +1325,26 @@ Formulating response based on available information...`
   const handleRenameFile = (fileId: string, newName: string) => {
     console.log('Renaming file:', fileId, 'to', newName);
     
+    let isNewItem = false;
+    let itemType = '';
+    let oldName = '';
+    
     // Find and rename the file in the knowledgebase data
     const findAndRenameFile = (items: any[]) => {
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
         if (item.id === fileId) {
+          // Store the original name and check if this is a new item
+          oldName = item.name;
+          isNewItem = !!item.isNew;
+          itemType = isFolder(item) ? 'folder' : 'file';
+          
+          // Rename the item
           item.name = newName;
+          
+          // Remove the isNew flag if it exists
+          if (item.isNew) delete item.isNew;
+          
           return true;
         }
         if (isFolder(item) && item.children) {
@@ -1349,11 +1363,20 @@ Formulating response based on available information...`
     knowledgebaseData.length = 0;
     knowledgebaseData.push(...knowledgebaseDataCopy);
     
-    addNotification({
-      title: 'File Renamed',
-      message: `File renamed to "${newName}"`,
-      type: 'success',
-    });
+    // Show different notifications based on whether this is a new item or renaming an existing one
+    if (isNewItem) {
+      addNotification({
+        title: `${itemType === 'folder' ? 'Folder' : 'File'} Created`,
+        message: `New ${itemType} "${newName}" has been created`,
+        type: 'success',
+      });
+    } else {
+      addNotification({
+        title: `${itemType === 'folder' ? 'Folder' : 'File'} Renamed`,
+        message: `${itemType === 'folder' ? 'Folder' : 'File'} renamed from "${oldName}" to "${newName}"`,
+        type: 'success',
+      });
+    }
   };
   
   // Global method to open the share modal
@@ -1396,6 +1419,136 @@ Formulating response based on available information...`
     setShareModalOpen(false);
   };
   
+  const handleAddFile = (folderId: string) => {
+    console.log('Adding file to folder:', folderId);
+    
+    // Generate a unique ID for the new file
+    const newFileId = `new-file-${generateUUID()}`;
+    
+    // Create a new file object that will be in renaming state from the start
+    const newFile = {
+      id: newFileId,
+      name: 'New File.md', // Default name that will be editable immediately
+      type: 'document' as const,
+      icon: '📄',
+      isNew: true // Special flag to indicate this is a new file that needs immediate renaming
+    };
+    
+    // Function to add the file to the specified folder
+    const addFileToFolder = (items: any[]): boolean => {
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        
+        if (item.id === folderId) {
+          // If this is the target folder, add the file
+          if (isFolder(item) && item.children) {
+            item.children.push(newFile);
+            return true;
+          } else {
+            // If it's not a folder, add to parent folder instead
+            return false;
+          }
+        }
+        
+        // Recursively check children
+        if (isFolder(item) && item.children) {
+          if (addFileToFolder(item.children)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+    
+    // Try to add the file to the folder
+    const added = addFileToFolder(knowledgebaseData);
+    
+    // If no folder found or not actually a folder, add to the root
+    if (!added) {
+      // Try to add to Topics folder
+      const topicsFolder = knowledgebaseData.find(item => item.id === 'topics');
+      if (topicsFolder && isFolder(topicsFolder) && topicsFolder.children) {
+        topicsFolder.children.push(newFile);
+      } else {
+        // Add to root if no Topics folder
+        knowledgebaseData.push(newFile);
+      }
+    }
+    
+    // Force re-render by creating a new reference
+    const knowledgebaseDataCopy = [...knowledgebaseData];
+    knowledgebaseData.length = 0;
+    knowledgebaseData.push(...knowledgebaseDataCopy);
+    
+    // No notification yet as the user will still be naming the file
+    // We'll show a notification after the renaming is complete
+  };
+  
+  const handleAddFolder = (parentFolderId: string) => {
+    console.log('Adding folder to:', parentFolderId);
+    
+    // Generate a unique ID for the new folder
+    const newFolderId = `new-folder-${generateUUID()}`;
+    
+    // Create a new folder object that will be in renaming state from the start
+    const newFolder = {
+      id: newFolderId,
+      name: 'New Folder', // Default name that will be editable immediately
+      icon: '📁',
+      children: [] as any[],
+      isNew: true // Special flag to indicate this is a new folder that needs immediate renaming
+    };
+    
+    // Function to add the folder to the specified parent folder
+    const addFolderToParent = (items: any[]): boolean => {
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        
+        if (item.id === parentFolderId) {
+          // If this is the target folder, add the new folder
+          if (isFolder(item) && item.children) {
+            item.children.push(newFolder);
+            return true;
+          } else {
+            // If it's not a folder, add to parent folder instead
+            return false;
+          }
+        }
+        
+        // Recursively check children
+        if (isFolder(item) && item.children) {
+          if (addFolderToParent(item.children)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+    
+    // Try to add the folder to the parent
+    const added = addFolderToParent(knowledgebaseData);
+    
+    // If no parent folder found or not actually a folder, add to the root
+    if (!added) {
+      // Try to add to Topics folder
+      const topicsFolder = knowledgebaseData.find(item => item.id === 'topics');
+      if (topicsFolder && isFolder(topicsFolder) && topicsFolder.children) {
+        topicsFolder.children.push(newFolder);
+      } else {
+        // Add to root if no Topics folder
+        knowledgebaseData.push(newFolder);
+      }
+    }
+    
+    // Force re-render by creating a new reference
+    const knowledgebaseDataCopy = [...knowledgebaseData];
+    knowledgebaseData.length = 0;
+    knowledgebaseData.push(...knowledgebaseDataCopy);
+    
+    // No notification yet as the user will still be naming the folder
+    // We'll show a notification after the renaming is complete
+  };
+
   const handleDeleteFile = (fileId: string) => {
     console.log('Deleting file:', fileId);
     
@@ -1900,7 +2053,9 @@ Formulating response based on available information...`
                               onView: handleViewFile,
                               onRename: handleRenameFile,
                               onShare: openShareModal,
-                              onDelete: handleDeleteFile
+                              onDelete: handleDeleteFile,
+                              onAddFile: handleAddFile,
+                              onAddFolder: handleAddFolder
                             }}
                             onSelect={(item) => {
                               console.log('Selected:', item.name);
