@@ -1,11 +1,6 @@
 // Sample data for the File Explorer component in the Knowledgebase widget
 
 export const knowledgebaseData = [
-  {
-    id: 'topics',
-    name: 'Topics',
-    icon: '📚',
-    children: [
       {
         id: 'work',
         name: 'Work',
@@ -82,6 +77,4 @@ export const knowledgebaseData = [
           { id: 'hobbies-recipes', name: 'Recipes', type: 'document' as const }
         ]
       }
-    ]
-  }
 ];

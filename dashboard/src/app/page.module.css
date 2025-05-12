@@ -13,6 +13,8 @@
   transition: background-color var(--transition-normal), color var(--transition-normal);
   overflow-x: hidden; /* Prevent horizontal scrolling */
   overflow-y: hidden; /* Prevent vertical scrolling at container level */
+  position: relative;
+  z-index: 1; /* Create stacking context for dashboard content */
 }
 
 .chatInputBox {
@@ -608,6 +610,8 @@
   height: 100%;
   overflow-y: auto;
   margin: 0 8px; /* Add margin on sides */
+  position: relative;
+  z-index: 1; /* Ensure it's below modals */
 }
 
 /* Removed duplicate definition */

@@ -1,0 +1,348 @@
+/* Modal backdrop and content styles */
+.modalBackdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999; /* Increased z-index to ensure it's above dashboard */
+  animation: backdropFadeIn 0.2s ease-out;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.modalContent {
+  background: var(--background-secondary);
+  border-radius: var(--radius-md);
+  width: 450px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 1px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-light);
+  z-index: 10000;
+  animation: fadeInScale 0.2s ease-out forwards;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--background-primary);
+}
+
+.modalHeader h2 {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--foreground-primary);
+  margin: 0;
+  letter-spacing: 0.2px;
+}
+
+.closeButton {
+  background: transparent;
+  border: none;
+  color: var(--foreground-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.closeButton:hover {
+  background-color: var(--background-hover);
+  color: var(--foreground-primary);
+}
+
+/* File selection styles */
+.fileSelectionContainer {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 8px;
+  margin-top: 0;
+  border-radius: var(--radius-sm);
+  background-color: var(--background-secondary);
+}
+
+/* Custom checkbox styling */
+.checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--border-light);
+  border-radius: 4px;
+  margin-right: 8px;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  background-color: var(--background-secondary);
+  transition: all 0.2s ease;
+}
+
+.checkbox:checked {
+  background-color: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+
+.checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 6px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox:hover:not(:checked) {
+  border-color: var(--brand-primary);
+  background-color: rgba(131, 61, 255, 0.1);
+}
+
+.checkbox:focus {
+  box-shadow: 0 0 0 2px rgba(131, 61, 255, 0.2);
+}
+
+.fileSelectionItem {
+  display: flex;
+  align-items: center;
+  padding: 6px 0;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s ease;
+}
+
+.fileSelectionItem:hover {
+  background-color: var(--background-hover);
+}
+
+.fileSelectionLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  color: var(--foreground-primary);
+  margin-left: 6px;
+}
+
+.folderToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--foreground-secondary);
+  width: 20px;
+  height: 20px;
+  margin-right: 2px;
+}
+
+.folderToggle:hover {
+  color: var(--foreground-primary);
+}
+
+/* Input styling enhancements */
+.input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background-color: var(--background-tertiary);
+  color: var(--foreground-primary);
+  font-size: var(--font-size-sm);
+  transition: border-color 0.2s ease;
+}
+
+.input:focus, .textarea:focus {
+  border-color: var(--brand-primary);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(131, 61, 255, 0.2);
+}
+
+.textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background-color: var(--background-secondary);
+  color: var(--foreground-primary);
+  font-size: var(--font-size-sm);
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.2s ease;
+}
+
+.iconSelector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.iconOption {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background-color: var(--background-secondary);
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.2s ease;
+}
+
+.iconOption:hover {
+  background-color: var(--background-hover);
+  transform: scale(1.05);
+}
+
+.selectedIcon {
+  border-color: var(--brand-primary);
+  background-color: rgba(131, 61, 255, 0.1);
+  box-shadow: 0 0 0 2px rgba(131, 61, 255, 0.2);
+}
+
+.error {
+  color: var(--error);
+  font-size: var(--font-size-sm);
+  margin-top: 8px;
+  padding: 8px 12px;
+  background-color: rgba(255, 59, 48, 0.1);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--error);
+}
+
+.inputGroup {
+  margin-bottom: 16px;
+  padding: 0 20px;
+}
+
+.inputGroup label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--foreground-secondary);
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-light);
+  background-color: var(--background-primary);
+}
+
+.primaryButton {
+  padding: 8px 16px;
+  background: var(--brand-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.primaryButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.secondaryButton {
+  padding: 8px 16px;
+  background-color: transparent;
+  color: var(--foreground-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.secondaryButton:hover {
+  background-color: var(--background-hover);
+  color: var(--foreground-primary);
+}
+
+/* Knowledgebase-style file tree */
+.fileTreeItem {
+  margin-bottom: 6px;
+}
+
+.fileRow {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.fileRow:hover {
+  background-color: var(--background-tertiary);
+}
+
+.fileCheckbox {
+  margin-right: 10px;
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--brand-primary);
+}
+
+.fileNameContainer {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.folderIcon, .fileIcon {
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+  color: var(--foreground-secondary);
+}
+
+.folderIcon {
+  display: flex;
+  gap: 4px;
+}
+
+.fileName {
+  font-size: var(--font-size-sm);
+  word-break: break-word;
+  color: var(--foreground-primary);
+}
+
+.childrenContainer {
+  margin-left: 26px;
+}
