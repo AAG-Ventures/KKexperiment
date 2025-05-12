@@ -83,29 +83,5 @@ export const knowledgebaseData = [
         ]
       }
     ]
-  },
-  { 
-    id: 'meeting-notes', 
-    name: 'Meeting Notes', 
-    type: 'document' as const,
-    icon: '📝'
-  },
-  {
-    id: 'shared',
-    name: 'Shared Space',
-    icon: '👥',
-    children: [
-      { id: 'shared-marketing', name: 'Marketing Plan', type: 'presentation' as const },
-      { id: 'shared-documentation', name: 'Team Documentation', type: 'document' as const },
-      { 
-        id: 'shared-analytics', 
-        name: 'Analytics', 
-        icon: '📊',
-        children: [
-          { id: 'analytics-q1', name: 'Q1 Report', type: 'spreadsheet' as const },
-          { id: 'analytics-q2', name: 'Q2 Report', type: 'spreadsheet' as const }
-        ]
-      }
-    ]
   }
 ];

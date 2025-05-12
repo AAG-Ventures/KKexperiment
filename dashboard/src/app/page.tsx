@@ -15,6 +15,8 @@ import { UploadIcon, FileIcon, SearchIcon, ShareIcon, FolderIcon, ChevronRightIc
 import DatePicker from './components/DatePicker';
 import CalendarWidget from './components/CalendarWidget';
 import { knowledgebaseData as knowledgebaseInitialData } from './components/KnowledgebaseSampleData';
+import ActiveProcesses, { initializeProcessesFromChats } from './components/ActiveProcesses';
+import MyAgents from './components/MyAgents';
 // Import explicitly for client component
 import { useRouter } from 'next/navigation';
 import OnboardingModal from './components/Onboarding/OnboardingModal';
@@ -909,12 +911,7 @@ Formulating response based on available information...`
     
     // Initialize Active Processes with current chat tabs
     if (chatTabs.length > 0) {
-      setProcesses(chatTabs.map(tab => ({
-        id: tab.id,
-        name: tab.title,
-        type: 'chat',
-        status: 'completed'
-      })));
+      setProcesses(initializeProcessesFromChats(chatTabs));
     }
   }, []);
 
@@ -1468,10 +1465,20 @@ Formulating response based on available information...`
       // Try to add to Topics folder
       const topicsFolder = knowledgebaseData.find(item => item.id === 'topics');
       if (topicsFolder && isFolder(topicsFolder) && topicsFolder.children) {
-        topicsFolder.children.push(newFile);
+        // Ensure file has a children property when needed to match the type structure
+        const fileWithChildren = {
+          ...newFile,
+          children: [] // Empty children array to match expected structure
+        };
+        topicsFolder.children.push(fileWithChildren);
       } else {
         // Add to root if no Topics folder
-        knowledgebaseData.push(newFile);
+        // Ensure the file has a children property when added to root level to match expected type structure
+        const rootLevelFile = {
+          ...newFile,
+          children: [] // Add empty children array to match the expected structure
+        };
+        knowledgebaseData.push(rootLevelFile);
       }
     }
     
@@ -1536,7 +1543,7 @@ Formulating response based on available information...`
         topicsFolder.children.push(newFolder);
       } else {
         // Add to root if no Topics folder
-        knowledgebaseData.push(newFolder);
+        knowledgebaseData.push(newFolder); // This is already OK since newFolder has a children property
       }
     }
     
@@ -2098,167 +2105,28 @@ Formulating response based on available information...`
                   {
                     id: 'my-agents',
                     content: (
-                      <aside className={styles.activeProcessesWidget}>
-                        <div className={styles.widgetHeader}>
-                          <h3>My Agents</h3>
-                          <button 
-                            className={styles.newTabButton}
-                            onClick={() => {
-                              setIsAddModalOpen(true);
-                              // Pre-select the agent option
-                              handleOptionSelect('agent');
-                            }}
-                            title="Add Agent"
-                            type="button"
-                          >
-                            <PlusIcon size={20} />
-                          </button>
-                        </div>
-                        <div className={styles.processList}>
-                          {userAgents.length > 0 ? (
-                            userAgents.map(agent => (
-                              <div 
-                                key={agent.id} 
-                                className={styles.processItem}
-                                onClick={() => {
-                                  // Open a chat with this agent
-                                  console.log(`Starting chat with agent: ${agent.name}`);
-                                  
-                                  // Set the current agent
-                                  setCurrentAgent(agent);
-                                  
-                                  // Create a new chat tab for this agent if it doesn't exist
-                                  const agentChatId = `chat-${agent.id}`;
-                                  const existingTab = chatTabs.find(tab => tab.id === agentChatId);
-                                  
-                                  if (existingTab) {
-                                    // Just make the tab active
-                                    setChatTabs(prevTabs => 
-                                      prevTabs.map(tab => ({
-                                        ...tab,
-                                        active: tab.id === agentChatId
-                                      }))
-                                    );
-                                  } else {
-                                    // Create new tab and set it as active
-                                    const newTab: ChatTab = {
-                                      id: agentChatId,
-                                      title: agent.name,
-                                      messages: [{ 
-                                        sender: 'bot' as const, 
-                                        content: `Hello! I'm ${agent.name}. How can I assist you today?` 
-                                      }],
-                                      active: true,
-                                      isRenaming: false,
-                                      isProcessing: false,
-                                      sessionId: generateUUID(),
-                                      agentId: agent.id
-                                    };
-                                    
-                                    setChatTabs(prevTabs => [
-                                      ...prevTabs.map(tab => ({ ...tab, active: false })),
-                                      newTab
-                                    ]);
-                                    
-                                    // Add to Active Processes
-                                    const processExists = processes.some(p => p.id === agentChatId);
-                                    if (!processExists) {
-                                      setProcesses(prev => [
-                                        ...prev,
-                                        {
-                                          id: agentChatId,
-                                          name: `Chat with ${agent.name}`,
-                                          type: 'chat',
-                                          status: 'inProgress'
-                                        }
-                                      ]);
-                                    }
-                                  }
-                                }}
-                              >
-
-                                <div className={styles.processDetails}>
-                                  <div className={styles.processName}>
-                                    <span style={{ marginRight: '8px' }}>{agent.avatar}</span>
-                                    {agent.name}
-                                  </div>
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <div className={styles.emptyState}>No agents available</div>
-                          )}
-                        </div>
-                        {/* Widget footer removed */}
-                      </aside>
+                      <MyAgents 
+                        userAgents={userAgents}
+                        chatTabs={chatTabs}
+                        setChatTabs={setChatTabs}
+                        setCurrentAgent={setCurrentAgent}
+                        processes={processes}
+                        setProcesses={setProcesses}
+                        setIsAddModalOpen={setIsAddModalOpen}
+                        handleOptionSelect={handleOptionSelect}
+                        generateUUID={generateUUID}
+                      />
                     )
                   },
                   {
                     id: 'active-processes',
                     content: (
-                      <aside className={styles.activeProcessesWidget}>
-                        <div className={styles.widgetHeader}>
-                          <h3>Active Processes</h3>
-                          <span className={styles.widgetIcon}>🔄</span>
-                        </div>
-                        <div className={styles.processList}>
-                          {processes.length > 0 ? (
-                            processes.map(process => (
-                              <div 
-                                key={process.id} 
-                                className={styles.processItem}
-                                onClick={() => {
-                                  if (process.type === 'chat') {
-                                    // Highlight the tab if it exists already
-                                    const existingTab = chatTabs.find(tab => tab.id === process.id);
-                                    
-                                    if (existingTab) {
-                                      // Just make the tab active
-                                      setChatTabs(prevTabs => 
-                                        prevTabs.map(tab => ({
-                                          ...tab,
-                                          active: tab.id === process.id
-                                        }))
-                                      );
-                                    } else {
-                                      // Create new tab and set it as active
-                                      const newTab: ChatTab = {
-                                        id: process.id,
-                                        title: process.name,
-                                        messages: [{ sender: 'bot' as const, content: 'Resuming conversation...' }],
-                                        active: true
-                                      };
-                                      
-                                      setChatTabs(prevTabs => [
-                                        ...prevTabs.map(tab => ({ ...tab, active: false })),
-                                        newTab
-                                      ]);
-                                    }
-                                    
-                                    // Update process status but don't remove it
-                                    setProcesses(prevProcesses => 
-                                      prevProcesses.map(p => 
-                                        p.id === process.id 
-                                          ? { ...p, status: 'inProgress' as const } 
-                                          : p
-                                      )
-                                    );
-                                  }
-                                }}
-                              >
-                                <span className={`${styles.statusIndicator} ${styles[`status${process.status.charAt(0).toUpperCase() + process.status.slice(1)}`]}`} 
-                                  title={`${process.status.charAt(0).toUpperCase() + process.status.slice(1)}`}>
-                                </span>
-                                <div className={styles.processDetails}>
-                                  <div className={styles.processName}>{process.name}</div>
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <div className={styles.emptyState}>No active processes</div>
-                          )}
-                        </div>
-                      </aside>
+                      <ActiveProcesses 
+                        processes={processes}
+                        chatTabs={chatTabs}
+                        setChatTabs={setChatTabs}
+                        setProcesses={setProcesses}
+                      />
                     )
                   }
                 ]}
