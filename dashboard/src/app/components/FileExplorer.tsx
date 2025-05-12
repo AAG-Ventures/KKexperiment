@@ -132,6 +132,10 @@ const File: React.FC<FileItemProps> = ({ file, onSelect, selected, onFileDrop, f
       fileOperations?.onRename?.(file.id, newFileName);
       // Update local file name to show the change immediately
       file.name = newFileName;
+      // Remove the isNew flag to ensure context menu works properly
+      if (file.isNew) {
+        file.isNew = false;
+      }
     }
     setIsRenaming(false);
   };
@@ -190,7 +194,7 @@ const File: React.FC<FileItemProps> = ({ file, onSelect, selected, onFileDrop, f
         className={`${styles.fileRow} ${fileClass} ${isActive ? styles.active : ''}`}
         onClick={() => onSelect(file)}
         onContextMenu={handleContextMenu}
-        draggable
+        draggable={!isRenaming} // Only draggable when not renaming
         onDragStart={handleDragStart}
       >
         <div className={styles.fileIconWrapper}>
@@ -319,6 +323,10 @@ const Folder: React.FC<FolderProps> = ({
       fileOperations?.onRename?.(folder.id, newFolderName);
       // Update local folder name to show the change immediately
       folder.name = newFolderName;
+      // Remove the isNew flag to ensure context menu works properly
+      if (folder.isNew) {
+        folder.isNew = false;
+      }
     }
     setIsRenaming(false);
   };
@@ -367,7 +375,7 @@ const Folder: React.FC<FolderProps> = ({
       className={styles.folderItem}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
-      onContextMenu={handleContextMenu}
+      onContextMenu={!isRenaming ? handleContextMenu : (e) => e.preventDefault()}
     >
       <div 
         className={`${styles.folderRow} ${isActive ? styles.active : ''} ${folder.id === 'topics' ? styles.topicsRow : ''}`}
@@ -481,6 +489,7 @@ const Folder: React.FC<FolderProps> = ({
                     defaultExpanded={false} // Let expandedFolders control expansion
                     onToggleFolder={onToggleFolder}
                     onFileDrop={onFileDrop}
+                    fileOperations={fileOperations}
                 />
                 ) : (
                   <File 
@@ -488,6 +497,7 @@ const Folder: React.FC<FolderProps> = ({
                     onSelect={onSelect} 
                     selected={selected}
                     onFileDrop={onFileDrop}
+                    fileOperations={fileOperations}
                 />
                 )}
               </div>

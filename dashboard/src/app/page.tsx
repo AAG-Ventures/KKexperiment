@@ -9,7 +9,8 @@ import { FileDiff } from './components/file-diff/FileDiff';
 import { FileList } from './components/file-list/FileList';
 import styles from "./page.module.css";
 import AddModal from "./components/AddModal";
-import { DraggableWidgetContainer } from "./components/DraggableWidgetContainer";
+import { DraggableWidgetContainer } from './components/DraggableWidgetContainer';
+import WorkspaceCreateModal from './components/workspace/WorkspaceCreateModal';
 import FileExplorer, { isFolder, FileExplorerProps, FileOperations } from './components/FileExplorer';
 import { UploadIcon, FileIcon, SearchIcon, ShareIcon, FolderIcon, ChevronRightIcon, ChevronDownIcon, EditIcon, MessageIcon, ClockIcon, BellIcon, UserIcon, PlusIcon, SendIcon, HomeIcon, CheckIcon, CalendarIcon } from './components/Icons';
 import DatePicker from './components/DatePicker';
@@ -22,6 +23,8 @@ import { formatDate, generateUUID } from './utils/helpers';
 import { marketingPlanContent } from './data/MarketingPlanContent';
 import { handleWidgetSelect as handleWidgetSelectUtil, WidgetType } from './utils/widgetOperations';
 import { Agent, createAgent, sendMessageToAIAgent, AI_AGENT_CONFIG, selectAgent } from './utils/agentOperations';
+import { Workspace, sampleWorkspaces } from './utils/workspace';
+import { WorkspaceWidget } from './components/workspace';
 // Import explicitly for client component
 import { useRouter } from 'next/navigation';
 import OnboardingModal from './components/Onboarding/OnboardingModal';
@@ -140,6 +143,13 @@ export default function Dashboard() {
   const [currentAgent, setCurrentAgent] = useState<Agent | null>(null); // Track current agent for chat
   const [processes, setProcesses] = useState<Process[]>([]);
   
+  // State management for workspaces
+  const [workspaces, setWorkspaces] = useState<Workspace[]>(sampleWorkspaces);
+  const [isWorkspaceCreateModalOpen, setIsWorkspaceCreateModalOpen] = useState(false);
+  // State for workspace editing
+  const [workspaceToEdit, setWorkspaceToEdit] = useState<Workspace | undefined>(undefined);
+  const [isEditMode, setIsEditMode] = useState(false);
+  
   // State for resizable chat/dashboard
   const [isDragging, setIsDragging] = useState(false);
   const defaultChatWidth = 350; // Default/minimum width of chat section
@@ -197,23 +207,9 @@ export default function Dashboard() {
   // Track expanded folders in knowledgebase
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
   
-  // Function to toggle folder expansion (for special folders like Topics and Shared Space)
+  // Function to toggle folder expansion (for  // Toggle folder expansion in the file explorer
   const toggleFolderExpansion = (folderId: string) => {
     console.log(`Toggling folder: ${folderId}`);
-    
-    // Special case for the Topics folder - either show it with all subtopics or hide all
-    if (folderId === 'topics') {
-      if (expandedFolders.includes('topics')) {
-        // If Topics is currently expanded, collapse it (remove it from expanded folders)
-        console.log('Closing Topics folder');
-        setExpandedFolders(expandedFolders.filter(id => id !== 'topics'));
-      } else {
-        // If Topics is currently collapsed, expand it (add it to expanded folders)
-        console.log('Opening Topics folder');
-        setExpandedFolders([...expandedFolders, 'topics']);
-      }
-      return;
-    }
     
     // Special case for the Shared Space folder - either show it with all subtopics or hide all
     if (folderId === 'shared') {
@@ -1148,7 +1144,8 @@ Formulating response based on available information...`
   // Function to return to main Topics view in knowledgebase
   const backToAllTopics = () => {
     setActiveTopicId(null);
-    setExpandedFolders(['topics']);
+    // Reset expanded folders when going back to all topics
+    setExpandedFolders([]);
   };
   
   // File operations handlers for knowledgebase
@@ -1272,8 +1269,9 @@ Formulating response based on available information...`
     setShareModalOpen(false);
   };
   
-  const handleAddFile = (folderId: string) => {
-    console.log('Adding file to folder:', folderId);
+  // Knowledgebase operation handlers
+  const handleKnowledgebaseAddFile = (folderId: string) => {
+    console.log('Adding file to knowledgebase folder:', folderId);
     
     // Generate a unique ID for the new file
     const newFileId = `new-file-${generateUUID()}`;
@@ -1286,6 +1284,8 @@ Formulating response based on available information...`
       icon: '📄',
       isNew: true // Special flag to indicate this is a new file that needs immediate renaming
     };
+    
+    let knowledgebaseDataCopy = JSON.parse(JSON.stringify(knowledgebaseData));
     
     // Function to add the file to the specified folder
     const addFileToFolder = (items: any[]): boolean => {
@@ -1314,41 +1314,48 @@ Formulating response based on available information...`
     };
     
     // Try to add the file to the folder
-    const added = addFileToFolder(knowledgebaseData);
+    const added = addFileToFolder(knowledgebaseDataCopy);
     
     // If no folder found or not actually a folder, add to the root
     if (!added) {
-      // Try to add to Topics folder
-      const topicsFolder = knowledgebaseData.find(item => item.id === 'topics');
-      if (topicsFolder && isFolder(topicsFolder) && topicsFolder.children) {
-        // Ensure file has a children property when needed to match the type structure
-        const fileWithChildren = {
-          ...newFile,
-          children: [] // Empty children array to match expected structure
-        };
-        topicsFolder.children.push(fileWithChildren);
-      } else {
-        // Add to root if no Topics folder
-        // Ensure the file has a children property when added to root level to match expected type structure
-        const rootLevelFile = {
-          ...newFile,
-          children: [] // Add empty children array to match the expected structure
-        };
-        knowledgebaseData.push(rootLevelFile);
-      }
+      // Add directly to root level
+      knowledgebaseDataCopy.push(newFile);
     }
     
-    // Force re-render by creating a new reference
-    const knowledgebaseDataCopy = [...knowledgebaseData];
-    knowledgebaseData.length = 0;
-    knowledgebaseData.push(...knowledgebaseDataCopy);
+    // Update state with the new data
+    setKnowledgebaseData(knowledgebaseDataCopy);
     
     // No notification yet as the user will still be naming the file
     // We'll show a notification after the renaming is complete
   };
   
-  const handleAddFolder = (parentFolderId: string) => {
-    console.log('Adding folder to:', parentFolderId);
+  // Workspace operation handlers
+  const handleWorkspaceAddFile = (folderId: string) => {
+    // Find the workspace to edit
+    const workspaceToEdit = workspaces.find(workspace => workspace.id === folderId);
+    if (workspaceToEdit) {
+      // Open the workspace edit modal
+      setWorkspaceToEdit(workspaceToEdit);
+      setIsEditMode(true);
+    } else {
+      console.error(`Could not find workspace with ID: ${folderId}`);
+    }
+  };
+  
+  // Generic handler that routes to the appropriate function
+  const handleAddFile = (folderId: string) => {
+    console.log('handleAddFile called with folderId:', folderId);
+    // Check if this is a workspace ID (workspace IDs always exactly match 'workspace-number')
+    if (folderId.match(/^workspace-\d+$/) && workspaces.some(w => w.id === folderId)) {
+      handleWorkspaceAddFile(folderId);
+    } else {
+      handleKnowledgebaseAddFile(folderId);
+    }
+  };
+  
+  // Knowledgebase operation handlers
+  const handleKnowledgebaseAddFolder = (parentFolderId: string) => {
+    console.log('Adding folder to knowledgebase:', parentFolderId);
     
     // Generate a unique ID for the new folder
     const newFolderId = `new-folder-${generateUUID()}`;
@@ -1361,6 +1368,9 @@ Formulating response based on available information...`
       children: [] as any[],
       isNew: true // Special flag to indicate this is a new folder that needs immediate renaming
     };
+    
+    // Create a deep copy of the knowledgebase data to avoid mutation issues
+    let knowledgebaseDataCopy = JSON.parse(JSON.stringify(knowledgebaseData));
     
     // Function to add the folder to the specified parent folder
     const addFolderToParent = (items: any[]): boolean => {
@@ -1389,59 +1399,85 @@ Formulating response based on available information...`
     };
     
     // Try to add the folder to the parent
-    const added = addFolderToParent(knowledgebaseData);
+    const added = addFolderToParent(knowledgebaseDataCopy);
     
     // If no parent folder found or not actually a folder, add to the root
     if (!added) {
       // Try to add to Topics folder
-      const topicsFolder = knowledgebaseData.find(item => item.id === 'topics');
+      const topicsFolder = knowledgebaseDataCopy.find(item => item.id === 'topics');
       if (topicsFolder && isFolder(topicsFolder) && topicsFolder.children) {
         topicsFolder.children.push(newFolder);
       } else {
         // Add to root if no Topics folder
-        knowledgebaseData.push(newFolder); // This is already OK since newFolder has a children property
+        knowledgebaseDataCopy.push(newFolder);
       }
     }
     
-    // Force re-render by creating a new reference
-    const knowledgebaseDataCopy = [...knowledgebaseData];
-    knowledgebaseData.length = 0;
-    knowledgebaseData.push(...knowledgebaseDataCopy);
+    // Update state with the modified copy
+    setKnowledgebaseData(knowledgebaseDataCopy);
     
     // No notification yet as the user will still be naming the folder
     // We'll show a notification after the renaming is complete
   };
+  
+  // Workspace operation handlers
+  const handleWorkspaceAddFolder = (parentFolderId: string) => {
+    // Find the workspace to edit
+    const workspaceToEdit = workspaces.find(workspace => workspace.id === parentFolderId);
+    if (workspaceToEdit) {
+      // Open the workspace edit modal
+      setWorkspaceToEdit(workspaceToEdit);
+      setIsEditMode(true);
+    } else {
+      console.error(`Could not find workspace with ID: ${parentFolderId}`);
+    }
+  };
+  
+  // Generic handler that routes to the appropriate function
+  const handleAddFolder = (parentFolderId: string) => {
+    console.log('handleAddFolder called with parentFolderId:', parentFolderId);
+    // Check if this is a workspace ID (workspace IDs always exactly match 'workspace-number')
+    if (parentFolderId.match(/^workspace-\d+$/) && workspaces.some(w => w.id === parentFolderId)) {
+      handleWorkspaceAddFolder(parentFolderId);
+    } else {
+      handleKnowledgebaseAddFolder(parentFolderId);
+    }
+  };
 
-  const handleDeleteFile = (fileId: string) => {
-    console.log('Deleting file:', fileId);
+  // Function to delete a file from the knowledgebase
+  const handleKnowledgebaseDeleteFile = (fileId: string) => {
+    console.log('Deleting file from knowledgebase:', fileId);
     
     // Find and delete the file from knowledgebase data
     let fileName = '';
     let fileDeleted = false;
-    
+
     // Direct deletion from top-level array
     for (let i = 0; i < knowledgebaseData.length; i++) {
-      if (knowledgebaseData[i].id === fileId && !isFolder(knowledgebaseData[i])) {
-        fileName = knowledgebaseData[i].name;
+      const item = knowledgebaseData[i];
+      if (item.id === fileId) {
+        fileName = item.name;
         knowledgebaseData.splice(i, 1);
         fileDeleted = true;
         break;
       }
     }
     
-    // Recursive function to delete from nested folders
+    // If not found at top level, recursively search through children
     if (!fileDeleted) {
-      const findAndDeleteFile = (items: any[]) => {
+      const deleteItemFromChildren = (items: any[]): boolean => {
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
           if (item.id === fileId) {
             fileName = item.name;
+            // Remove the item from the array
             items.splice(i, 1);
-            fileDeleted = true;
             return true;
           }
+          
+          // Recursively search children
           if (isFolder(item) && item.children) {
-            if (findAndDeleteFile(item.children)) {
+            if (deleteItemFromChildren(item.children)) {
               return true;
             }
           }
@@ -1449,10 +1485,11 @@ Formulating response based on available information...`
         return false;
       };
       
-      // Check each top level item that has children
+      // Try all top-level folders
       for (const item of knowledgebaseData) {
         if (isFolder(item) && item.children) {
-          if (findAndDeleteFile(item.children)) {
+          if (deleteItemFromChildren(item.children)) {
+            fileDeleted = true;
             break;
           }
         }
@@ -1468,13 +1505,18 @@ Formulating response based on available information...`
     const knowledgebaseDataCopy = JSON.parse(JSON.stringify(knowledgebaseData));
     setKnowledgebaseData(knowledgebaseDataCopy);
     
-    addNotification({
-      title: 'File Deleted',
-      message: `File "${fileName}" deleted`,
-      type: 'success',
-    });
+    // Show a notification
+    if (fileDeleted) {
+      addNotification({
+        title: 'File Deleted',
+        message: `File "${fileName}" deleted`,
+        type: 'info',
+      });
+    } else {
+      console.error(`Could not find file with ID: ${fileId}`);
+    }
   };
-  
+
   // Function to handle file drops between folders in the knowledgebase
   const handleFileDrop = (fileId: string, targetFolderId: string) => {
     console.log(`Moving file ${fileId} to folder ${targetFolderId}`);
@@ -1741,6 +1783,21 @@ Formulating response based on available information...`
                 columnId="left-column"
                 initialItems={[
                   {
+                    id: 'workspaces',
+                    content: (
+                      <WorkspaceWidget
+                        workspaces={workspaces}
+                        setWorkspaces={setWorkspaces}
+                        knowledgebaseData={knowledgebaseData}
+                        onOpenCreateModal={() => setIsWorkspaceCreateModalOpen(true)}
+                        onEditWorkspace={(workspace) => {
+                          setWorkspaceToEdit(workspace);
+                          setIsEditMode(true);
+                        }}
+                      />
+                    )
+                  },
+                  {
                     id: 'knowledgebase',
                     content: (
                       <aside className={styles.knowledgeWidget}>
@@ -1757,21 +1814,7 @@ Formulating response based on available information...`
                             cursor: activeTopicId ? 'pointer' : 'default',
                           }}
                         >
-                          <h3 
-                            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
-                            onClick={() => {
-                              // Direct toggle for the topics folder
-                              toggleFolderExpansion('topics');
-                            }}
-                          >
-                            <span style={{ display: 'flex', alignItems: 'center' }}>
-                              {expandedFolders.includes('topics') ? 
-                                <ChevronDownIcon size={18} /> : 
-                                <ChevronRightIcon size={18} />
-                              }
-                            </span>
-                            Knowledgebase
-                          </h3>
+                          <h3>Knowledgebase</h3>
                         </div>
                         {/* File Explorer Component */}
                         <div className={styles.fileExplorerContainer}>
@@ -1786,9 +1829,9 @@ Formulating response based on available information...`
                               onView: handleViewFile,
                               onRename: handleRenameFile,
                               onShare: openShareModal,
-                              onDelete: handleDeleteFile,
-                              onAddFile: handleAddFile,
-                              onAddFolder: handleAddFolder
+                              onDelete: handleKnowledgebaseDeleteFile,
+                              onAddFile: handleKnowledgebaseAddFile,
+                              onAddFolder: handleKnowledgebaseAddFolder
                             }}
                             onSelect={(item) => {
                               console.log('Selected:', item.name);
@@ -2954,6 +2997,43 @@ Formulating response based on available information...`
           fileName={shareFileName}
           onClose={() => setShareModalOpen(false)}
           onShare={(email) => handleShareFile(shareFileId, email)}
+        />
+      )}
+      
+      {/* Workspace Create Modal */}
+      {(isWorkspaceCreateModalOpen || (isEditMode && workspaceToEdit)) && (
+        <WorkspaceCreateModal
+          isOpen={isWorkspaceCreateModalOpen || isEditMode}
+          onClose={() => {
+            setIsWorkspaceCreateModalOpen(false);
+            setIsEditMode(false);
+            setWorkspaceToEdit(undefined);
+          }}
+          onCreateWorkspace={(workspace) => {
+            if (isEditMode && workspaceToEdit) {
+              // Update existing workspace
+              setWorkspaces(prevWorkspaces => {
+                const index = prevWorkspaces.findIndex(w => w.id === workspace.id);
+                if (index !== -1) {
+                  const updatedWorkspaces = [...prevWorkspaces];
+                  updatedWorkspaces[index] = workspace;
+                  return updatedWorkspaces;
+                }
+                return prevWorkspaces;
+              });
+            } else {
+              // Add new workspace
+              setWorkspaces(prevWorkspaces => [...prevWorkspaces, workspace]);
+            }
+            
+            // Reset modal state
+            setIsWorkspaceCreateModalOpen(false);
+            setIsEditMode(false);
+            setWorkspaceToEdit(undefined);
+          }}
+          knowledgebaseData={knowledgebaseData}
+          existingWorkspace={workspaceToEdit}
+          modalTitle={isEditMode ? "Edit Workspace" : "Create New Workspace"}
         />
       )}
     </div>
