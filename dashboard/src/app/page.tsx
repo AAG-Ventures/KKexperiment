@@ -17,6 +17,11 @@ import CalendarWidget from './components/CalendarWidget';
 import { knowledgebaseData as knowledgebaseInitialData } from './components/KnowledgebaseSampleData';
 import ActiveProcesses, { initializeProcessesFromChats } from './components/ActiveProcesses';
 import MyAgents from './components/MyAgents';
+import RecentActivity from './components/RecentActivity';
+import { formatDate, generateUUID } from './utils/helpers';
+import { marketingPlanContent } from './data/MarketingPlanContent';
+import { handleWidgetSelect as handleWidgetSelectUtil, WidgetType } from './utils/widgetOperations';
+import { Agent, createAgent, sendMessageToAIAgent, AI_AGENT_CONFIG, selectAgent } from './utils/agentOperations';
 // Import explicitly for client component
 import { useRouter } from 'next/navigation';
 import OnboardingModal from './components/Onboarding/OnboardingModal';
@@ -25,42 +30,7 @@ import Notifications, { Notification as NotificationType } from './components/No
 import Header from './components/Header';
 import ChatSidebar from './components/ChatSidebar';
 
-// Helper function to format dates
-const formatDate = (date: Date | string | number) => {
-  if (!date) return '';
-  
-  // Ensure we're working with a Date object
-  let dateObj: Date;
-  try {
-    if (date instanceof Date) {
-      dateObj = date;
-    } else if (typeof date === 'string' || typeof date === 'number') {
-      dateObj = new Date(date);
-    } else {
-      return ''; // Invalid date format
-    }
-    
-    // Check if date is valid
-    if (isNaN(dateObj.getTime())) {
-      return ''; // Invalid date
-    }
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return ''; // Return empty string on error
-  }
-  
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  
-  const isToday = dateObj.toDateString() === today.toDateString();
-  const isTomorrow = dateObj.toDateString() === tomorrow.toDateString();
-  
-  if (isToday) return 'Today';
-  if (isTomorrow) return 'Tomorrow';
-  
-  return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-};
+// Helper functions imported from utils/helpers.ts
 
 // Type definitions
 type TaskPriority = 'low' | 'medium' | 'high';
@@ -104,17 +74,7 @@ type Process = {
   status: 'inProgress' | 'completed' | 'failed';
 };
 
-type Agent = {
-  id: string;
-  name: string;
-  description: string;
-  avatar: string;
-  status: 'online' | 'offline' | 'busy';
-  lastActive?: Date;
-  createdAt: Date;
-  capabilities: string[];
-  author: string;
-};
+// Agent type is now imported from utils/agentOperations.ts
 
 type Notification = NotificationType;
 
@@ -445,112 +405,8 @@ export default function Dashboard() {
     return notifications.filter(notification => !notification.read).length;
   }, [notifications]);
   
-  // AI Agent constants
-  const AI_AGENT_CONFIG = {
-    API_KEY: 'test',
-    BACKEND_DOMAIN: 'https://ai-agent-soc-media-template-ddd7b1afdf47.herokuapp.com',
-    AGENT_ID: '95ba603a-9479-4f6a-8e1e-1e63638053a9',
-    USER_ID: '86d3eaaa-51e0-43a3-ba79-e42ed82ee30f'
-  };
-  
-  // Helper function to generate UUID compatible with both server and client
-  const generateUUID = () => {
-    // Check if crypto.randomUUID is available (modern browsers)
-    if (typeof window !== 'undefined' && window.crypto && typeof window.crypto.randomUUID === 'function') {
-      return window.crypto.randomUUID();
-    }
-    
-    // Fallback method
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0,
-          v = c === 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
-  };
-  
-  // Function to interact with AI agent
-  const sendMessageToAIAgent = async (prompt: string, sessionId: string) => {
-    try {
-      console.log('Sending request to AI agent with:', {
-        endpoint: `${AI_AGENT_CONFIG.BACKEND_DOMAIN}/api/interact/voice`,
-        sessionId,
-        agentId: AI_AGENT_CONFIG.AGENT_ID,
-        userId: AI_AGENT_CONFIG.USER_ID
-      });
-      
-      const requestBody = {
-        agentId: AI_AGENT_CONFIG.AGENT_ID,
-        userId: AI_AGENT_CONFIG.USER_ID,
-        sessionId: sessionId,
-        prompt: prompt,
-        attachments: []
-      };
-      
-      console.log('Request payload:', JSON.stringify(requestBody, null, 2));
-      
-      const response = await fetch(`${AI_AGENT_CONFIG.BACKEND_DOMAIN}/api/interact/voice`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': AI_AGENT_CONFIG.API_KEY,
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
-      });
-      
-      console.log('Response status:', response.status);
-      console.log('Response headers:', {
-        'content-type': response.headers.get('content-type'),
-        'cors': response.headers.get('access-control-allow-origin')
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API error response:', errorText);
-        throw new Error(`API error: ${response.status} - ${errorText}`);
-      }
-      
-      const responseText = await response.text();
-      console.log('Raw response:', responseText);
-      
-      let data;
-      try {
-        data = JSON.parse(responseText);
-        console.log('Parsed response data:', data);
-      } catch (parseError) {
-        console.error('Error parsing JSON response:', parseError);
-        throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}...`);
-      }
-      
-      // Extract AI response from the API's structure
-      let aiResponseText = '';
-      
-      // The API returns response in the 'text' field based on your console logs
-      if (data.text) {
-        aiResponseText = data.text;
-        console.log('Found response in text field:', aiResponseText);
-      } else if (data.response) {
-        aiResponseText = data.response;
-        console.log('Found response in response field:', aiResponseText);
-      } else {
-        console.warn('No text or response field found in data:', data);
-        // Look for any string field that might contain the response
-        for (const key in data) {
-          if (typeof data[key] === 'string' && data[key].length > 10) {
-            aiResponseText = data[key];
-            console.log(`Found potential response in ${key} field:`, aiResponseText);
-            break;
-          }
-        }
-      }
-      
-      return aiResponseText || "I'm here to help. What can I assist you with today?";
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Error communicating with AI agent:', error);
-      return `Sorry, I couldn't connect to the AI agent at this moment. Technical details: ${errorMessage}`;
-    }
-  };
+  // AI Agent constants and functions are now imported from utils/agentOperations.ts
+  // generateUUID is now imported from utils/helpers.ts
 
   // Function to handle sending a message
   const handleSendMessage = (userMsg: string, activeTab: ChatTab) => {
@@ -561,8 +417,8 @@ export default function Dashboard() {
     ];
 
     // Update the active tab with user message and set as processing
-    setChatTabs(prevTabs => 
-      prevTabs.map(tab => {
+    setChatTabs((prevTabs: ChatTab[]) => 
+      prevTabs.map((tab: ChatTab) => {
         if (tab.id === activeTab.id) {
           return { ...tab, messages: newMessages, isProcessing: true };
         }
@@ -581,8 +437,8 @@ export default function Dashboard() {
     // Ensure the processing state is visible
     setTimeout(() => {
       // Double-check that the tab is still in processing state
-      setChatTabs(tabs => {
-        return tabs.map(tab => tab.id === activeTab.id && !tab.isProcessing ? 
+      setChatTabs((tabs: ChatTab[]) => {
+        return tabs.map((tab: ChatTab) => tab.id === activeTab.id && !tab.isProcessing ? 
           { ...tab, isProcessing: true } : tab);
       });
     }, 100);
@@ -590,14 +446,14 @@ export default function Dashboard() {
     // Get or create a session ID for this chat
     const chatSessionId = activeTab.sessionId || generateUUID();
     
-    // Call the AI agent API
+    // Call the AI agent API with the user message and session ID
     sendMessageToAIAgent(userMsg, chatSessionId)
-      .then(response => {
+      .then((response: string) => {
         console.log('AI agent response:', response);
         
         // Add bot message with response from the AI agent
-        setChatTabs(prevTabs => {
-          return prevTabs.map(tab => {
+        setChatTabs((prevTabs: ChatTab[]) => {
+          return prevTabs.map((tab: ChatTab) => {
             if (tab.id === activeTab.id) {
               const botReply = {
                 sender: 'bot' as const, 
@@ -632,20 +488,20 @@ Formulating response based on available information...`
         }, 100);
         
         // Update process status to completed
-        setProcesses(prevProcesses => 
-          prevProcesses.map(process => 
+        setProcesses((prevProcesses: Process[]) => 
+          prevProcesses.map((process: Process) => 
             process.id === activeTab.id ? 
               { ...process, status: 'completed' as const } : 
               process
           )
         );
       })
-      .catch(error => {
+      .catch((error: unknown) => {
         console.error('Error calling AI agent:', error);
         
         // Update chat with error message
-        setChatTabs(prevTabs => 
-          prevTabs.map(tab => {
+        setChatTabs((prevTabs: ChatTab[]) => 
+          prevTabs.map((tab: ChatTab) => {
             if (tab.id === activeTab.id) {
               return { 
                 ...tab, 
@@ -669,8 +525,8 @@ Formulating response based on available information...`
         }, 100);
         
         // Update status to failed
-        setProcesses(prevProcesses => 
-          prevProcesses.map(process => 
+        setProcesses((prevProcesses: Process[]) => 
+          prevProcesses.map((process: Process) => 
             process.id === activeTab.id ? 
               { ...process, status: 'failed' as const } : 
               process
@@ -679,8 +535,8 @@ Formulating response based on available information...`
       });
     
     // Update status in Active Processes to in progress
-    setProcesses(prevProcesses => 
-      prevProcesses.map(process => 
+    setProcesses((prevProcesses: Process[]) => 
+      prevProcesses.map((process: Process) => 
         process.id === activeTab.id 
           ? { ...process, status: 'inProgress' as const } 
           : process
@@ -1764,148 +1620,18 @@ Formulating response based on available information...`
     }
   };
   
-  // Handle widget selection 
-  const handleWidgetSelect = (widgetType: 'calendar' | 'myTasks' | 'activeProcesses' | 'myAgents') => {
-    console.log(`Selected widget type: ${widgetType}`);
-    
-    // Create widget content based on the selected type
-    let widgetContent: React.ReactNode;
-    
-    switch (widgetType) {
-      case 'calendar':
-        widgetContent = (
-          <CalendarWidget 
-            tasks={tasks.filter(task => task.deadline).map(task => ({
-              id: task.id,
-              text: task.text,
-              deadline: task.deadline || new Date(),
-              priority: task.priority || 'medium',
-              completed: task.completed
-            }))}
-            onSelectDate={(date) => {
-              console.log('Calendar date selected:', date);
-            }}
-            onSelectTask={(taskId) => {
-              setSelectedTaskId(taskId);
-            }}
-          />
-        );
-        break;
-        
-
-        
-      case 'myTasks':
-        widgetContent = (
-          <div className={styles.tasksWidget}>
-            <h3>My Tasks</h3>
-            <div className={styles.tasksList}>
-              {tasks.slice(0, 3).map(task => (
-                <div key={task.id} className={styles.taskItem}>
-                  <input 
-                    type="checkbox" 
-                    checked={task.completed} 
-                    onChange={() => toggleTaskCompletion(task.id)}
-                  />
-                  <span className={task.completed ? styles.completedTask : ''}>
-                    {task.text}
-                  </span>
-                </div>
-              ))}
-              {tasks.length === 0 && (
-                <p>No tasks yet</p>
-              )}
-            </div>
-            <button className={styles.viewAllButton}>
-              View All Tasks
-            </button>
-          </div>
-        );
-        break;
-        
-      case 'activeProcesses':
-        widgetContent = (
-          <div className={styles.processesWidget}>
-            <h3>Active Processes</h3>
-            <div className={styles.processesList}>
-              {processes.filter(p => p.status === 'inProgress').slice(0, 3).map(process => (
-                <div key={process.id} className={styles.processItem}>
-                  <span>{process.name}</span>
-                  <div className={styles.processStatus}>
-                    <div className={styles.processingIndicator}></div>
-                    Processing
-                  </div>
-                </div>
-              ))}
-              {processes.filter(p => p.status === 'inProgress').length === 0 && (
-                <p>No active processes</p>
-              )}
-            </div>
-          </div>
-        );
-        break;
-        
-      case 'myAgents':
-        widgetContent = (
-          <div className={styles.agentsWidget}>
-            <h3>My Agents</h3>
-            <div className={styles.agentsList}>
-              {chatTabs.slice(0, 3).map(chatTab => (
-                <div key={chatTab.id} className={styles.agentItem}>
-                  <div className={styles.agentIcon}>
-                    <UserIcon size={20} />
-                  </div>
-                  <div className={styles.agentInfo}>
-                    <div className={styles.agentName}>{chatTab.title}</div>
-                    <div className={styles.agentStatus}>
-                      {chatTab.isProcessing ? 'Processing...' : 'Ready'}
-                    </div>
-                  </div>
-                  <button className={styles.agentActionButton}>
-                    <MessageIcon size={16} />
-                  </button>
-                </div>
-              ))}
-              {chatTabs.length === 0 && (
-                <p>No agents available</p>
-              )}
-            </div>
-            <button className={styles.viewAllButton}>
-              Manage Agents
-            </button>
-          </div>
-        );
-        break;
-    }
-    
-    // Add the new widget to the dashboard
-    const newWidgetId = `widget-${Date.now()}`;
-    const newWidget = { id: newWidgetId, content: widgetContent };
-    
-    // Add to first column for simplicity
-    const columnId = 'column1';
-    const columnWidgets = dashboardItems[columnId] || [];
-    
-    // Create the widget with drag-and-drop enabled
-    const draggableWidget = {
-      ...newWidget,
-      column: columnId,
-      isDraggable: true
-    };
-    
-    setDashboardItems(prev => ({
-      ...prev,
-      [columnId]: [...columnWidgets, draggableWidget]
-    }));
-    
-    // Show confirmation notification
-    addNotification({
-      title: 'Widget Added',
-      message: `New ${widgetType} widget has been added to your dashboard`,
-      type: 'success',
-    });
-    
-    handleCloseAddModal();
+  // Handle widget selection using the utility function
+  const handleWidgetSelect = (widgetType: WidgetType) => {
+    // Call the utility function with the necessary parameters
+    handleWidgetSelectUtil(widgetType, dashboardItems, setDashboardItems, addNotification);
   };
+  
+  // Handle file selection
+  const handleFileSelect = (file: any) => {
+    console.log('File selected:', file);
+    // Implementation for file selection logic
+  };
+  
   
   // Add drag and drop event listeners when component mounts
   useEffect(() => {
@@ -2453,97 +2179,8 @@ Formulating response based on available information...`
               </div>
             </div>
           ) : activeTabId === 'marketing-plan' ? (
-            /* Show Marketing Plan content in markdown format */
-            <MarkdownViewer content={`# Marketing Plan 2025
-
-## Executive Summary
-
-This marketing plan outlines our strategy for increasing market share and brand awareness over the next fiscal year. We aim to leverage digital channels, strategic partnerships, and innovative product features to achieve our growth targets.
-
-## Target Market
-
-### Primary Audience
-- Mid-sized enterprises (100-500 employees)
-- Tech-focused startups in growth phase
-- Educational institutions
-
-### Secondary Audience
-- Individual professionals
-- Small businesses (< 100 employees)
-
-## Competitive Analysis
-
-| Competitor | Market Share | Key Strengths | Weaknesses |
-|------------|--------------|---------------|------------|
-| CompX | 34% | Brand recognition, Wide feature set | High pricing, Complex UI |
-| TechY | 28% | Modern interface, Good mobile support | Limited integrations |
-| SystemZ | 15% | Enterprise focus, Security features | Dated design, Poor customer support |
-
-## Marketing Strategy
-
-### Digital Marketing
-- **Content Marketing**: Weekly blog posts, monthly whitepapers
-- **SEO**: Target 5 high-value keywords per quarter
-- **Email Campaigns**: Bi-weekly newsletter, automated onboarding sequence
-- **Social Media**: Daily posts across platforms with focus on LinkedIn and Twitter
-
-### Event Marketing
-- Attendance at 3 major industry conferences
-- Host quarterly webinars on industry topics
-- Annual user conference in Q3
-
-### Partnerships
-- Co-marketing with 5 strategic technology partners
-- Educational institution discount program
-- Referral program for existing customers
-
-## Budget Allocation
-
-- Digital Marketing: 40%
-- Content Production: 25%
-- Events: 20%
-- Partnerships: 10%
-- Miscellaneous: 5%
-
-## Key Performance Indicators
-
-- Increase website traffic by 35%
-- Achieve 15% conversion rate from free trial to paid
-- Grow customer base by 25%
-- Improve customer retention to 90%
-- Increase social media engagement by 50%
-
-## Timeline
-
-### Q1 (Jan-Mar)
-- Launch redesigned website
-- Implement marketing automation platform
-- Develop Q1 content calendar
-
-### Q2 (Apr-Jun)
-- Begin partnership program
-- Launch spring promotional campaign
-- Attend industry conference A
-
-### Q3 (Jul-Sep)
-- Host annual user conference
-- Review and adjust digital strategy
-- Launch referral program
-
-### Q4 (Oct-Dec)
-- Holiday promotional campaign
-- Annual strategy review
-- Planning for next year
-
-## Risk Assessment
-
-- Increased competition may require additional budget allocation
-- Market trends shift may necessitate pivot in messaging
-- Economic factors could impact B2B spending
-
-## Conclusion
-
-This marketing plan provides a comprehensive framework for achieving our business objectives through strategic marketing initiatives. Regular monitoring and adjustments will ensure we stay agile in response to market changes.`} />
+            /* Show Marketing Plan content in markdown format - imported from external file */
+            <MarkdownViewer content={marketingPlanContent} />
             
           ) : activeTabId !== 'work' ? (
             /* Show regular dashboard content for non-Work tabs */
@@ -2591,63 +2228,7 @@ This marketing plan provides a comprehensive framework for achieving our busines
                 </div>
                 
                 {/* Recent Activity Card */}
-                <div className={`${styles.card} ${styles.cardActivity}`}>
-                  <div className={styles.widgetHeader}>
-                    <h3>Recent Activity</h3>
-                    <span className={styles.widgetIcon}>
-                      <ClockIcon size={20} />
-                    </span>
-                  </div>
-                  <div className={styles.cardContent}>
-                    <ul className={styles.activityList}>
-                      <li className={styles.activityItem}>
-                        <span className={styles.activityIcon}>
-                          <EditIcon size={20} />
-                        </span>
-                        <div className={styles.activityText}>
-                          <div>Updated <strong>Marketing Plan</strong></div>
-                          <div className={styles.activityTime}>10 minutes ago</div>
-                        </div>
-                      </li>
-                      <li className={styles.activityItem}>
-                        <span className={styles.activityIcon}>
-                          <FolderIcon size={20} />
-                        </span>
-                        <div className={styles.activityText}>
-                          <div>Created <strong>Q2 Reports</strong> folder</div>
-                          <div className={styles.activityTime}>Yesterday</div>
-                        </div>
-                      </li>
-                      <li className={styles.activityItem}>
-                        <span className={styles.activityIcon}>
-                          <MessageIcon size={20} />
-                        </span>
-                        <div className={styles.activityText}>
-                          <div>New message in <strong>Team Chat</strong></div>
-                          <div className={styles.activityTime}>Yesterday</div>
-                        </div>
-                      </li>
-                      <li className={styles.activityItem}>
-                        <span className={styles.activityIcon}>
-                          <FileIcon size={20} />
-                        </span>
-                        <div className={styles.activityText}>
-                          <div>Uploaded <strong>Presentation.pdf</strong></div>
-                          <div className={styles.activityTime}>2 days ago</div>
-                        </div>
-                      </li>
-                      <li className={styles.activityItem}>
-                        <span className={styles.activityIcon}>
-                          <CheckIcon size={20} />
-                        </span>
-                        <div className={styles.activityText}>
-                          <div>Completed <strong>Project Review</strong></div>
-                          <div className={styles.activityTime}>3 days ago</div>
-                        </div>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
+                <RecentActivity />
 
                 {/* My Tasks Card */}
                 <div className={`${styles.card} ${styles.cardTasks}`}>
@@ -3165,21 +2746,8 @@ This marketing plan provides a comprehensive framework for achieving our busines
         onCreateAgent={(name, description, avatar, capabilities) => {
           console.log(`Creating agent: ${name}`);
           
-          // Create a new ID for the agent
-          const agentId = `agent-${Date.now()}`;
-          
-          // Create the new agent object
-          const newAgent: Agent = {
-            id: agentId,
-            name,
-            description,
-            avatar,
-            status: 'online' as const,
-            lastActive: new Date(),
-            createdAt: new Date(),
-            capabilities,
-            author: 'ME',
-          };
+          // Create the new agent object using our utility function
+          const newAgent = createAgent(name, description, avatar, capabilities);
           
           // Add the agent to userAgents
           setUserAgents((prev: Agent[]) => [...prev, newAgent]);
@@ -3192,7 +2760,7 @@ This marketing plan provides a comprehensive framework for achieving our busines
           });
           
           // Automatically open a chat with the new agent
-          const agentChatId = `chat-${agentId}`;
+          const agentChatId = `chat-${newAgent.id}`;
           
           // Create new chat tab
           const newTab: ChatTab = {

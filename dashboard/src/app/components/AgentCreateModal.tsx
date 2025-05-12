@@ -1,19 +1,6 @@
 import React, { useState } from 'react';
 import styles from './FolderCreateModal.module.css'; // Reusing the same styles
-
-// Define capability options
-const CAPABILITY_OPTIONS = [
-  { id: 'web-search', name: 'Web Search', description: 'Search the internet for information' },
-  { id: 'doc-analysis', name: 'Document Analysis', description: 'Analyze and extract information from documents' },
-  { id: 'summarization', name: 'Summarization', description: 'Summarize content and conversations' },
-  { id: 'data-processing', name: 'Data Processing', description: 'Process and analyze data sets' },
-  { id: 'visualization', name: 'Visualization', description: 'Create visual representations of data' },
-  { id: 'coding', name: 'Coding Assistant', description: 'Help with coding and development tasks' },
-  { id: 'writing', name: 'Writing Assistant', description: 'Help with writing and content creation' }
-];
-
-// Avatars for agents
-const AGENT_AVATARS = ['🤖', '🧠', '📊', '🔍', '📝', '💻', '📚', '🧩'];
+import { CAPABILITY_OPTIONS, AGENT_AVATARS, toggleCapability, validateAgentCreation } from '../utils/agentDiscovery';
 
 type AgentCreateModalProps = {
   onClose: () => void;
@@ -30,14 +17,10 @@ const AgentCreateModal: React.FC<AgentCreateModalProps> = ({ onClose, onCreateAg
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate input
-    if (!name.trim()) {
-      setError('Please enter a name for your agent');
-      return;
-    }
-    
-    if (selectedCapabilities.length === 0) {
-      setError('Please select at least one capability');
+    // Use validateAgentCreation utility function for validation
+    const validationError = validateAgentCreation(name, selectedCapabilities);
+    if (validationError) {
+      setError(validationError);
       return;
     }
     
@@ -53,14 +36,8 @@ const AgentCreateModal: React.FC<AgentCreateModalProps> = ({ onClose, onCreateAg
     onClose();
   };
   
-  const toggleCapability = (capabilityId: string) => {
-    setSelectedCapabilities(prev => {
-      if (prev.includes(capabilityId)) {
-        return prev.filter(id => id !== capabilityId);
-      } else {
-        return [...prev, capabilityId];
-      }
-    });
+  const handleToggleCapability = (capabilityId: string) => {
+    setSelectedCapabilities(toggleCapability(selectedCapabilities, capabilityId));
   };
 
   return (
@@ -118,7 +95,7 @@ const AgentCreateModal: React.FC<AgentCreateModalProps> = ({ onClose, onCreateAg
                 <div 
                   key={capability.id}
                   className={`${styles.capabilityOption} ${selectedCapabilities.includes(capability.id) ? styles.selectedCapability : ''}`}
-                  onClick={() => toggleCapability(capability.id)}
+                  onClick={() => handleToggleCapability(capability.id)}
                 >
                   <div className={styles.capabilityName}>{capability.name}</div>
                   <div className={styles.capabilityDescription}>{capability.description}</div>
