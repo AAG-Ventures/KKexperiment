@@ -64,7 +64,7 @@ const AgentCreateModal: React.FC<AgentCreateModalProps> = ({ onClose, onCreateAg
   };
 
   return (
-    <div className={styles.modalOverlay}>
+    <div className={styles.modalBackdrop}>
       <div className={styles.modalContent}>
         <h2>Create New Agent</h2>
         

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './AddModal.module.css';
 import FolderCreateModal from './FolderCreateModal';
 import FileUploadModal from './FileUploadModal';
@@ -21,7 +21,15 @@ type AddModalProps = {
 const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose, onOptionSelect, onFolderCreate, onFileUpload, onCreateAgent, onWidgetSelect = () => {}, availableFolders = [] }) => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   
+  // Reset selectedOption when modal is closed
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedOption(null);
+    }
+  }, [isOpen]);
+  
   const handleOptionSelect = (option: string) => {
+    console.log(`Selected option in AddModal: ${option}`);
     setSelectedOption(option);
     onOptionSelect(option);
   };
@@ -30,10 +38,12 @@ const AddModal: React.FC<AddModalProps> = ({ isOpen, onClose, onOptionSelect, on
     setSelectedOption(null);
     onClose();
   };
+  
   if (!isOpen) return null;
   
   // Show folder creation modal if folder option is selected
   if (selectedOption === 'folder') {
+    console.log('Showing FolderCreateModal');
     return (
       <FolderCreateModal 
         isOpen={true}

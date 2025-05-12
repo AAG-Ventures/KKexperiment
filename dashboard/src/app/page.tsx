@@ -1561,25 +1561,28 @@ Formulating response based on available information...`
   
   // Handle option selection in the add modal
   const handleOptionSelect = (option: string) => {
-    console.log(`Selected option: ${option}`);
+    console.log(`Selected option in Dashboard: ${option}`);
     
     // Handle each option type differently
     switch (option) {
       case 'folder':
         // Don't close the modal for folder - the AddModal component will show FolderCreateModal
+        console.log('Folder option selected - AddModal will handle displaying FolderCreateModal');
         return; // Return early to prevent closing the modal
         
       case 'file':
         // Don't close the modal for file - the AddModal component will show FileUploadModal
+        console.log('File option selected - AddModal will handle displaying FileUploadModal');
         return; // Return early to prevent closing the modal
         
       case 'widget':
         // Don't close the modal for widget - the AddModal component will show WidgetSelectModal
+        console.log('Widget option selected - AddModal will handle displaying WidgetSelectModal');
         return; // Return early to prevent closing the modal
         
       case 'agent':
         // Don't close the modal for agent - the AddModal component will show AgentBrowserModal
-        console.log('Showing agent browser modal');
+        console.log('Agent option selected - AddModal will handle displaying AgentBrowserModal');
         return; // Return early to prevent closing the modal
         
       case 'workflow':

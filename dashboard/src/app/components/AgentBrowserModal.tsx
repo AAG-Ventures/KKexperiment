@@ -195,7 +195,7 @@ const AgentBrowserModal: React.FC<AgentBrowserModalProps> = ({ onClose, onSelect
   }
 
   return (
-    <div className={styles.modalOverlay}>
+    <div className={styles.modalBackdrop}>
       <div className={styles.modalContent} style={{ width: '650px', maxWidth: '90vw', position: 'relative' }}>
         <div className={styles.modalHeader}>
           <h2>Discover Agents</h2>

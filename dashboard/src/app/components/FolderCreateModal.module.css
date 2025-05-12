@@ -1,34 +1,35 @@
-.modalOverlay {
+.modalBackdrop {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 9999;
   animation: backdropFadeIn 0.2s ease-out;
   padding: 20px;
   overflow-y: auto;
 }
 
 .modalContent {
-  background: var(--card-bg);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg), 0 0 40px rgba(131, 61, 255, 0.15);
+  background: var(--background-secondary, #1a1a22);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
   width: 480px;
   max-width: 90vw;
   max-height: 90vh;
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--border-medium, #32323e);
   animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: auto;
   transform-origin: center center;
   margin: auto;
   position: relative;
   padding: 24px;
+  color: var(--foreground-primary, #ffffff);
 }
 
 @media (max-width: 576px) {
@@ -44,7 +45,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .modalHeader h2 {
@@ -53,12 +54,20 @@
   font-weight: 600;
 }
 
+.closeIcon {
+  display: inline-block;
+  font-size: 24px;
+  line-height: 1;
+}
+
 .closeButton {
   background: transparent;
   border: none;
-  color: var(--text-secondary);
+  color: var(--foreground-secondary, #a9a9b2);
   font-size: 24px;
   cursor: pointer;
+  padding: 0;
+  line-height: 1;
 }
 
 .folderForm {
@@ -70,23 +79,26 @@
 .formGroup {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  margin-bottom: 20px;
 }
 
-.formGroup label {
+.formLabel {
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-secondary);
+  color: var(--foreground-secondary, #a9a9b2);
+  margin-bottom: 8px;
 }
 
-.textInput, .select {
+.formInput {
   padding: 12px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-light);
-  background: var(--input-bg);
+  border-radius: 8px;
+  border: 1px solid var(--border-medium, #32323e);
+  background: var(--background-primary, #121218);
   font-size: 14px;
-  color: var(--text-primary);
+  color: var(--foreground-primary, #ffffff);
   width: 100%;
+  transition: all 0.2s ease;
+  height: 40px;
 }
 
 .textInput:focus, .select:focus {
@@ -98,13 +110,13 @@
 .buttonGroup {
   display: flex;
   justify-content: flex-end;
-  margin-top: 16px;
-  gap: 8px;
+  gap: 12px;
+  margin-top: 24px;
 }
 
 .cancelButton, .submitButton {
   padding: 10px 16px;
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -112,9 +124,9 @@
 }
 
 .cancelButton {
-  background: var(--bg-light);
-  color: var(--text-secondary);
-  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--foreground-secondary, #a9a9b2);
+  border: 1px solid var(--border-medium, #32323e);
 }
 
 .cancelButton:hover {
@@ -123,7 +135,7 @@
 }
 
 .submitButton {
-  background: var(--accent);
+  background: var(--brand-primary, #7857ed);
   color: white;
   border: none;
 }
@@ -143,21 +155,26 @@
 
 .fileDropArea {
   padding: 24px;
-  border: 2px dashed var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg-light);
+  border: 2px dashed var(--border-medium, #32323e);
+  border-radius: 8px;
+  background: var(--background-primary, #121218);
   text-align: center;
   margin-bottom: 16px;
   position: relative;
   transition: all 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-.fileDropArea.dragActive {
+.dropzone.dragging {
   border-color: var(--accent);
   background: var(--accent-lightest);
 }
 
-.fileDropLabel {
+.dropzoneContent {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -165,14 +182,17 @@
   cursor: pointer;
 }
 
-.fileIcon {
-  font-size: 32px;
+.uploadIcon {
+  font-size: 24px;
+  color: var(--foreground-secondary, #a9a9b2);
+  margin-bottom: 8px;
   color: var(--accent);
 }
 
-.fileDropText {
+.dropzoneContent p {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--foreground-secondary, #a9a9b2);
+  margin: 0;
 }
 
 .browseLink {
@@ -274,6 +294,17 @@
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--accent-light);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes backdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* Agent Browser Modal Styles */
@@ -533,14 +564,34 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
 }
 
 .capabilityItem, .useCasesList li {
-  padding: 8px 12px;
-  background: var(--bg-light);
-  border-radius: var(--radius-md);
-  margin-bottom: 8px;
+  padding: 12px 16px;
+  background: var(--background-primary, #121218);
+  border: 1px solid var(--border-medium, #32323e);
+  border-radius: 8px;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.capabilityItem:before, .useCasesList li:before {
+  content: '•';
+  color: var(--brand-primary, #7857ed);
+  font-size: 18px;
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.capabilityItem:hover, .useCasesList li:hover {
+  background: var(--background-secondary, #1a1a22);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .agentDetailActions {
@@ -682,11 +733,11 @@
   transform: scale(1.1);
 }
 
-.capabilitiesList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 8px;
+/* Additional capabilities styles in mobile view */
+@media (max-width: 576px) {
+  .capabilitiesList, .useCasesList {
+    grid-template-columns: 1fr;
+  }
 }
 
 .capabilityOption {

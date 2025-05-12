@@ -6,6 +6,8 @@ import styles from './marketplace.module.css';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Search } from 'lucide-react';
+import AgentDetailModal from './AgentDetailModal';
+
 
 // Agent type (consistent with other components)
 type Agent = {
@@ -394,6 +396,15 @@ const AgentMarketplace: React.FC = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             className={styles.searchInput}
           />
+          {searchQuery && (
+            <button 
+              className={styles.clearSearchButton}
+              onClick={() => setSearchQuery('')}
+              aria-label="Clear search"
+            >
+              ✕
+            </button>
+          )}
         </div>
         {searchQuery && (
           <div className={styles.searchResults}>
@@ -406,87 +417,12 @@ const AgentMarketplace: React.FC = () => {
       
       {/* Agent Details Modal */}
       {showAgentDetails && selectedAgent && (
-        <div className={styles.agentDetailModal}>
-          <div className={styles.agentDetailContent}>
-            <button 
-              className={styles.closeButton}
-              onClick={() => setShowAgentDetails(false)}
-            >
-              &times;
-            </button>
-            
-            <div className={styles.agentDetailHeader}>
-              <div className={styles.agentDetailAvatar}>{selectedAgent.avatar}</div>
-              <div>
-                <h2>{selectedAgent.name}</h2>
-                <div className={styles.agentRating}>
-                  <span className={styles.ratingStars}>
-                    {'★'.repeat(Math.floor(selectedAgent.rating || 0))}
-                    {'☆'.repeat(5 - Math.floor(selectedAgent.rating || 0))}
-                  </span>
-                  <span>{selectedAgent.rating?.toFixed(1)}</span>
-                </div>
-                <p className={styles.agentAuthor}>By {selectedAgent.author}</p>
-              </div>
-              <button 
-                className={styles.addAgentButton}
-                onClick={() => handleAddAgent(selectedAgent)}
-              >
-                Add to My Agents
-              </button>
-            </div>
-            
-            <p className={styles.agentDetailDescription}>{selectedAgent.description}</p>
-            
-            <div className={styles.agentDetailSection}>
-              <h3>Capabilities</h3>
-              <ul className={styles.agentCapabilities}>
-                {selectedAgent.capabilities.map(capability => (
-                  <li key={capability}>{capability}</li>
-                ))}
-              </ul>
-            </div>
-            
-            {selectedAgent.tags && (
-              <div className={styles.agentDetailSection}>
-                <h3>Tags</h3>
-                <div className={styles.agentTags}>
-                  {selectedAgent.tags.map(tag => (
-                    <span key={tag} className={styles.agentTag}>{tag}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            <div className={styles.agentDetailFooter}>
-              <div className={styles.agentStats}>
-                <div>
-                  <strong>{selectedAgent.downloads?.toLocaleString()}</strong>
-                  <span>Downloads</span>
-                </div>
-                <div>
-                  <strong>{selectedAgent.price ? `$${selectedAgent.price.toFixed(2)}` : 'Free'}</strong>
-                  <span>Price</span>
-                </div>
-                <div>
-                  <strong>{new Date(selectedAgent.createdAt || new Date()).toLocaleDateString()}</strong>
-                  <span>Added</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className={styles.searchContainer}>
-        <input
-          type="text"
-          placeholder="Search agents..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className={styles.searchInput}
+        <AgentDetailModal
+          agent={selectedAgent}
+          onClose={() => setShowAgentDetails(false)}
+          onAddAgent={handleAddAgent}
         />
-      </div>
+      )}
       
       {/* Filters sidebar */}
       <div className={styles.marketplaceLayout}>
@@ -541,11 +477,63 @@ const AgentMarketplace: React.FC = () => {
         
         {/* Main content */}
         <main className={styles.marketplaceContent}>
-          {/* Most Popular Section */}
-          <section className={styles.marketplaceSection}>
-            <h2>Most Popular</h2>
-            <div className={styles.agentGrid}>
-              {getMostPopularAgents().map(agent => (
+          {searchQuery ? (
+            /* Search Results Section */
+            <section className={styles.marketplaceSection}>
+              <h2 className={styles.resultsHeading}>
+                Results
+                <span className={styles.resultCount}>({filteredAgents.length} agents found)</span>
+              </h2>
+              {filteredAgents.length > 0 ? (
+                <div className={styles.agentGrid}>
+                  {filteredAgents.map(agent => (
+                    <div 
+                      key={agent.id}
+                      className={styles.agentCard}
+                      onClick={() => handleAgentSelect(agent)}
+                    >
+                      <div className={styles.agentCardHeader}>
+                        <div className={styles.agentAvatar}>{agent.avatar}</div>
+                        <div className={styles.agentCardHeaderInfo}>
+                          <h3>{agent.name}</h3>
+                          <div className={styles.agentRating}>
+                            <span className={styles.ratingStars}>
+                              {'★'.repeat(Math.floor(agent.rating || 0))}
+                              {'☆'.repeat(5 - Math.floor(agent.rating || 0))}
+                            </span>
+                            <span className={styles.ratingValue}>{agent.rating?.toFixed(1)}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <p className={styles.agentDescription}>{agent.description}</p>
+                      <div className={styles.agentCardFooter}>
+                        <span className={styles.agentAuthor}>By {agent.author}</span>
+                        <span className={styles.agentPrice}>
+                          {agent.price ? `$${agent.price.toFixed(2)}` : 'Free'}
+                        </span>
+                      </div>
+                      <div className={styles.agentTags}>
+                        {agent.tags?.slice(0, 3).map(tag => (
+                          <span key={tag} className={styles.agentTag}>{tag}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className={styles.emptyState}>
+                  <p>No agents found matching your search criteria</p>
+                </div>
+              )}
+            </section>
+          ) : (
+            /* Default content when no search is active */
+            <>
+              {/* Most Popular Section */}
+              <section className={styles.marketplaceSection}>
+                <h2>Most Popular</h2>
+                <div className={styles.agentGrid}>
+                  {getMostPopularAgents().map(agent => (
                 <div 
                   key={agent.id}
                   className={styles.agentCard}
@@ -684,6 +672,8 @@ const AgentMarketplace: React.FC = () => {
               </div>
             )}
           </section>
+            </>
+          )}
         </main>
       </div>
     

@@ -24,7 +24,7 @@ interface AgentDetailPageProps {
 
 const AgentDetailPage: React.FC<AgentDetailPageProps> = ({ agent, onBack, onAddAgent }) => {
   return (
-    <div className={styles.modalOverlay}>
+    <div className={styles.modalBackdrop}>
       <div className={styles.modalContent} style={{ width: '600px', maxWidth: '90vw' }}>
         <div className={styles.modalHeader}>
           <button onClick={onBack} className={styles.backButton}>
