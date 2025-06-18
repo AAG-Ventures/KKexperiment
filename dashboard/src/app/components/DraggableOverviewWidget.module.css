@@ -1,0 +1,41 @@
+.draggableOverviewWidget {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.dragging {
+  transform: rotate(2deg) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  cursor: grabbing !important;
+}
+
+/* Global drag handle styles for overview widgets */
+:global(.drag-handle-active) {
+  cursor: grab;
+}
+
+:global(.drag-handle-active:hover) {
+  opacity: 0.8;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+:global(.drag-handle-active:active) {
+  cursor: grabbing;
+}
+
+/* Add smooth transitions to all cards during drag operations */
+.draggableOverviewWidget :global(.card) {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Visual feedback during dragging */
+.dragging :global(.card) {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border: 2px solid #007AFF;
+}
+
+/* Ensure proper positioning during drag */
+.draggableOverviewWidget {
+  touch-action: none;
+}

@@ -1,8 +1,9 @@
 import React from 'react';
-import styles from '../page.module.css';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { ClockIcon, EditIcon, FolderIcon, MessageIcon, FileIcon, CheckIcon } from './Icons';
+import styles from '../page.module.css';
 
-// Type definitions for activities
 export type Activity = {
   id: string;
   type: 'edit' | 'folder' | 'message' | 'file' | 'task';
@@ -10,8 +11,9 @@ export type Activity = {
   time: string;
 };
 
-interface RecentActivityProps {
-  activities?: Activity[]; // Optional prop to allow custom activities
+interface DraggableRecentActivityWidgetProps {
+  id: string;
+  activities?: Activity[];
 }
 
 // Default activities if none are provided
@@ -48,7 +50,23 @@ const defaultActivities: Activity[] = [
   }
 ];
 
-export default function RecentActivity({ activities = defaultActivities }: RecentActivityProps) {
+export function DraggableRecentActivityWidget({ id, activities = defaultActivities }: DraggableRecentActivityWidgetProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.8 : 1,
+    zIndex: isDragging ? 1000 : 'auto',
+  };
+
   // Helper function to get the appropriate icon based on activity type
   const getActivityIcon = (type: Activity['type']) => {
     switch (type) {
@@ -86,9 +104,18 @@ export default function RecentActivity({ activities = defaultActivities }: Recen
   };
 
   return (
-    <div className={`${styles.card} ${styles.cardActivity}`}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`${styles.card} ${styles.cardActivity} ${isDragging ? styles.dragging : ''}`}
+    >
       <div className={styles.widgetHeader}>
-        <div className={styles.dragHandle}>
+        <div 
+          className={`${styles.dragHandle} drag-handle-active`}
+          {...attributes} 
+          {...listeners}
+          style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+        >
           <span className={styles.dragIcon}>⋮⋮</span>
         </div>
         <h3>Recent Activity</h3>

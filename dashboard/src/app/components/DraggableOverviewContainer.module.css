@@ -1,0 +1,54 @@
+.overviewContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .overviewContainer {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+.dragOverlay {
+  opacity: 0.8;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  transform: rotate(2deg);
+  pointer-events: none;
+}
+
+/* Global styles for drag feedback */
+:global(body.dragging) {
+  cursor: grabbing !important;
+}
+
+:global(.drag-active) {
+  background-color: rgba(0, 122, 255, 0.05);
+}
+
+/* Smooth animations for grid reordering */
+.overviewContainer > * {
+  transition: transform 0.3s ease;
+}
+
+/* Enhanced visual feedback during drag operations */
+.overviewContainer:has(.dragging) {
+  position: relative;
+}
+
+.overviewContainer:has(.dragging)::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  background: rgba(0, 122, 255, 0.02);
+  border-radius: 16px;
+  pointer-events: none;
+  z-index: -1;
+}
