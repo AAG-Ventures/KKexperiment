@@ -1213,7 +1213,7 @@ Formulating response based on available information...`
           
           return true;
         }
-        if (isFolder(item) && item.children) {
+        if (isFolder(item) && 'children' in item && Array.isArray(item.children)) {
           if (findAndRenameFile(item.children)) {
             return true;
           }
@@ -1255,7 +1255,7 @@ Formulating response based on available information...`
           fileName = item.name;
           return true;
         }
-        if (isFolder(item) && item.children) {
+        if (isFolder(item) && 'children' in item && Array.isArray(item.children)) {
           if (findFileName(item.children)) {
             return true;
           }
@@ -1310,7 +1310,7 @@ Formulating response based on available information...`
         
         if (item.id === folderId) {
           // If this is the target folder, add the file
-          if (isFolder(item) && item.children) {
+          if (isFolder(item) && 'children' in item && Array.isArray(item.children)) {
             item.children.push(newFile);
             return true;
           } else {
@@ -1320,7 +1320,7 @@ Formulating response based on available information...`
         }
         
         // Recursively check children
-        if (isFolder(item) && item.children) {
+        if (isFolder(item) && 'children' in item && Array.isArray(item.children)) {
           if (addFileToFolder(item.children)) {
             return true;
           }
@@ -1345,31 +1345,6 @@ Formulating response based on available information...`
     // We'll show a notification after the renaming is complete
   };
   
-  // Workspace operation handlers
-  const handleWorkspaceAddFile = (folderId: string) => {
-    // Find the workspace to edit
-    const workspaceToEdit = workspaces.find(workspace => workspace.id === folderId);
-    if (workspaceToEdit) {
-      // Open the workspace edit modal
-      setWorkspaceToEdit(workspaceToEdit);
-      setIsEditMode(true);
-    } else {
-      console.error(`Could not find workspace with ID: ${folderId}`);
-    }
-  };
-  
-  // Generic handler that routes to the appropriate function
-  const handleAddFile = (folderId: string) => {
-    console.log('handleAddFile called with folderId:', folderId);
-    // Check if this is a workspace ID (workspace IDs always exactly match 'workspace-number')
-    if (folderId.match(/^workspace-\d+$/) && workspaces.some(w => w.id === folderId)) {
-      handleWorkspaceAddFile(folderId);
-    } else {
-      handleKnowledgebaseAddFile(folderId);
-    }
-  };
-  
-  // Knowledgebase operation handlers
   const handleKnowledgebaseAddFolder = (parentFolderId: string) => {
     console.log('Adding folder to knowledgebase:', parentFolderId);
     
@@ -1395,7 +1370,7 @@ Formulating response based on available information...`
         
         if (item.id === parentFolderId) {
           // If this is the target folder, add the new folder
-          if (isFolder(item) && item.children) {
+          if (isFolder(item) && 'children' in item && Array.isArray(item.children)) {
             item.children.push(newFolder);
             return true;
           } else {
@@ -1405,7 +1380,7 @@ Formulating response based on available information...`
         }
         
         // Recursively check children
-        if (isFolder(item) && item.children) {
+        if (isFolder(item) && 'children' in item && Array.isArray(item.children)) {
           if (addFolderToParent(item.children)) {
             return true;
           }
@@ -1420,8 +1395,8 @@ Formulating response based on available information...`
     // If no parent folder found or not actually a folder, add to the root
     if (!added) {
       // Try to add to Topics folder
-      const topicsFolder = knowledgebaseDataCopy.find(item => item.id === 'topics');
-      if (topicsFolder && isFolder(topicsFolder) && topicsFolder.children) {
+      const topicsFolder = knowledgebaseDataCopy.find((item: any) => item.id === 'topics');
+      if (topicsFolder && isFolder(topicsFolder) && 'children' in topicsFolder && Array.isArray(topicsFolder.children)) {
         topicsFolder.children.push(newFolder);
       } else {
         // Add to root if no Topics folder
@@ -1437,6 +1412,18 @@ Formulating response based on available information...`
   };
   
   // Workspace operation handlers
+  const handleWorkspaceAddFile = (folderId: string) => {
+    // Find the workspace to edit
+    const workspaceToEdit = workspaces.find(workspace => workspace.id === folderId);
+    if (workspaceToEdit) {
+      // Open the workspace edit modal
+      setWorkspaceToEdit(workspaceToEdit);
+      setIsEditMode(true);
+    } else {
+      console.error(`Could not find workspace with ID: ${folderId}`);
+    }
+  };
+  
   const handleWorkspaceAddFolder = (parentFolderId: string) => {
     // Find the workspace to edit
     const workspaceToEdit = workspaces.find(workspace => workspace.id === parentFolderId);
@@ -1450,6 +1437,16 @@ Formulating response based on available information...`
   };
   
   // Generic handler that routes to the appropriate function
+  const handleAddFile = (folderId: string) => {
+    console.log('handleAddFile called with folderId:', folderId);
+    // Check if this is a workspace ID (workspace IDs always exactly match 'workspace-number')
+    if (folderId.match(/^workspace-\d+$/) && workspaces.some(w => w.id === folderId)) {
+      handleWorkspaceAddFile(folderId);
+    } else {
+      handleKnowledgebaseAddFile(folderId);
+    }
+  };
+  
   const handleAddFolder = (parentFolderId: string) => {
     console.log('handleAddFolder called with parentFolderId:', parentFolderId);
     // Check if this is a workspace ID (workspace IDs always exactly match 'workspace-number')
@@ -1459,7 +1456,7 @@ Formulating response based on available information...`
       handleKnowledgebaseAddFolder(parentFolderId);
     }
   };
-
+  
   // Function to delete a file from the knowledgebase
   const handleKnowledgebaseDeleteFile = (fileId: string) => {
     console.log('Deleting file from knowledgebase:', fileId);
@@ -1492,7 +1489,7 @@ Formulating response based on available information...`
           }
           
           // Recursively search children
-          if (isFolder(item) && item.children) {
+          if (isFolder(item) && 'children' in item && Array.isArray(item.children)) {
             if (deleteItemFromChildren(item.children)) {
               return true;
             }
@@ -1503,7 +1500,7 @@ Formulating response based on available information...`
       
       // Try all top-level folders
       for (const item of knowledgebaseData) {
-        if (isFolder(item) && item.children) {
+        if (isFolder(item) && 'children' in item && Array.isArray(item.children)) {
           if (deleteItemFromChildren(item.children)) {
             fileDeleted = true;
             break;
@@ -1543,18 +1540,19 @@ Formulating response based on available information...`
     let fileIndex = -1;
     
     // Helper function to recursively find the file
-    const findFile = (items: any[], parent: any = null) => {
+    const findFile = (items: any[]): boolean => {
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
         if (item.id === fileId) {
           fileToMove = item;
-          parentFolder = parent;
+          parentFolder = items;
           fileIndex = i;
           return true;
         }
         
-        if (item.children) {
-          if (findFile(item.children, item)) {
+        // Recursively search children
+        if (isFolder(item) && 'children' in item && Array.isArray(item.children)) {
+          if (findFile(item.children)) {
             return true;
           }
         }
@@ -1569,7 +1567,8 @@ Formulating response based on available information...`
           return item;
         }
         
-        if (item.children) {
+        // Recursively search children
+        if (isFolder(item) && 'children' in item && Array.isArray(item.children)) {
           const found = findTargetFolder(item.children);
           if (found) return found;
         }
@@ -1588,7 +1587,7 @@ Formulating response based on available information...`
     // Find the target folder
     const targetFolder = findTargetFolder(knowledgebaseData);
     
-    if (!targetFolder || !targetFolder.children) {
+    if (!targetFolder || !isFolder(targetFolder) || !('children' in targetFolder) || !Array.isArray(targetFolder.children)) {
       console.error('Target folder not found or is not a folder');
       return;
     }
@@ -1600,8 +1599,8 @@ Formulating response based on available information...`
     }
     
     // Remove the file from its current location
-    if (parentFolder && parentFolder.children) {
-      parentFolder.children.splice(fileIndex, 1);
+    if (parentFolder && Array.isArray(parentFolder)) {
+      parentFolder.splice(fileIndex, 1);
     } else {
       // File is at the root level
       knowledgebaseData.splice(fileIndex, 1);
@@ -2875,7 +2874,7 @@ Formulating response based on available information...`
         availableFolders={[
           { id: 'root', name: 'Root' },
           { id: 'topics', name: 'Topics' },
-          ...(knowledgebaseData[0]?.children?.filter(item => item.children)
+          ...(knowledgebaseData[0]?.children?.filter(item => 'children' in item && Array.isArray(item.children))
               .map(folder => ({ id: folder.id, name: folder.name })) || [])
         ]}
         onFileUpload={(destinationFolder, files) => {
@@ -2920,27 +2919,26 @@ Formulating response based on available information...`
               knowledgebaseData.push(fileObj as any);
             } else if (destinationFolder === 'topics') {
               // Add to topics folder
-              const topicsFolder = knowledgebaseData.find(item => item.id === 'topics');
-              if (topicsFolder && Array.isArray(topicsFolder.children)) {
+              const topicsFolder = knowledgebaseData.find((item: any) => item.id === 'topics');
+              if (topicsFolder && 'children' in topicsFolder && Array.isArray(topicsFolder.children)) {
                 topicsFolder.children.push(fileObj as any);
               }
             } else {
               // Add to specific folder
-              const topicsFolder = knowledgebaseData.find(item => item.id === 'topics');
-              if (topicsFolder && Array.isArray(topicsFolder.children)) {
-                const targetFolder = topicsFolder.children.find(item => item.id === destinationFolder);
-                if (targetFolder && Array.isArray(targetFolder.children)) {
+              const topicsFolder = knowledgebaseData.find((item: any) => item.id === 'topics');
+              if (topicsFolder && 'children' in topicsFolder && Array.isArray(topicsFolder.children)) {
+                const targetFolder = topicsFolder.children.find((item: any) => item.id === destinationFolder);
+                if (targetFolder && 'children' in targetFolder && Array.isArray(targetFolder.children)) {
                   targetFolder.children.push(fileObj as any);
-                } else if (targetFolder) {
-                  targetFolder.children = [fileObj as any];
+                } else if (targetFolder && 'children' in targetFolder) {
+                  (targetFolder as any).children = [fileObj as any];
                 }
               }
             }
           }
           
-          // Force a re-render by creating a new reference to knowledgebaseData
+          // Force a re-render by creating a new reference
           const knowledgebaseDataCopy = [...knowledgebaseData];
-          // This is a hack to force a re-render in this demo
           knowledgebaseData.length = 0;
           knowledgebaseData.push(...knowledgebaseDataCopy);
           
@@ -3006,7 +3004,7 @@ Formulating response based on available information...`
           
           // Add the new topic to the knowledgebase data
           if (knowledgebaseData && knowledgebaseData.length > 0 && knowledgebaseData[0].children) {
-            knowledgebaseData[0].children.push(newTopic);
+            (knowledgebaseData[0].children as any[]).push(newTopic);
           }
           
           // Make sure the topics folder is expanded
