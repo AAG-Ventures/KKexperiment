@@ -101,6 +101,9 @@ export default function Dashboard() {
     column3: []
   });
   
+  // Overview widgets state for drag-and-drop
+  const [overviewWidgets, setOverviewWidgets] = useState<WidgetItem[]>([]);
+  
   // Notification panel state
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
   const [isAddingTask, setIsAddingTask] = useState(false);
@@ -790,6 +793,269 @@ Formulating response based on available information...`
     }
   }, [tasks]);
   
+  // Initialize overview widgets for drag-and-drop
+  useEffect(() => {
+    const widgets: WidgetItem[] = [
+      {
+        id: 'calendar',
+        content: (
+          <div className={`${styles.card} ${styles.cardCalendar}`} data-onboarding-target="calendar-card">
+            <div className={styles.widgetHeader}>
+              <h3>Calendar</h3>
+              <span className={styles.widgetIcon}>📅</span>
+            </div>
+            <div className={styles.calendarContainer}>
+              <CalendarWidget 
+                tasks={tasks.map(task => ({
+                  id: task.id,
+                  text: task.text,
+                  deadline: task.deadline || new Date(),
+                  priority: task.priority,
+                  completed: task.completed
+                }))}
+                onSelectDate={(date) => {
+                  console.log('Date selected in calendar:', date);
+                  // Set the selected date as the deadline for the new task
+                  setNewTaskDeadline(date);
+                  // Start adding a task
+                  setIsAddingTask(true);
+                  setNewTaskText('');
+                  // Skip date picker and show priority selector after text is entered
+                  
+                  // Focus on the input after a short delay
+                  setTimeout(() => {
+                    if (newTaskInputRef.current) {
+                      newTaskInputRef.current.focus();
+                    }
+                  }, 100);
+                }}
+                onSelectTask={(taskId) => {
+                  // When a task is selected in the calendar, show its details
+                  setSelectedTaskId(taskId);
+                }}
+              />
+            </div>
+          </div>
+        )
+      },
+      {
+        id: 'recent-activity',
+        content: <RecentActivity />
+      },
+      {
+        id: 'my-tasks',
+        content: (
+          <div className={`${styles.card} ${styles.cardTasks}`}>
+            <div className={styles.widgetHeader}>
+              <h3>My Tasks</h3>
+              {!isNotificationPanelOpen && (
+                <button 
+                  className={styles.newTabButton} 
+                  title="Add New Task"
+                  type="button"
+                  onClick={handleAddTask}
+                >
+                  <PlusIcon size={20} />
+                </button>
+              )}
+            </div>
+            <div className={styles.tasksContainer}>
+              {/* Active Tasks */}
+              <div className={styles.taskSection}>
+                {tasks.filter(task => !task.completed).length === 0 && !isAddingTask ? (
+                  <div className={styles.emptyTasksMessage}>
+                    <div className={styles.emptyTasksIcon}>✓</div>
+                    <p>You&apos;ve completed everything in your plan!</p>
+                    <button 
+                      className={styles.addTaskButton}
+                      onClick={handleAddTask}
+                    >
+                      Add a new task
+                    </button>
+                  </div>
+                ) : (
+                  <ul className={styles.taskList}>
+                    {tasks
+                      .filter(task => !task.completed)
+                      // Sort tasks by deadline (nearest at top)
+                      .sort((a, b) => {
+                        // Tasks without deadlines go to the bottom
+                        if (!a.deadline && !b.deadline) return 0;
+                        if (!a.deadline) return 1;
+                        if (!b.deadline) return -1;
+                        
+                        // Safer approach: use try-catch to prevent any runtime errors
+                        try {
+                          // Convert to timestamps with error handling
+                          let aTime, bTime;
+                          
+                          try {
+                            aTime = a.deadline instanceof Date ? 
+                              a.deadline.getTime() : 
+                              new Date(a.deadline).getTime();
+                          } catch (e) {
+                            // If there's an error, put this task at the bottom
+                            return 1;
+                          }
+                          
+                          try {
+                            bTime = b.deadline instanceof Date ? 
+                              b.deadline.getTime() : 
+                              new Date(b.deadline).getTime();
+                          } catch (e) {
+                            // If there's an error, put this task at the bottom
+                            return -1;
+                          }
+                          
+                          // Additional validation
+                          if (isNaN(aTime)) return 1;
+                          if (isNaN(bTime)) return -1;
+                          
+                          // Sort by date
+                          return aTime - bTime;
+                        } catch (e) {
+                          // Last resort fallback if anything goes wrong
+                          console.error('Error sorting tasks:', e);
+                          return 0;
+                        }
+                      })
+                      .map(task => (
+                        <li key={task.id} className={`${styles.taskItem} ${styles.taskItemClickable}`}>
+                          <button 
+                            className={styles.taskCheckbox} 
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent task selection when clicking checkbox
+                              toggleTaskCompletion(task.id);
+                            }}
+                            aria-label={`Mark ${task.text} as complete`}
+                          >
+                            <span className={styles.checkboxInner}></span>
+                          </button>
+                          <div 
+                            className={styles.taskContent}
+                            onClick={() => setSelectedTaskId(task.id)}
+                          >
+                            <span className={styles.taskText}>{task.text}</span>
+                            {task.deadline && (
+                              <span className={`${styles.taskDeadline} 
+                                ${isDeadlineUrgent(task.deadline) ? styles.urgentDeadline : ''}
+                                ${isDeadlineSoon(task.deadline) ? styles.soonDeadline : ''}
+                                ${isDeadlineNormal(task.deadline) ? styles.normalDeadline : ''}`}>
+                                {formatDeadline(task.deadline)}
+                              </span>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    
+                    {isAddingTask && (
+                      <>
+                        <li className={styles.taskItem}>
+                          <button className={styles.taskCheckbox}>
+                            <span className={styles.checkboxInner}></span>
+                          </button>
+                          <div className={styles.newTaskContainer}>
+                            <input
+                              ref={newTaskInputRef}
+                              className={styles.newTaskInput}
+                              type="text"
+                              placeholder="Type a new task..."
+                              value={newTaskText}
+                              onChange={(e) => setNewTaskText(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  if (newTaskText.trim()) {
+                                    // Create task immediately on Enter press
+                                    const newTask: Task = {
+                                      id: `task-${Date.now()}`,
+                                      text: newTaskText.trim(),
+                                      completed: false
+                                    };
+                                    
+                                    setTasks(prevTasks => [...prevTasks, newTask]);
+                                    
+                                    // Save to localStorage
+                                    const updatedTasks = [...tasks, newTask];
+                                    localStorage.setItem('dashboard_tasks', JSON.stringify(updatedTasks));
+                                    
+                                    // Reset input field
+                                    setNewTaskText('');
+                                  }
+                                } else if (e.key === 'Escape') {
+                                  cancelAddingTask();
+                                }
+                              }}
+                            />
+                          </div>
+                        </li>
+                      </>
+                    )}
+                  </ul>
+                )}
+                {/* Completed Tasks */}
+                {tasks.some(task => task.completed) && (
+                  <div className={styles.completedTasksSection}>
+                    <button 
+                      className={styles.completedTasksHeader} 
+                      onClick={() => {
+                        const completedSection = document.querySelector(`.${styles.completedTasksList}`);
+                        if (completedSection) {
+                          (completedSection as HTMLElement).scrollIntoView({ behavior: 'smooth' });
+                        }
+                      }}
+                    >
+                      Completed ({tasks.filter(task => task.completed).length})
+                    </button>
+                    <div className={styles.completedTasksList}>
+                      <ul className={styles.taskList}>
+                        {tasks
+                          .filter(task => task.completed)
+                          .map(task => (
+                            <li key={task.id} className={`${styles.taskItem} ${styles.completedTask} ${styles.taskItemClickable}`}>
+                              <button 
+                                className={`${styles.taskCheckbox} ${styles.checked}`}
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent task selection when clicking checkbox
+                                  toggleTaskCompletion(task.id);
+                                }}
+                                aria-label={`Mark ${task.text} as incomplete`}
+                              >
+                                <span className={`${styles.checkboxInner} ${styles.checked}`}>
+                                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M3 6L5 8L9 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                </span>
+                              </button>
+                              <div 
+                                className={styles.taskContent}
+                                onClick={() => setSelectedTaskId(task.id)}
+                              >
+                                <span className={styles.taskText}>{task.text}</span>
+                                {task.deadline && (
+                                  <span className={`${styles.taskDeadline} 
+                                    ${isDeadlineUrgent(task.deadline) ? styles.urgentDeadline : ''}
+                                    ${isDeadlineSoon(task.deadline) ? styles.soonDeadline : ''}
+                                    ${isDeadlineNormal(task.deadline) ? styles.normalDeadline : ''}`}>
+                                    {formatDeadline(task.deadline)}
+                                  </span>
+                                )}
+                              </div>
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )
+      }
+    ];
+    
+    setOverviewWidgets(widgets);
+  }, [tasks, isAddingTask, newTaskText, isNotificationPanelOpen]);
+  
   // Helper function to format task deadlines
   const formatDeadline = (dateInput: Date | string | number): string => {
     // Ensure the input is converted to a proper Date object
@@ -1304,7 +1570,7 @@ Formulating response based on available information...`
     let knowledgebaseDataCopy = JSON.parse(JSON.stringify(knowledgebaseData));
     
     // Function to add the file to the specified folder
-    const addFileToFolder = (items: any[]): boolean => {
+    const addFileToFolder = (items: any[]) => {
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
         
@@ -1364,7 +1630,7 @@ Formulating response based on available information...`
     let knowledgebaseDataCopy = JSON.parse(JSON.stringify(knowledgebaseData));
     
     // Function to add the folder to the specified parent folder
-    const addFolderToParent = (items: any[]): boolean => {
+    const addFolderToParent = (items: any[]) => {
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
         
@@ -1481,6 +1747,7 @@ Formulating response based on available information...`
       const deleteItemFromChildren = (items: any[]): boolean => {
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
+          
           if (item.id === fileId) {
             fileName = item.name;
             // Remove the item from the array
