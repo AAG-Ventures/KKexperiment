@@ -76,6 +76,18 @@
   font-weight: 500;
 }
 
+/* Highlight folder when its context menu is open */
+.folderRow.contextMenuActive {
+  background-color: var(--background-tertiary) !important;
+  border: 1px solid rgba(var(--brand-rgb), 0.3) !important;
+  box-shadow: 0 0 0 1px rgba(var(--brand-rgb), 0.2) !important;
+}
+
+/* Ensure context menu highlight overrides hover */
+.folderRow.contextMenuActive:hover {
+  background-color: var(--background-tertiary) !important;
+}
+
 .icon {
   margin-right: 8px;
   width: 18px;

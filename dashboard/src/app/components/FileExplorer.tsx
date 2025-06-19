@@ -379,7 +379,7 @@ const Folder: React.FC<FolderProps> = ({
       onContextMenu={!isRenaming ? handleContextMenu : (e) => e.preventDefault()}
     >
       <div 
-        className={`${styles.folderRow} ${isActive ? styles.active : ''} ${folder.id === 'topics' ? styles.topicsRow : ''}`}
+        className={`${styles.folderRow} ${isActive ? styles.active : ''} ${folder.id === 'topics' ? styles.topicsRow : ''} ${contextMenuTargetId === folder.id ? styles.contextMenuActive : ''}`}
         onClick={(e) => {
           // For all folders, prioritize toggle expansion when clicking the row
           if (onToggleFolder) {
