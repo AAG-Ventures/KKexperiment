@@ -1,6 +1,7 @@
 import React from 'react';
 import styles from '../page.module.css';
 import { PlusIcon } from 'lucide-react';
+import ContextMenu, { ContextMenuItem } from './ContextMenu';
 
 // Type definitions
 export type Agent = {
@@ -61,6 +62,31 @@ export default function MyAgents({
   handleOptionSelect,
   generateUUID
 }: MyAgentsProps) {
+  const [contextMenu, setContextMenu] = React.useState<{ x: number; y: number; agentId: string } | null>(null);
+
+  // Close context menu when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = () => setContextMenu(null);
+    if (contextMenu) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [contextMenu]);
+
+  const handleViewMemory = (agentId: string) => {
+    console.log(`View Memory for agent: ${agentId}`);
+    // TODO: Implement view memory functionality
+    setContextMenu(null);
+  };
+
+  // Context menu items for agents
+  const contextMenuItems: ContextMenuItem[] = [
+    {
+      label: 'View Memory',
+      onClick: () => handleViewMemory(contextMenu?.agentId || '')
+    }
+  ];
+
   return (
     <aside className={styles.activeProcessesWidget}>
       <div className={styles.widgetHeader}>
@@ -84,60 +110,69 @@ export default function MyAgents({
             <div 
               key={agent.id} 
               className={styles.processItem}
-              onClick={() => {
-                // Open a chat with this agent
-                console.log(`Starting chat with agent: ${agent.name}`);
-                
-                // Set the current agent
-                setCurrentAgent(agent);
-                
-                // Create a new chat tab for this agent if it doesn't exist
-                const agentChatId = `chat-${agent.id}`;
-                const existingTab = chatTabs.find(tab => tab.id === agentChatId);
-                
-                if (existingTab) {
-                  // Just make the tab active
-                  setChatTabs(prevTabs => 
-                    prevTabs.map(tab => ({
-                      ...tab,
-                      active: tab.id === agentChatId
-                    }))
-                  );
+              onClick={(e) => {
+                if (e.nativeEvent.button === 2) {
+                  e.preventDefault();
+                  setContextMenu({ x: e.clientX, y: e.clientY, agentId: agent.id });
                 } else {
-                  // Create new tab and set it as active
-                  const newTab: ChatTab = {
-                    id: agentChatId,
-                    title: agent.name,
-                    messages: [{ 
-                      sender: 'bot' as const, 
-                      content: `Hello! I'm ${agent.name}. How can I assist you today?` 
-                    }],
-                    active: true,
-                    isRenaming: false,
-                    isProcessing: false,
-                    sessionId: generateUUID(),
-                    agentId: agent.id
-                  };
+                  // Open a chat with this agent
+                  console.log(`Starting chat with agent: ${agent.name}`);
                   
-                  setChatTabs(prevTabs => [
-                    ...prevTabs.map(tab => ({ ...tab, active: false })),
-                    newTab
-                  ]);
+                  // Set the current agent
+                  setCurrentAgent(agent);
                   
-                  // Add to Active Processes
-                  const processExists = processes.some(p => p.id === agentChatId);
-                  if (!processExists) {
-                    setProcesses(prev => [
-                      ...prev,
-                      {
-                        id: agentChatId,
-                        name: `Chat with ${agent.name}`,
-                        type: 'chat',
-                        status: 'inProgress'
-                      }
+                  // Create a new chat tab for this agent if it doesn't exist
+                  const agentChatId = `chat-${agent.id}`;
+                  const existingTab = chatTabs.find(tab => tab.id === agentChatId);
+                  
+                  if (existingTab) {
+                    // Just make the tab active
+                    setChatTabs(prevTabs => 
+                      prevTabs.map(tab => ({
+                        ...tab,
+                        active: tab.id === agentChatId
+                      }))
+                    );
+                  } else {
+                    // Create new tab and set it as active
+                    const newTab: ChatTab = {
+                      id: agentChatId,
+                      title: agent.name,
+                      messages: [{ 
+                        sender: 'bot' as const, 
+                        content: `Hello! I'm ${agent.name}. How can I assist you today?` 
+                      }],
+                      active: true,
+                      isRenaming: false,
+                      isProcessing: false,
+                      sessionId: generateUUID(),
+                      agentId: agent.id
+                    };
+                    
+                    setChatTabs(prevTabs => [
+                      ...prevTabs.map(tab => ({ ...tab, active: false })),
+                      newTab
                     ]);
+                    
+                    // Add to Active Processes
+                    const processExists = processes.some(p => p.id === agentChatId);
+                    if (!processExists) {
+                      setProcesses(prev => [
+                        ...prev,
+                        {
+                          id: agentChatId,
+                          name: `Chat with ${agent.name}`,
+                          type: 'chat',
+                          status: 'inProgress'
+                        }
+                      ]);
+                    }
                   }
                 }
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                setContextMenu({ x: e.clientX, y: e.clientY, agentId: agent.id });
               }}
             >
               <div className={styles.processDetails}>
@@ -146,12 +181,31 @@ export default function MyAgents({
                   {agent.name}
                 </div>
               </div>
+              <button
+                className={styles.contextMenuTrigger}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setContextMenu({ x: e.clientX, y: e.clientY, agentId: agent.id });
+                }}
+                aria-label="Agent options"
+              >
+                ⋮
+              </button>
             </div>
           ))
         ) : (
           <div className={styles.emptyState}>No agents available</div>
         )}
       </div>
+      
+      {/* Context menu rendered outside the loop */}
+      {contextMenu && (
+        <ContextMenu
+          items={contextMenuItems}
+          position={{ x: contextMenu.x, y: contextMenu.y }}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
     </aside>
   );
 }

@@ -42,7 +42,12 @@ export default function ActiveProcesses({
     <aside className={styles.activeProcessesWidget}>
       <div className={styles.widgetHeader}>
         <h3>Active Processes</h3>
-        <span className={styles.widgetIcon}>🔄</span>
+        <button className={styles.widgetIcon} style={{ background: 'none', border: 'none', padding: '0', cursor: 'pointer' }}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13.65 2.35C12.2 0.9 10.2 0 8 0C3.58 0 0 3.58 0 8H2C2 4.69 4.69 2 8 2C9.66 2 11.14 2.69 12.22 3.78L10 6H16V0L13.65 2.35Z" fill="var(--foreground-secondary)"/>
+            <path d="M14 8C14 11.31 11.31 14 8 14C6.34 14 4.86 13.31 3.78 12.22L6 10H0V16L2.35 13.65C3.8 15.1 5.8 16 8 16C12.42 16 16 12.42 16 8H14Z" fill="var(--foreground-secondary)"/>
+          </svg>
+        </button>
       </div>
       <div className={styles.processList}>
         {processes.length > 0 ? (
