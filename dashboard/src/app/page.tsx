@@ -1779,24 +1779,26 @@ Formulating response based on available information...`
           <PlusIcon size={20} />
         </button>
         
+        {/* Toggle sidebar button outside leftColumn */}
+        {!isSidebarCollapsed && (
+          <button 
+            className={styles.sidebarToggle} 
+            onClick={toggleSidebar}
+            aria-label="Collapse sidebar"
+            title="Collapse sidebar"
+          >
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15 6L9 12L15 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        )}
+        
         {/* Left Column - Knowledge Section */}
         <div className={styles.leftColumn}>
           
           {!isSidebarCollapsed ? (
             /* Knowledge Section - Full size version */
             <>
-              {/* Toggle button at the edge in expanded state */}
-              <button 
-                className={styles.sidebarToggle} 
-                onClick={toggleSidebar}
-                aria-label="Collapse sidebar"
-                title="Collapse sidebar"
-              >
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M15 6L9 12L15 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-              
               {/* Draggable widget container for left column */}
               <DraggableWidgetContainer
                 columnId="left-column"
