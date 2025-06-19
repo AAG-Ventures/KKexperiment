@@ -345,12 +345,11 @@ const Folder: React.FC<FolderProps> = ({
   const toggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
     
-    // If this is the topics folder or we have an external toggle handler,
-    // use the external state management
-    if (folder.id === 'topics' && onToggleFolder) {
+    // Use external state management for all folders if available
+    if (onToggleFolder) {
       onToggleFolder(folder.id);
     } else {
-      // For other folders, use internal state
+      // Fallback to internal state only if no external handler
       setExpanded(!expanded);
     }
   };
@@ -382,15 +381,13 @@ const Folder: React.FC<FolderProps> = ({
       <div 
         className={`${styles.folderRow} ${isActive ? styles.active : ''} ${folder.id === 'topics' ? styles.topicsRow : ''}`}
         onClick={(e) => {
-          
-          // Select the folder in all cases
-          onSelect(folder);
-          
-          // Special handling for Topics and Shared Space folders
-          if ((folder.id === 'topics' || folder.id === 'shared') && onToggleFolder) {
+          // For all folders, prioritize toggle expansion when clicking the row
+          if (onToggleFolder) {
             e.stopPropagation();
             onToggleFolder(folder.id);
-            return;
+          } else {
+            // Fallback to toggle expand if no external handler
+            toggleExpand(e);
           }
         }}
       >
