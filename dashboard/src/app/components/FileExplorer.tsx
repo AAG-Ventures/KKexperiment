@@ -291,10 +291,12 @@ const Folder: React.FC<FolderProps> = ({
   
   const isActive = selected === folder.id;
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const [contextMenuTargetId, setContextMenuTargetId] = useState<string | null>(null);
   
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    setContextMenuTargetId(folder.id);
     setContextMenu({ x: e.clientX, y: e.clientY });
   };
   
@@ -439,6 +441,8 @@ const Folder: React.FC<FolderProps> = ({
           className={styles.contextMenuTrigger} 
           onClick={(e) => {
             e.stopPropagation();
+            // Store the target folder ID for context menu actions
+            setContextMenuTargetId(folder.id);
             setContextMenu({ x: e.clientX, y: e.clientY });
           }}
         >⋮</span>
@@ -450,12 +454,38 @@ const Folder: React.FC<FolderProps> = ({
             ...(fileOperations?.onAddFile ? [{
               label: 'Add File',
               icon: '📄',
-              onClick: () => fileOperations.onAddFile?.(folder.id)
+              onClick: () => {
+                const targetId = contextMenuTargetId || folder.id;
+                // First, expand the folder if it's not already expanded
+                if (onToggleFolder && !expandedFolders.includes(targetId)) {
+                  onToggleFolder(targetId);
+                  // Add a small delay to ensure expansion completes before adding file
+                  setTimeout(() => {
+                    fileOperations.onAddFile?.(targetId);
+                  }, 50);
+                } else {
+                  // Folder is already expanded, add immediately
+                  fileOperations.onAddFile?.(targetId);
+                }
+              }
             }] : []),
             ...(fileOperations?.onAddFolder ? [{
               label: 'Add Folder',
               icon: '📁',
-              onClick: () => fileOperations.onAddFolder?.(folder.id)
+              onClick: () => {
+                const targetId = contextMenuTargetId || folder.id;
+                // First, expand the folder if it's not already expanded
+                if (onToggleFolder && !expandedFolders.includes(targetId)) {
+                  onToggleFolder(targetId);
+                  // Add a small delay to ensure expansion completes before adding folder
+                  setTimeout(() => {
+                    fileOperations.onAddFolder?.(targetId);
+                  }, 50);
+                } else {
+                  // Folder is already expanded, add immediately
+                  fileOperations.onAddFolder?.(targetId);
+                }
+              }
             }] : []),
             ...(fileOperations?.onRename ? [{
               label: 'Rename',
@@ -465,11 +495,14 @@ const Folder: React.FC<FolderProps> = ({
             ...(fileOperations?.onDelete ? [{
               label: 'Delete',
               icon: '🗑️',
-              onClick: () => fileOperations.onDelete?.(folder.id)
+              onClick: () => fileOperations.onDelete?.(contextMenuTargetId || folder.id)
             }] : [])
           ]}
           position={contextMenu}
-          onClose={() => setContextMenu(null)}
+          onClose={() => {
+            setContextMenu(null);
+            setContextMenuTargetId(null);
+          }}
         />
       )}
       
