@@ -68,7 +68,7 @@ const ChatOnboardingStep: React.FC<ChatOnboardingStepProps> = ({ onComplete, ste
       setWaitingForResponse(true);
       
       setTimeout(() => {
-        addAgentMessage(`Let me create a perfectly personalized dashboard for you, to do that, can you share what is your ocupation, and is there anything apart from work you'd like to use this platform for?`);
+        addAgentMessage(`Let me create a perfectly personalized dashboard for you. To do that, could you share your occupation? Also, is there anything besides work that you'd like to use this platform for?`);
         setChatStep('occupation');
         setWaitingForResponse(false);
       }, 1000);
