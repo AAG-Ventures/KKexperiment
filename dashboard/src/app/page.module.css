@@ -2472,7 +2472,7 @@
   overflow-y: auto;
   padding: 8px 6px; /* Minimize padding to maximize space */
   box-sizing: border-box;
-  margin-bottom: 8px; /* Smaller space before input */
+  margin-bottom: 80px; /* Increased to prevent overlap with 64px input container + extra space */
   /* Show a scrollbar when needed */
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
@@ -2625,7 +2625,7 @@ details[open] .thinkingSummary::before {
 
 /* Chat input styling */
 .chatInputContainer {
-  position: absolute;
+  position: sticky;
   bottom: 0;
   left: 0;
   right: 0;
@@ -2633,10 +2633,10 @@ details[open] .thinkingSummary::before {
   background: var(--background-secondary);
   border-top: 1px solid var(--border-light);
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-  margin-top: auto;
   z-index: 10;
   height: 64px; /* Fixed height to ensure consistency */
   box-sizing: border-box;
+  flex-shrink: 0; /* Prevent shrinking in flex container */
 }
 
 .chatInputWrapper {

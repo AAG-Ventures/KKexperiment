@@ -19,10 +19,10 @@ export type Agent = {
 
 // AI Agent configuration
 export const AI_AGENT_CONFIG = {
-  API_KEY: 'demo-key-xyz-123',
+  API_KEY: 'test',
   USER_ID: 'user-123456',
-  BACKEND_DOMAIN: 'https://ai-agent-soc-media-template-ddd7b1afdf47.herokuapp.com',
-  AGENT_ID: '95ba603a-9479-4f6a-8e1e-1e63638053a9',
+  BACKEND_DOMAIN: 'https://agent-template.aag.systems',
+  AGENT_ID: 'a7d5c2d2-f395-4e5e-9675-506a04175c17',
 };
 
 /**
@@ -75,16 +75,13 @@ export const sendMessageToAIAgent = async (prompt: string, sessionId: string): P
       userId: AI_AGENT_CONFIG.USER_ID
     });
     
-    // Prepare the request body
+    // Prepare the request body to match the expected API format
     const requestBody = {
-      prompt,
-      sessionId,
       agentId: AI_AGENT_CONFIG.AGENT_ID,
       userId: AI_AGENT_CONFIG.USER_ID,
-      voiceSettings: {
-        stability: 0.5,
-        similarity: 0.75
-      }
+      sessionId,
+      prompt,
+      attachments: []
     };
     
     // Send the request to the agent API
@@ -117,12 +114,13 @@ export const sendMessageToAIAgent = async (prompt: string, sessionId: string): P
     // Log response for debugging
     console.log('AI agent response data:', data);
     
-    // Check if the response has the expected structure
-    if (!data.response) {
+    // Check if the response has the expected structure (new format with text field)
+    if (!data.text && !data.response) {
       throw new Error('Unexpected response format from AI agent API');
     }
     
-    return data.response;
+    // Return the text field from the new response format, fallback to old format
+    return data.text || data.response;
   } catch (error) {
     // Handle any errors
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
