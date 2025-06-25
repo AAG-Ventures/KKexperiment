@@ -40,6 +40,7 @@ import ShareModal from './components/ShareModal';
 import Notifications, { Notification as NotificationType } from './components/Notifications'; // Use alias for Notification type if local one is hard to remove or named Notification
 import Header from './components/Header';
 import ChatSidebar from './components/ChatSidebar';
+import AgentMemoriesView from './components/AgentMemoriesView';
 
 // Helper functions imported from utils/helpers.ts
 
@@ -213,6 +214,10 @@ export default function Dashboard() {
     },
   ]);
   
+  // View switching state for Agent Memories
+  const [currentView, setCurrentView] = useState<'dashboard' | 'agentMemories'>('dashboard');
+  const [selectedAgentForMemories, setSelectedAgentForMemories] = useState<Agent | null>(null);
+  
   // Track expanded folders in knowledgebase
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
   
@@ -244,6 +249,17 @@ export default function Dashboard() {
         return [...prev, folderId];
       }
     });
+  };
+  
+  // View switching handlers
+  const handleViewAgentMemories = (agent: Agent) => {
+    setSelectedAgentForMemories(agent);
+    setCurrentView('agentMemories');
+  };
+  
+  const handleBackToDashboard = () => {
+    setCurrentView('dashboard');
+    setSelectedAgentForMemories(null);
   };
   
   // Track active topic in knowledgebase
@@ -1637,11 +1653,20 @@ Formulating response based on available information...`
   };
   
   // Handle option selection in the add modal
-  const handleOptionSelect = (option: string) => {
+  const handleOptionSelect = (option: string, agent?: Agent) => {
     console.log(`Selected option in Dashboard: ${option}`);
     
     // Handle each option type differently
     switch (option) {
+      case 'viewAgentMemory':
+        // Open Agent Memory Management interface
+        if (agent) {
+          console.log(`Opening memory view for agent: ${agent.name}`);
+          setSelectedAgentForMemories(agent);
+          setCurrentView('agentMemories');
+        }
+        return;
+        
       case 'folder':
         // Don't close the modal for folder - the AddModal component will show FolderCreateModal
         console.log('Folder option selected - AddModal will handle displaying FolderCreateModal');
@@ -1768,7 +1793,17 @@ Formulating response based on available information...`
         setNotifications={setNotifications}
       />
 
-      {/* Main Layout */}
+      {/* Conditional rendering between Dashboard and Agent Memories */}
+      {currentView === 'agentMemories' && selectedAgentForMemories ? (
+        <AgentMemoriesView 
+          agent={selectedAgentForMemories} 
+          onBack={() => {
+            setCurrentView('dashboard');
+            setSelectedAgentForMemories(null);
+          }} 
+        />
+      ) : (
+        <>
       <div className={`${styles.layout} ${isSidebarCollapsed ? styles.layoutCollapsed : ''}`}>
         {/* Sticky Create Button - Apply hideWhenNotifications class when notification panel is open */}
         <button 
@@ -2541,7 +2576,7 @@ Formulating response based on available information...`
                         style={{ cursor: 'pointer' }}
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M14 2H6C3.89543 2 3 2.89543 3 4V20C3 21.1046 3.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                         <span style={{ textDecoration: 'underline' }}>{attachment}</span>
                       </div>
@@ -2854,7 +2889,6 @@ Formulating response based on available information...`
         }}
       />
 
-      {/* Global share modal */}
       {shareModalOpen && (
         <ShareModal
           fileName={shareFileName}
@@ -2899,6 +2933,7 @@ Formulating response based on available information...`
           modalTitle={isEditMode ? "Edit Workspace" : "Create New Workspace"}
         />
       )}
-    </div>
-  );
-}
+      </>
+  )};
+  </div>
+)}

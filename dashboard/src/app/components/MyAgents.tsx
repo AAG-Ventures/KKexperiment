@@ -47,7 +47,7 @@ interface MyAgentsProps {
   processes: Process[];
   setProcesses: React.Dispatch<React.SetStateAction<Process[]>>;
   setIsAddModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  handleOptionSelect: (option: string) => void;
+  handleOptionSelect: (option: string, agent?: Agent) => void;
   generateUUID: () => string;
 }
 
@@ -75,7 +75,12 @@ export default function MyAgents({
 
   const handleViewMemory = (agentId: string) => {
     console.log(`View Memory for agent: ${agentId}`);
-    // TODO: Implement view memory functionality
+    // Find the agent and trigger the memory view
+    const agent = userAgents.find(a => a.id === agentId);
+    if (agent && handleOptionSelect) {
+      // Use handleOptionSelect to pass the agent and action to parent
+      handleOptionSelect('viewAgentMemory', agent);
+    }
     setContextMenu(null);
   };
 
