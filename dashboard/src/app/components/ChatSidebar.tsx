@@ -5,6 +5,21 @@ import styles from "../page.module.css";
 import { PlusIcon, SendIcon } from './Icons';
 
 // Type definitions from main component
+type WorkflowStatus = {
+  stage: 'thinking' | 'editing' | 'generating' | 'analyzing' | 'complete';
+  description: string;
+  startTime: Date;
+  filesInvolved?: string[];
+  currentFile?: string;
+};
+
+type WorkflowAction = {
+  id: string;
+  label: string;
+  type: 'file' | 'diff' | 'preview' | 'download';
+  payload?: any;
+};
+
 type ChatTab = {
   id: string;
   title: string;
@@ -12,10 +27,13 @@ type ChatTab = {
     sender: 'user' | 'bot', 
     content: string,
     thinking?: string // Optional thinking content for agent messages
+    workflowStatus?: WorkflowStatus; // AI workflow status for this message
+    workflowActions?: WorkflowAction[]; // Available actions for this message
   }[];
   active: boolean;
   isRenaming?: boolean;
   isProcessing?: boolean;
+  currentWorkflow?: WorkflowStatus; // Current ongoing workflow status
   sessionId?: string; // AI agent session ID
   agentId?: string; // ID of the agent for this chat
 };
@@ -82,6 +100,107 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
     
     return () => clearTimeout(timeoutId);
   }, [chatTabs]); // Trigger when chatTabs change (new messages, processing state, etc.)
+
+  // Format workflow stage display
+  const formatWorkflowStage = (stage: WorkflowStatus['stage']): string => {
+    switch (stage) {
+      case 'thinking': return 'thinking...';
+      case 'editing': return 'editing';
+      case 'generating': return 'generating';
+      case 'analyzing': return 'analyzing';
+      case 'complete': return 'complete';
+      default: return stage;
+    }
+  };
+
+  // Handle workflow action clicks
+  const handleWorkflowAction = (action: WorkflowAction, tabId: string) => {
+    switch (action.type) {
+      case 'file':
+        if (action.payload?.filePath) {
+          // Open file in editor (you'll need to implement this based on your app's file opening logic)
+          console.log('Opening file:', action.payload.filePath);
+          // Example: window.electronAPI?.openFile(action.payload.filePath);
+        }
+        break;
+      case 'diff':
+        if (action.payload?.changes) {
+          // Show differences view
+          console.log('Showing diff:', action.payload.changes);
+          // Example: openDiffModal(action.payload.changes);
+        }
+        break;
+      case 'preview':
+        if (action.payload?.content) {
+          // Show preview
+          console.log('Showing preview:', action.payload.content);
+        }
+        break;
+      case 'download':
+        if (action.payload?.downloadUrl) {
+          // Download file
+          const link = document.createElement('a');
+          link.href = action.payload.downloadUrl;
+          link.download = action.payload.filename || 'download';
+          link.click();
+        }
+        break;
+    }
+  };
+
+  // WorkflowStatus display component
+  const WorkflowStatusDisplay: React.FC<{ 
+    workflow: WorkflowStatus; 
+    actions?: WorkflowAction[];
+    tabId: string;
+  }> = ({ workflow, actions, tabId }) => (
+    <div className={styles.workflowStatus}>
+      <div className={styles.workflowHeader}>
+        <div className={styles.workflowStage}>
+          <div className={styles.workflowIndicator}>
+            <div className={styles.workflowPulse}></div>
+          </div>
+          <span className={styles.workflowText}>
+            {formatWorkflowStage(workflow.stage)}
+            {workflow.currentFile && (
+              <span className={styles.workflowFile}> • {workflow.currentFile}</span>
+            )}
+          </span>
+        </div>
+        <div className={styles.workflowTime}>
+          {new Date(workflow.startTime).toLocaleTimeString([], { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          })}
+        </div>
+      </div>
+      
+      {workflow.description && (
+        <div className={styles.workflowDescription}>
+          {workflow.description}
+        </div>
+      )}
+      
+      {actions && actions.length > 0 && (
+        <div className={styles.workflowActions}>
+          {actions.map((action) => (
+            <button
+              key={action.id}
+              className={styles.workflowActionButton}
+              onClick={() => handleWorkflowAction(action, tabId)}
+              title={action.label}
+            >
+              {action.type === 'file' && '📄'}
+              {action.type === 'diff' && '🔍'}
+              {action.type === 'preview' && '👁️'}
+              {action.type === 'download' && '💾'}
+              <span>{action.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className={styles.chatSidebar}>
@@ -252,6 +371,15 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                       )}
                       
                       <div className={styles.messageContent}>{msg.content}</div>
+                      
+                      {/* Display workflow status and actions for bot messages */}
+                      {msg.sender === 'bot' && msg.workflowStatus && (
+                        <WorkflowStatusDisplay 
+                          workflow={msg.workflowStatus} 
+                          actions={msg.workflowActions} 
+                          tabId={tab.id} 
+                        />
+                      )}
                     </div>
                   ))}
                   
@@ -281,6 +409,15 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                         <span className={styles.typingDot}></span>
                       </div>
                     </div>
+                  )}
+                  
+                  {/* Display current workflow status */}
+                  {tab.currentWorkflow && (
+                    <WorkflowStatusDisplay 
+                      workflow={tab.currentWorkflow} 
+                      actions={undefined} 
+                      tabId={tab.id} 
+                    />
                   )}
                 </div>
               ))}

@@ -3566,3 +3566,474 @@ body.dragging {
 .dragHandle:hover .dragIcon {
   color: var(--foreground-secondary);
 }
+
+/* Agent Memories View Styles */
+.agentMemoriesView {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--background-primary);
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.agentMemoriesHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.agentMemoriesHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--background-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  color: var(--foreground-secondary);
+}
+
+.backButton:hover {
+  background: var(--background-tertiary);
+  color: var(--foreground-primary);
+  transform: translateX(-2px);
+}
+
+.agentMemoriesTitle h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--foreground-primary);
+  margin: 0 0 4px 0;
+}
+
+.agentMemoriesSubtitle {
+  font-size: 16px;
+  color: var(--foreground-secondary);
+  margin: 0;
+}
+
+.addMemoryButton {
+  background: var(--brand-primary);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.addMemoryButton:hover {
+  background: var(--brand-secondary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.searchFiltersSection {
+  background: var(--background-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.searchFiltersHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  background: var(--background-tertiary);
+  border-bottom: 1px solid var(--border-primary);
+  font-weight: 600;
+  color: var(--foreground-primary);
+}
+
+.searchFiltersContent {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap: 20px;
+  align-items: end;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filterLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--foreground-secondary);
+}
+
+.searchInputContainer {
+  position: relative;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--input-bg);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--input-text);
+  font-size: 14px;
+  transition: all var(--transition-normal);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
+}
+
+.searchInput::placeholder {
+  color: var(--foreground-tertiary);
+}
+
+.labelsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.labelButton {
+  background: var(--background-tertiary);
+  border: 1px solid var(--border-primary);
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  color: var(--foreground-secondary);
+}
+
+.labelButton:hover {
+  background: var(--background-primary);
+  color: var(--foreground-primary);
+}
+
+.labelButtonActive {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: white;
+}
+
+.labelButtonActive:hover {
+  background: var(--brand-secondary);
+}
+
+.dateSelect {
+  padding: 12px 16px;
+  background: var(--input-bg);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--input-text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.dateSelect:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
+}
+
+.searchButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--brand-primary);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  height: fit-content;
+}
+
+.searchButton:hover {
+  background: var(--brand-secondary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.memoriesSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.memoriesHeader {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--foreground-primary);
+  margin: 0 0 20px 0;
+}
+
+.loadingState,
+.errorState,
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--foreground-secondary);
+  font-size: 16px;
+  background: var(--background-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+}
+
+.errorState {
+  color: var(--error-text);
+  background: var(--error-bg);
+  border-color: var(--error-border);
+}
+
+.memoriesList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.memoryCard {
+  background: var(--background-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  transition: all var(--transition-normal);
+}
+
+.memoryCard:hover {
+  border-color: var(--border-secondary);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.memoryHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.memoryTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--foreground-primary);
+  margin: 0;
+  flex: 1;
+}
+
+.deleteButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  color: var(--foreground-tertiary);
+}
+
+.deleteButton:hover {
+  background: var(--error-bg);
+  border-color: var(--error-border);
+  color: var(--error-text);
+}
+
+.memoryContent {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--foreground-secondary);
+  margin: 0 0 16px 0;
+}
+
+.memoryFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.memoryLabels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.memoryLabel {
+  background: var(--background-tertiary);
+  border: 1px solid var(--border-primary);
+  padding: 4px 8px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--foreground-secondary);
+}
+
+.memoryDates {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-end;
+}
+
+.memoryDate {
+  font-size: 12px;
+  color: var(--foreground-tertiary);
+}
+
+.workflowStatus {
+  background: var(--background-secondary);
+  border: 1px solid rgba(var(--brand-primary-rgb), 0.2);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin: 8px 0;
+  font-size: 0.875rem;
+  transition: all var(--transition-normal);
+}
+
+.workflowHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.workflowStage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.workflowIndicator {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand-primary);
+}
+
+.workflowPulse {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--brand-primary);
+  opacity: 0.3;
+  animation: workflowPulse 2s infinite;
+}
+
+@keyframes workflowPulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.1;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0.3;
+  }
+}
+
+.workflowText {
+  font-weight: 500;
+  color: var(--foreground-primary);
+}
+
+.workflowFile {
+  color: var(--foreground-secondary);
+  font-weight: 400;
+  font-size: 0.8rem;
+}
+
+.workflowTime {
+  color: var(--foreground-tertiary);
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+}
+
+.workflowDescription {
+  color: var(--foreground-secondary);
+  font-size: 0.8rem;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.workflowActions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.workflowActionButton {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--background-tertiary);
+  border: 1px solid rgba(var(--brand-primary-rgb), 0.3);
+  border-radius: var(--radius-sm);
+  color: var(--foreground-primary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.workflowActionButton:hover {
+  background: var(--brand-primary);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.workflowActionButton:active {
+  transform: translateY(0);
+}
+
+.workflowActionButton span {
+  font-size: 0.75rem;
+}
+
+.processingIndicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: var(--background-secondary);
+  border-radius: var(--radius-sm);
+  margin-top: 4px;
+}
