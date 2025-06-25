@@ -27,6 +27,7 @@ export default function AgentMemoriesView({ agent, onBack }: AgentMemoriesViewPr
   const [memories, setMemories] = useState<Memory[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
 
   // Mock data for now - replace with API call later
   const mockMemories: Memory[] = [
@@ -93,6 +94,11 @@ export default function AgentMemoriesView({ agent, onBack }: AgentMemoriesViewPr
 
   const handleDeleteMemory = (memoryId: string) => {
     setMemories(prev => prev.filter(m => m.id !== memoryId));
+  };
+
+  const handleDeleteAllMemories = () => {
+    setMemories([]);
+    setShowDeleteAllModal(false);
   };
 
   const formatDate = (date: Date) => {
@@ -204,6 +210,15 @@ export default function AgentMemoriesView({ agent, onBack }: AgentMemoriesViewPr
       <div className={styles.memoriesSection}>
         <h2 className={styles.memoriesHeader}>
           Memories ({filteredMemories.length})
+          {filteredMemories.length > 0 && (
+            <button 
+              className={styles.deleteAllButton}
+              onClick={() => setShowDeleteAllModal(true)}
+            >
+              <TrashIcon size={16} />
+              Delete All
+            </button>
+          )}
         </h2>
         
         {loading ? (
@@ -261,6 +276,31 @@ export default function AgentMemoriesView({ agent, onBack }: AgentMemoriesViewPr
           </div>
         )}
       </div>
+
+      {showDeleteAllModal && (
+        <div className={styles.deleteAllModal}>
+          <h2 className={styles.deleteAllModalHeader}>
+            Delete All Memories?
+          </h2>
+          <p className={styles.deleteAllModalText}>
+            Are you sure you want to delete all memories for {agent.name}?
+          </p>
+          <div className={styles.deleteAllModalActions}>
+            <button 
+              className={styles.deleteAllModalCancelButton}
+              onClick={() => setShowDeleteAllModal(false)}
+            >
+              Cancel
+            </button>
+            <button 
+              className={styles.deleteAllModalDeleteButton}
+              onClick={handleDeleteAllMemories}
+            >
+              Delete All
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

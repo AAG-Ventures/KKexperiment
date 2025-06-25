@@ -768,7 +768,6 @@
 @keyframes bounce {
   0%, 20%, 50%, 80%, 100% {
     transform: translateY(0);
-    box-shadow: 0 0 15px 5px rgba(255, 140, 0, 0.6) !important;
   }
   40% {
     transform: translateY(-15px);
@@ -4036,4 +4035,122 @@ body.dragging {
   background: var(--background-secondary);
   border-radius: var(--radius-sm);
   margin-top: 4px;
+}
+
+/* Delete All Button */
+.deleteAllButton {
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 12px;
+  transition: background-color 0.2s ease;
+}
+
+.deleteAllButton:hover {
+  background: #b91c1c;
+}
+
+.memoriesHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* Delete All Modal */
+.deleteAllModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.deleteAllModal::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  height: 200px;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  padding: 24px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.deleteAllModalHeader {
+  position: relative;
+  z-index: 1001;
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.deleteAllModalText {
+  position: relative;
+  z-index: 1001;
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.deleteAllModalActions {
+  position: relative;
+  z-index: 1001;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.deleteAllModalCancelButton {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.deleteAllModalCancelButton:hover {
+  background: var(--bg-hover);
+}
+
+.deleteAllModalDeleteButton {
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.deleteAllModalDeleteButton:hover {
+  background: #b91c1c;
 }
