@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import styles from "../page.module.css";
 import { PlusIcon, SendIcon } from './Icons';
 
@@ -67,6 +67,21 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   cancelTabRename
 }) => {
   const renameInputRef = useRef<HTMLInputElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when messages change or processing state changes
+  useEffect(() => {
+    const scrollToBottom = () => {
+      if (messagesContainerRef.current) {
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      }
+    };
+
+    // Small delay to ensure DOM is updated before scrolling
+    const timeoutId = setTimeout(scrollToBottom, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, [chatTabs]); // Trigger when chatTabs change (new messages, processing state, etc.)
 
   return (
     <div className={styles.chatSidebar}>
@@ -196,7 +211,10 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
           
           <div className={styles.fullHeightChat} style={{ display: 'flex', flexDirection: 'column', height: 'calc(100% - 85px)' }}>
             {/* Chat messages area */}
-            <div style={{ flex: '1', overflow: 'auto', marginBottom: 'auto' }}>
+            <div 
+              ref={messagesContainerRef}
+              style={{ flex: '1', overflow: 'auto', marginBottom: 'auto' }}
+            >
               {chatTabs.map((tab) => tab.active && (
                 <div key={tab.id} className={styles.chatBody} id="chatBodyContainer">
                   {tab.messages.map((msg, i) => (
